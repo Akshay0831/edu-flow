@@ -22,6 +22,27 @@ class NotFoundError(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
 
 
+class UnauthorizedError(HTTPException):
+    """Custom unauthorized error"""
+    
+    def __init__(self, detail: str, status_code: int = status.HTTP_403_FORBIDDEN):
+        super().__init__(status_code=status_code, detail=detail)
+
+
+class ValidationError(HTTPException):
+    """Custom validation error"""
+    
+    def __init__(self, detail: str, status_code: int = status.HTTP_400_BAD_REQUEST):
+        super().__init__(status_code=status_code, detail=detail)
+
+
+class NotFoundError(HTTPException):
+    """Custom not found error"""
+    
+    def __init__(self, detail: str, status_code: int = status.HTTP_404_NOT_FOUND):
+        super().__init__(status_code=status_code, detail=detail)
+
+
 class ForbiddenError(HTTPException):
     """Custom forbidden error"""
     

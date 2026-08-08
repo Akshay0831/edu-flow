@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 import time
@@ -15,14 +16,42 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Configure middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
+
+app.add_middleware(GZipMiddleware)
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to responses"""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 # Initialize services
 from src.services.user_service import UserService
 from src.api.v1.endpoints.users import router as users_router
+from src.api.v1.endpoints.course_router import router as courses_router
+from src.api.v1.endpoints.students import router as students_router
 from src.core.security import AuthService
+from src.core.services import auth_service, user_service, get_student_service
 
-user_service = UserService()
-auth_service = AuthService()
-auth_service.user_service = user_service  # Set the user service after creation
+# Use a consistent secret key for testing
+SECRET_KEY = "your-secret-key-here-in-production-use-environment-variable"
+ALGORITHM = "HS256"
+
+# Set the user service in auth service
+auth_service.user_service = user_service
 
 # CORS middleware
 app.add_middleware(
@@ -141,6 +170,8 @@ async def register_user(user_data: Dict[str, Any]):
         }
     except (AuthenticationError, ValidationError) as e:
         raise e
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Missing required field: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -295,8 +326,10 @@ async def get_current_user(request: Request):
         }
     except AuthenticationError as e:
         raise e
+    except IndexError:
+        raise AuthenticationError("Invalid token format")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise AuthenticationError("Invalid token")
 
 @app.get("/api/v1/teachers/me")
 async def get_teacher_profile(request: Request):
@@ -399,8 +432,19 @@ async def get_available_roles():
         "message": "Available roles retrieved successfully"
     }
 
-# Include user management endpoints
+# Inject auth service into student endpoints
+def get_auth_service():
+    """Dependency to get auth service"""
+    return auth_service
+
+def get_student_service():
+    """Dependency to get student service"""
+    return StudentService(auth_service)
+
+# Include API endpoints with dependency injection
 app.include_router(users_router, prefix="/api/v1")
+app.include_router(courses_router, prefix="/api/v1")
+app.include_router(students_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

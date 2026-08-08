@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from src.core.security import AuthService
@@ -49,7 +49,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
@@ -63,7 +64,8 @@ class UserCreate(UserBase):
             raise ValueError('Password must contain at least one special character')
         return v
     
-    @validator('role')
+    @field_validator('role')
+    @classmethod
     def validate_role(cls, v):
         valid_roles = ['student', 'teacher', 'admin', 'staff']
         if v not in valid_roles:

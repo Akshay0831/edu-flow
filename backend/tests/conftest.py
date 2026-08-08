@@ -14,19 +14,19 @@ def auth_test_data() -> Dict[str, Any]:
     return {
         "valid_user": {
             "email": "test@example.com",
-            "password": "password123",
+            "password": "Password123!",
             "name": "Test User",
             "role": "teacher"
         },
         "admin_user": {
             "email": "admin@example.com",
-            "password": "admin123",
+            "password": "Admin123!",
             "name": "Admin User",
             "role": "admin"
         },
         "student_user": {
             "email": "student@example.com", 
-            "password": "student123",
+            "password": "Student123!",
             "name": "Student User",
             "role": "student"
         },
@@ -36,11 +36,11 @@ def auth_test_data() -> Dict[str, Any]:
         },
         "malformed_email": {
             "email": "invalid-email",
-            "password": "password123"
+            "password": "Password123!"
         },
         "weak_password": {
             "email": "test@example.com",
-            "password": "123"
+            "password": "short"
         },
         "missing_fields": {
             "email": "test@example.com"

@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 from src.core.security import AuthService
 from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
@@ -29,16 +29,32 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
 
 # Base models
-class LoginRequest(BaseModel):
-    """Login request model"""
+class UserRegistrationRequest(BaseModel):
+    """User registration request model"""
     email: EmailStr
     password: str
+    name: str
+    role: str
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters')
         return v
+
+class UserRegistrationResponse(BaseModel):
+    """User registration response model"""
+    user_id: str
+    email: str
+    name: str
+    role: str
+    message: str
+
+class LoginRequest(BaseModel):
+    """Login request model"""
+    email: EmailStr
+    password: str
 
 class LoginResponse(BaseModel):
     """Login response model"""
@@ -63,7 +79,8 @@ class PasswordResetRequest(BaseModel):
     old_password: str
     new_password: str
     
-    @validator('new_password')
+    @field_validator('new_password')
+    @classmethod
     def validate_new_password(cls, v):
         if len(v) < 8:
             raise ValueError('New password must be at least 8 characters')
@@ -75,6 +92,42 @@ auth_service = AuthService()
 auth_service.user_service = user_service
 
 # Endpoints
+
+@router.post("/register", response_model=UserRegistrationResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(user_request: UserRegistrationRequest):
+    """
+    User registration endpoint
+    
+    - **email**: Valid email address
+    - **password**: User password (minimum 8 characters)
+    - **name**: User display name
+    - **role**: User role (student, teacher, admin, staff)
+    
+    Registers a new user and returns user information
+    """
+    try:
+        user_id = auth_service.create_user(
+            email=user_request.email,
+            password=user_request.password,
+            name=user_request.name,
+            role=user_request.role
+        )
+        
+        # Generate tokens
+        tokens = auth_service.login_user({
+            "email": user_request.email,
+            "password": user_request.password
+        })
+        
+        return {
+            "message": "User registered successfully",
+            "user_id": user_id["user_id"],
+            **tokens
+        }
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login", response_model=LoginResponse)
 async def login_user(login_request: LoginRequest):
