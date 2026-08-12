@@ -225,9 +225,12 @@ class ExternalServiceError(Exception):
     pass
 
 
-class ConfigurationError(Exception):
-    """Configuration error"""
+class ServiceNotFoundError(Exception):
+    """Service not found error"""
     pass
+
+
+
 
 
 class RateLimitError(HTTPException):

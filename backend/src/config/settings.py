@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     
     # Database settings
     database_name: str = Field(default="edu_flow")
-    database_url: str = Field(default="postgresql+asyncpg://user:password@localhost:5432/edu_flow")
+    database_url: str = Field(default="sqlite+aiosqlite:///edu_flow.db")
     mongodb_url: str = Field(default="mongodb://localhost:27017/edu_flow")
     redis_url: str = Field(default="redis://localhost:6379")
     

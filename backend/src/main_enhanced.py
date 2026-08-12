@@ -35,7 +35,7 @@ from src.core.exceptions import (
 )
 from src.core.security import auth_service
 from src.core.response_handler import ResponseFormatter
-from src.core.error_handling import setup_error_handling
+from src.core.error_handling import setup_error_handler
 from src.core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
 from src.core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
 from src.core.service_container import initialize_service_container, configure_services, get_service_container
@@ -155,7 +155,7 @@ async def lifespan(app: FastAPI):
         auth_service.user_service = user_service
         
         # Set up error handling
-        setup_error_handling(app)
+        setup_error_handler(app)
         
         logger.info("✅ All systems initialized successfully")
         logger.info("📊 Health check available at /health")

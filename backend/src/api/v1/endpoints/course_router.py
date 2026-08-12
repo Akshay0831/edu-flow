@@ -3,8 +3,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 
 from src.models.course import (
     CourseCreate, CourseUpdate, CourseResponse, CourseCreateResponse,
@@ -15,8 +13,7 @@ from src.models.course import (
 )
 from src.services.course_service import CourseService
 from src.core.exceptions import ValidationError, NotFoundError, UnauthorizedError
-from src.core.security import AuthService, get_current_user
-from src.core.dependencies import get_db_connection
+from src.core.security import AuthService
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
@@ -26,11 +23,7 @@ auth_service = AuthService()
 course_service = CourseService(auth_service)
 
 @router.post("/", response_model=CourseCreateResponse, status_code=status.HTTP_201_CREATED)
-async def create_course(
-    course: CourseCreate,
-    current_user: str = Depends(get_current_user),
-    db=Depends(get_db_connection)
-):
+async def create_course(course: CourseCreate):
     """Create a new course."""
     try:
         result = course_service.create_course(course, current_user)

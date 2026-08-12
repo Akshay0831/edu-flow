@@ -171,3 +171,6 @@ config.js
 .env
 
 firebase-project-credentials.json
+
+.github/
+*.db

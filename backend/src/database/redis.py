@@ -1,34 +1,81 @@
-"""Redis integration for caching and session management."""
+"""
+Redis integration for caching and session management.
+
+This module provides Redis caching functionality:
+- Basic Redis operations with automatic serialization
+- TTL management
+- Session management
+- Cache invalidation
+
+Author: Edu-Flow Team
+"""
 
 import json
 import pickle
 import hashlib
 from typing import Any, Optional, Dict, List
 from datetime import datetime, timedelta
-from src.database.connection import database_manager
 from src.config.settings import settings
 from src.core.exceptions import ConfigurationError
+import asyncio
+import logging
+from redis.asyncio import Redis
 
+logger = logging.getLogger(__name__)
 
 class RedisCache:
     """Redis cache with automatic serialization and TTL management."""
     
     def __init__(self, prefix: str = "edu_flow"):
         self.prefix = prefix
-        self.client = None
+        self.client: Optional[Redis] = None
         self._initialized = False
-    
+        
     async def initialize(self) -> None:
         """Initialize Redis connection."""
         if self._initialized:
             return
         
         try:
-            self.client = await database_manager.get_redis_client()
-            if not self.client:
-                raise ConfigurationError("Redis client not available")
+            # Parse Redis URL - simplified version
+            redis_url = settings.redis_url
+            host = "localhost"
+            port = 6379
+            
+            # Basic URL parsing if provided
+            if redis_url and "://" in redis_url:
+                # Extract host and port from URL
+                url_without_protocol = redis_url.split("://")[1]
+                if ":" in url_without_protocol:
+                    host = url_without_protocol.split(":")[0]
+                    port_str = url_without_protocol.split(":")[1]
+                    if "/" in port_str:
+                        port = int(port_str.split("/")[0])
+                    else:
+                        port = int(port_str)
+                elif "/" in url_without_protocol:
+                    host = url_without_protocol.split("/")[0]
+            
+            # Create Redis client with connection pooling
+            self.client = Redis(
+                host=host,
+                port=port,
+                db=0,
+                password=None,
+                decode_responses=False,  # We'll handle encoding ourselves
+                retry_on_timeout=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                max_connections=20
+            )
+            
+            # Test connection
+            await self.client.ping()
             self._initialized = True
+            logger.info("Redis connected successfully")
+            
         except Exception as e:
+            logger.error(f"Failed to initialize Redis: {e}")
             raise ConfigurationError(f"Failed to initialize Redis: {e}")
     
     async def _get_key(self, key: str) -> str:
@@ -37,10 +84,14 @@ class RedisCache:
     
     async def _serialize(self, value: Any) -> bytes:
         """Serialize value for storage."""
-        if isinstance(value, (str, int, float, bool, dict, list)):
-            return json.dumps(value, default=str).encode('utf-8')
-        else:
-            return pickle.dumps(value)
+        try:
+            if isinstance(value, (str, int, float, bool, dict, list)):
+                return json.dumps(value, default=str).encode('utf-8')
+            else:
+                return pickle.dumps(value)
+        except Exception as e:
+            logger.error(f"Serialization failed for value type {type(value)}: {e}")
+            raise ConfigurationError(f"Serialization failed: {e}")
     
     async def _deserialize(self, data: bytes) -> Any:
         """Deserialize value from storage."""
@@ -48,11 +99,15 @@ class RedisCache:
             # Try JSON first
             return json.loads(data.decode('utf-8'))
         except (json.JSONDecodeError, UnicodeDecodeError):
-            # Fall back to pickle
-            return pickle.loads(data)
+            try:
+                # Fall back to pickle
+                return pickle.loads(data)
+            except Exception as e:
+                logger.error(f"Deserialization failed: {e}")
+                raise ConfigurationError(f"Deserialization failed: {e}")
     
-    async def get(self, key: str, default: Any = None) -> Any:
-        """Get value from cache."""
+    async def get(self, key: str) -> Optional[Any]:
+        """Get value from Redis."""
         try:
             if not self._initialized:
                 await self.initialize()
@@ -61,54 +116,50 @@ class RedisCache:
             data = await self.client.get(full_key)
             
             if data is None:
-                return default
+                return None
             
             return await self._deserialize(data)
             
         except Exception as e:
-            # If Redis is down, return default without failing
-            return default
+            logger.error(f"Redis get failed for key {key}: {e}")
+            raise ConfigurationError(f"Redis get failed: {e}")
     
     async def set(self, key: str, value: Any, ttl: int = None) -> bool:
-        """Set value in cache with optional TTL."""
+        """Set value in Redis with optional TTL."""
         try:
             if not self._initialized:
                 await self.initialize()
             
             full_key = await self._get_key(key)
-            serialized_data = await self._serialize(value)
+            serialized_value = await self._serialize(value)
             
-            if ttl is None:
-                ttl = settings.cache_ttl
-            
-            if ttl > 0:
-                await self.client.setex(full_key, ttl, serialized_data)
+            if ttl:
+                await self.client.setex(full_key, ttl, serialized_value)
             else:
-                await self.client.set(full_key, serialized_data)
+                await self.client.set(full_key, serialized_value)
             
             return True
             
         except Exception as e:
-            # If Redis is down, don't fail the operation
-            return False
+            logger.error(f"Redis set failed for key {key}: {e}")
+            raise ConfigurationError(f"Redis set failed: {e}")
     
     async def delete(self, key: str) -> bool:
-        """Delete value from cache."""
+        """Delete key from Redis."""
         try:
             if not self._initialized:
                 await self.initialize()
             
             full_key = await self._get_key(key)
             result = await self.client.delete(full_key)
-            
             return result > 0
             
         except Exception as e:
-            # If Redis is down, return False
-            return False
+            logger.error(f"Redis delete failed for key {key}: {e}")
+            raise ConfigurationError(f"Redis delete failed: {e}")
     
     async def exists(self, key: str) -> bool:
-        """Check if key exists in cache."""
+        """Check if key exists in Redis."""
         try:
             if not self._initialized:
                 await self.initialize()
@@ -117,11 +168,11 @@ class RedisCache:
             return await self.client.exists(full_key) > 0
             
         except Exception as e:
-            # If Redis is down, assume key doesn't exist
-            return False
+            logger.error(f"Redis exists check failed for key {key}: {e}")
+            raise ConfigurationError(f"Redis exists check failed: {e}")
     
     async def expire(self, key: str, ttl: int) -> bool:
-        """Set expiration time for a key."""
+        """Set TTL for key."""
         try:
             if not self._initialized:
                 await self.initialize()
@@ -130,246 +181,63 @@ class RedisCache:
             return await self.client.expire(full_key, ttl)
             
         except Exception as e:
-            # If Redis is down, return False
-            return False
+            logger.error(f"Redis expire failed for key {key}: {e}")
+            raise ConfigurationError(f"Redis expire failed: {e}")
     
-    async def ttl(self, key: str) -> int:
-        """Get TTL for a key."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            return await self.client.ttl(full_key)
-            
-        except Exception as e:
-            # If Redis is down, return -1
-            return -1
-    
-    async def increment(self, key: str, amount: int = 1) -> int:
-        """Increment a counter value."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            return await self.client.incrby(full_key, amount)
-            
-        except Exception as e:
-            # If Redis is down, return 0
-            return 0
-    
-    async def decrement(self, key: str, amount: int = 1) -> int:
-        """Decrement a counter value."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            return await self.client.decrby(full_key, amount)
-            
-        except Exception as e:
-            # If Redis is down, return 0
-            return 0
-    
-    async def set_hash(self, key: str, field: str, value: Any, ttl: int = None) -> bool:
-        """Set a field in a hash."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            serialized_value = await self._serialize(value)
-            
-            result = await self.client.hset(full_key, field, serialized_value)
-            
-            if ttl and ttl > 0:
-                await self.client.expire(full_key, ttl)
-            
-            return result > 0
-            
-        except Exception as e:
-            return False
-    
-    async def get_hash(self, key: str, field: str) -> Any:
-        """Get a field from a hash."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            data = await self.client.hget(full_key, field)
-            
-            if data is None:
-                return None
-            
-            return await self._deserialize(data)
-            
-        except Exception as e:
-            return None
-    
-    async def delete_hash_field(self, key: str, field: str) -> bool:
-        """Delete a field from a hash."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            result = await self.client.hdel(full_key, field)
-            
-            return result > 0
-            
-        except Exception as e:
-            return False
-    
-    async def get_hash_all(self, key: str) -> Dict[str, Any]:
-        """Get all fields from a hash."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            data = await self.client.hgetall(full_key)
-            
-            if not data:
-                return {}
-            
-            result = {}
-            for field, value in data.items():
-                result[field] = await self._deserialize(value)
-            
-            return result
-            
-        except Exception as e:
-            return {}
-    
-    async def list_push(self, key: str, value: Any, ttl: int = None) -> bool:
-        """Push value to a list."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            serialized_value = await self._serialize(value)
-            
-            result = await self.client.lpush(full_key, serialized_value)
-            
-            if ttl and ttl > 0:
-                await self.client.expire(full_key, ttl)
-            
-            return result > 0
-            
-        except Exception as e:
-            return False
-    
-    async def list_pop(self, key: str) -> Any:
-        """Pop value from a list."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            data = await self.client.lpop(full_key)
-            
-            if data is None:
-                return None
-            
-            return await self._deserialize(data)
-            
-        except Exception as e:
-            return None
-    
-    async def list_get_all(self, key: str) -> List[Any]:
-        """Get all values from a list."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            full_key = await self._get_key(key)
-            data = await self.client.lrange(full_key, 0, -1)
-            
-            if not data:
-                return []
-            
-            result = []
-            for item in data:
-                result.append(await self._deserialize(item))
-            
-            return result
-            
-        except Exception as e:
-            return []
-    
-    async def get_memory_usage(self) -> Dict[str, int]:
-        """Get memory usage statistics."""
-        try:
-            if not self._initialized:
-                await self.initialize()
-            
-            info = await self.client.info('memory')
-            return {
-                'used_memory': info.get('used_memory', 0),
-                'used_memory_human': info.get('used_memory_human', '0B'),
-                'total_system_memory': info.get('total_system_memory', 0),
-                'maxmemory': info.get('maxmemory', 0),
-                'maxmemory_human': info.get('maxmemory_human', '0B')
-            }
-            
-        except Exception as e:
-            return {
-                'used_memory': 0,
-                'used_memory_human': '0B',
-                'total_system_memory': 0,
-                'maxmemory': 0,
-                'maxmemory_human': '0B'
-            }
-    
-    async def flush_pattern(self, pattern: str) -> int:
-        """Delete all keys matching a pattern."""
+    async def keys(self, pattern: str = "*") -> List[str]:
+        """Get keys matching pattern."""
         try:
             if not self._initialized:
                 await self.initialize()
             
             full_pattern = f"{self.prefix}:{pattern}"
             keys = await self.client.keys(full_pattern)
-            
-            if not keys:
-                return 0
-            
-            deleted = await self.client.delete(*keys)
-            return deleted
+            return [key.replace(f"{self.prefix}:", "") for key in keys]
             
         except Exception as e:
-            return 0
+            logger.error(f"Redis keys failed for pattern {pattern}: {e}")
+            raise ConfigurationError(f"Redis keys failed: {e}")
     
-    async def health_check(self) -> Dict[str, Any]:
-        """Check Redis health."""
+    async def clear(self) -> bool:
+        """Clear all keys with this prefix."""
         try:
             if not self._initialized:
                 await self.initialize()
             
-            # Test connection
-            await self.client.ping()
+            pattern = f"{self.prefix}:*"
+            keys = await self.client.keys(pattern)
+            if keys:
+                await self.client.delete(*keys)
             
-            # Get info
-            info = await self.client.info()
-            
-            return {
-                'status': 'healthy',
-                'connected_clients': info.get('connected_clients', 0),
-                'used_memory': info.get('used_memory', 0),
-                'used_memory_human': info.get('used_memory_human', '0B'),
-                'keyspace_hits': info.get('keyspace_hits', 0),
-                'keyspace_misses': info.get('keyspace_misses', 0),
-                'total_commands_processed': info.get('total_commands_processed', 0)
-            }
+            return True
             
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e)
-            }
-
+            logger.error(f"Redis clear failed: {e}")
+            raise ConfigurationError(f"Redis clear failed: {e}")
+    
+    async def close(self) -> None:
+        """Close Redis connection."""
+        try:
+            if self.client:
+                await self.client.close()
+                self._initialized = False
+                logger.info("Redis connection closed")
+        except Exception as e:
+            logger.error(f"Failed to close Redis: {e}")
 
 # Global Redis cache instance
 redis_cache = RedisCache()
+
+# Initialize Redis on import
+async def initialize_redis() -> bool:
+    """Initialize Redis cache."""
+    try:
+        await redis_cache.initialize()
+        return True
+    except Exception as e:
+        logger.error(f"Failed to initialize Redis: {e}")
+        return False
+
+async def close_redis() -> None:
+    """Close Redis connection."""
+    await redis_cache.close()

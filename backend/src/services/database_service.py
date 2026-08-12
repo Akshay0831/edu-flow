@@ -6,17 +6,20 @@ This module provides database connection and operations:
 - Database collection access
 - Basic CRUD operations
 - Database health checks
+- PostgreSQL integration
+- Redis caching
 
 Author: Edu-Flow Team
 """
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, AsyncGenerator
 from src.config.settings import settings
 from src.core.exceptions import DatabaseError, NotFoundError
+from src.core.logging import get_logger
 import logging
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DatabaseService:
@@ -55,12 +58,27 @@ class DatabaseService:
             raise DatabaseError(f"Failed to connect to database: {e}")
     
     async def disconnect(self):
-        """Disconnect from MongoDB database"""
+        """Disconnect from database"""
         if self.client:
             self.client.close()
             self.client = None
             self.db = None
             logger.info("Disconnected from MongoDB")
+        
+        # Close PostgreSQL connection
+        try:
+            from src.database.postgresql import close_postgres
+            await close_postgres()
+        except Exception as e:
+            logger.error(f"Failed to close PostgreSQL: {e}")
+        
+        # Close Redis connection
+        try:
+            from src.database.redis import redis_cache
+            if redis_cache.client:
+                await redis_cache.client.close()
+        except Exception as e:
+            logger.error(f"Failed to close Redis: {e}")
     
     async def _ensure_indexes(self):
         """Ensure database indexes are created"""
