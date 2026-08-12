@@ -1,3 +1,5 @@
+from src.core.validation import validate_email, validate_password, validate_student_id
+from src.core.exceptions import ValidationError, AuthenticationError, NotFoundError
 """
 Student Management System Test Suite
 

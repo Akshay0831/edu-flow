@@ -1,3 +1,5 @@
+from src.core.test_validation_system import TestValidationSystem, assert_response_format, assert_error, assert_success
+from src.core.exceptions import ValidationError, AuthenticationError, NotFoundError
 """
 Tests for the Edu-Flow unified logging system.
 """
@@ -276,7 +278,6 @@ def test_log_formatting():
 def test_concurrent_logging():
     """Test concurrent logging from multiple threads"""
     import threading
-    import time
     
     logger = get_logger('backend')
     

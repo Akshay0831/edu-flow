@@ -1,53 +1,204 @@
+"""Custom exception hierarchy for consistent error handling."""
+
+from typing import Optional, Dict, Any
 from fastapi import HTTPException, status
+from datetime import datetime, timezone
 
 
-class AuthenticationError(HTTPException):
-    """Custom authentication error"""
+class BaseError(Exception):
+    """Base exception class for all custom errors."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_401_UNAUTHORIZED):
-        super().__init__(status_code=status_code, detail=detail)
-
-
-class ValidationError(HTTPException):
-    """Custom validation error"""
+    def __init__(self, message: str, error_code: str = None, details: Dict = None):
+        self.message = message
+        self.error_code = error_code or self.__class__.__name__
+        self.details = details or {}
+        self.timestamp = datetime.now(timezone.utc).isoformat()
+        super().__init__(self.message)
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_400_BAD_REQUEST):
-        super().__init__(status_code=status_code, detail=detail)
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert exception to dictionary format."""
+        return {
+            'error_code': self.error_code,
+            'message': self.message,
+            'details': self.details,
+            'timestamp': self.timestamp
+        }
 
 
-class NotFoundError(HTTPException):
-    """Custom not found error"""
+class ValidationError(BaseError):
+    """Exception raised for validation errors."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_404_NOT_FOUND):
-        super().__init__(status_code=status_code, detail=detail)
+    def __init__(self, message: str, field: str = None, details: Dict = None):
+        self.field = field
+        super().__init__(
+            message=message,
+            error_code='VALIDATION_ERROR',
+            details={'field': field, **(details or {})}
+        )
 
 
-class UnauthorizedError(HTTPException):
-    """Custom unauthorized error"""
+class NotFoundError(BaseError):
+    """Exception raised when a resource is not found."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_403_FORBIDDEN):
-        super().__init__(status_code=status_code, detail=detail)
+    def __init__(self, resource: str, id: str = None, details: Dict = None):
+        self.resource = resource
+        self.id = id
+        message = f"{resource} not found"
+        if id:
+            message += f" with ID: {id}"
+        super().__init__(
+            message=message,
+            error_code='NOT_FOUND',
+            details={'resource': resource, 'id': id, **(details or {})}
+        )
 
 
-class ValidationError(HTTPException):
-    """Custom validation error"""
+class AuthenticationError(BaseError):
+    """Exception raised for authentication errors."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_400_BAD_REQUEST):
-        super().__init__(status_code=status_code, detail=detail)
+    def __init__(self, message: str = "Authentication failed", details: Dict = None):
+        super().__init__(
+            message=message,
+            error_code='AUTHENTICATION_ERROR',
+            details=details or {}
+        )
 
 
-class NotFoundError(HTTPException):
-    """Custom not found error"""
+class AuthorizationError(BaseError):
+    """Exception raised for authorization errors."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_404_NOT_FOUND):
-        super().__init__(status_code=status_code, detail=detail)
+    def __init__(self, message: str = "Access denied", required_permission: str = None, details: Dict = None):
+        self.required_permission = required_permission
+        super().__init__(
+            message=message,
+            error_code='AUTHORIZATION_ERROR',
+            details={'required_permission': required_permission, **(details or {})}
+        )
 
 
-class ForbiddenError(HTTPException):
-    """Custom forbidden error"""
+class ForbiddenError(BaseError):
+    """Exception raised for forbidden access."""
     
-    def __init__(self, detail: str, status_code: int = status.HTTP_403_FORBIDDEN):
-        super().__init__(status_code=status_code, detail=detail)
+    def __init__(self, message: str = "Access forbidden", details: Dict = None):
+        super().__init__(
+            message=message,
+            error_code='FORBIDDEN',
+            details=details or {}
+        )
+
+
+class ConflictError(BaseError):
+    """Exception raised for conflicts (e.g., duplicate entries)."""
+    
+    def __init__(self, message: str, conflict_field: str = None, conflict_value: str = None, details: Dict = None):
+        self.conflict_field = conflict_field
+        self.conflict_value = conflict_value
+        super().__init__(
+            message=message,
+            error_code='CONFLICT',
+            details={
+                'conflict_field': conflict_field,
+                'conflict_value': conflict_value,
+                **(details or {})
+            }
+        )
+
+
+class DatabaseError(BaseError):
+    """Exception raised for database-related errors."""
+    
+    def __init__(self, message: str, operation: str = None, details: Dict = None):
+        self.operation = operation
+        super().__init__(
+            message=message,
+            error_code='DATABASE_ERROR',
+            details={'operation': operation, **(details or {})}
+        )
+
+
+class ExternalServiceError(BaseError):
+    """Exception raised for external service errors."""
+    
+    def __init__(self, message: str, service_name: str = None, details: Dict = None):
+        self.service_name = service_name
+        super().__init__(
+            message=message,
+            error_code='EXTERNAL_SERVICE_ERROR',
+            details={'service_name': service_name, **(details or {})}
+        )
+
+
+class RateLimitError(BaseError):
+    """Exception raised for rate limit exceeded."""
+    
+    def __init__(self, message: str = "Rate limit exceeded", retry_after: int = None, details: Dict = None):
+        self.retry_after = retry_after
+        super().__init__(
+            message=message,
+            error_code='RATE_LIMIT',
+            details={'retry_after': retry_after, **(details or {})}
+        )
+
+
+class ConfigurationError(BaseError):
+    """Exception raised for configuration errors."""
+    
+    def __init__(self, message: str, config_key: str = None, details: Dict = None):
+        self.config_key = config_key
+        super().__init__(
+            message=message,
+            error_code='CONFIGURATION_ERROR',
+            details={'config_key': config_key, **(details or {})}
+        )
+
+
+class UnauthorizedError(BaseError):
+    """Exception raised for unauthorized access."""
+    
+    def __init__(self, message: str = "Unauthorized access", required_permission: str = None, details: Dict = None):
+        self.required_permission = required_permission
+        super().__init__(
+            message=message,
+            error_code='UNAUTHORIZED_ERROR',
+            details={'required_permission': required_permission, **(details or {})}
+        )
+
+
+class HTTPError(HTTPException):
+    """HTTP exception with error details."""
+    
+    def __init__(self, error: BaseError):
+        super().__init__(
+            status_code=error.__class__.__name__ if error.__class__.__name__ in [
+                'ValidationError', 'AuthenticationError', 'AuthorizationError', 
+                'ForbiddenError', 'NotFoundError', 'ConflictError', 'UnauthorizedError'
+            ] else status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={'error': error.to_dict()}
+        )
+
+
+def get_http_exception(error: BaseError) -> HTTPException:
+    """Convert a BaseError to HTTPException."""
+    status_code_map = {
+        'ValidationError': status.HTTP_422_UNPROCESSABLE_ENTITY,
+        'NotFoundError': status.HTTP_404_NOT_FOUND,
+        'AuthenticationError': status.HTTP_401_UNAUTHORIZED,
+        'AuthorizationError': status.HTTP_403_FORBIDDEN,
+        'ForbiddenError': status.HTTP_403_FORBIDDEN,
+        'ConflictError': status.HTTP_409_CONFLICT,
+        'DatabaseError': status.HTTP_500_INTERNAL_SERVER_ERROR,
+        'ExternalServiceError': status.HTTP_502_BAD_GATEWAY,
+        'RateLimitError': status.HTTP_429_TOO_MANY_REQUESTS,
+        'ConfigurationError': status.HTTP_500_INTERNAL_SERVER_ERROR,
+        'UnauthorizedError': status.HTTP_401_UNAUTHORIZED,
+    }
+    
+    status_code = status_code_map.get(error.error_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return HTTPException(
+        status_code=status_code,
+        content={'error': error.to_dict()}
+    )
 
 
 class ConflictError(HTTPException):

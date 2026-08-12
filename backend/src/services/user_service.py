@@ -96,7 +96,7 @@ class UserService:
             'email': email,
             'name': name,
             'role': role,
-            'password_hash': self.auth_service.get_password_hash(password),
+            'password_hash': password,  # Password is already hashed by auth service
             'is_active': True,
             'created_at': now,
             'updated_at': now,

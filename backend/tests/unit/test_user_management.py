@@ -1,8 +1,11 @@
 import pytest
+from unittest.mock import Mock, AsyncMock
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 import sys
 import os
+from src.core.validation import validate_email, validate_password
+from src.core.exceptions import ValidationError, AuthenticationError, NotFoundError
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.core.security import AuthService
 from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
@@ -17,10 +20,10 @@ class TestUserManagement:
         self.mock_user_service = Mock()
         
         # Create auth service first
-        self.authService = AuthService()
+        self.auth_service = AuthService()
         self.test_secret_key = "test-secret-key"
-        self.authService.secret_key = self.test_secret_key
-        self.authService.algorithm = "HS256"
+        self.auth_service.secret_key = self.test_secret_key
+        self.auth_service.algorithm = "HS256"
         # Track created emails for mock
         self.created_emails = set()
         
@@ -79,7 +82,7 @@ class TestUserManagement:
                     return {
                         "user_id": "test-user-id",
                         "email": "test@example.com",
-                        "password_hash": self.authService.get_password_hash("Password123!"),
+                        "password_hash": self.auth_service.get_password_hash("Password123!"),
                         "name": "Test User",
                         "role": "student",
                         "is_active": True,
@@ -136,7 +139,7 @@ class TestUserManagement:
                     "email": "test@example.com",
                     "name": "Test User",
                     "role": "student",
-                    "password_hash": self.authService.get_password_hash("Password123!"),
+                    "password_hash": self.auth_service.get_password_hash("Password123!"),
                     "is_active": True,
                     "created_at": datetime.now(),
                     "updated_at": datetime.now()
@@ -232,7 +235,7 @@ class TestUserManagement:
                     "email": "test@example.com",
                     "name": "Test User",
                     "role": "student",
-                    "password_hash": self.authService.get_password_hash("Password123!"),
+                    "password_hash": self.auth_service.get_password_hash("Password123!"),
                     "is_active": True,
                     "created_at": datetime.now(),
                     "updated_at": datetime.now()
@@ -242,13 +245,13 @@ class TestUserManagement:
         
         self.mock_user_service.get_user.side_effect = mock_get_user
         
-        self.authService.user_service = self.mock_user_service
+        self.auth_service.user_service = self.mock_user_service
         
     def test_user_creation_validation(self):
         """Test user creation validation"""
         # Test invalid email
         with pytest.raises(ValidationError, match="Invalid email format"):
-            self.authService.create_user(
+            self.auth_service.create_user(
                 email="invalid-email",
                 password="Password123!",
                 name="Test User",
@@ -257,7 +260,7 @@ class TestUserManagement:
         
         # Test weak password
         with pytest.raises(ValidationError, match="Password does not meet strength requirements"):
-            self.authService.create_user(
+            self.auth_service.create_user(
                 email="test@example.com",
                 password="weak",
                 name="Test User",
@@ -266,7 +269,7 @@ class TestUserManagement:
         
         # Test invalid role
         with pytest.raises(ValidationError, match="Invalid role"):
-            self.authService.create_user(
+            self.auth_service.create_user(
                 email="test@example.com",
                 password="Password123!",
                 name="Test User",
@@ -274,7 +277,7 @@ class TestUserManagement:
             )
         
         # Test valid user creation
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -290,7 +293,7 @@ class TestUserManagement:
     def test_user_update_validation(self):
         """Test user update validation"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -301,14 +304,14 @@ class TestUserManagement:
         
         # Test invalid email update
         with pytest.raises(ValidationError, match="Invalid email format"):
-            self.authService.update_user(
+            self.auth_service.update_user(
                 user_id=user_id,
                 email="invalid-email",
                 name="Updated Name"
             )
         
         # Test valid user update
-        updated_user = self.authService.update_user(
+        updated_user = self.auth_service.update_user(
             user_id=user_id,
             email="updated@example.com",
             name="Updated User",
@@ -322,7 +325,7 @@ class TestUserManagement:
     def test_user_deactivation(self):
         """Test user deactivation"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -337,7 +340,7 @@ class TestUserManagement:
                 deactivated_user = {
                     "user_id": "test-user-id",
                     "email": "test@example.com",
-                    "password_hash": self.authService.get_password_hash("Password123!"),
+                    "password_hash": self.auth_service.get_password_hash("Password123!"),
                     "name": "Test User",
                     "role": "student",
                     "is_active": False,  # deactivated
@@ -364,14 +367,14 @@ class TestUserManagement:
         self.mock_user_service.get_user_by_email.side_effect = mock_get_user_by_email_after_creation
         
         # Deactivate user
-        deactivated_user = self.authService.deactivate_user(user_id)
+        deactivated_user = self.auth_service.deactivate_user(user_id)
         
         assert deactivated_user["is_active"] == False
         assert deactivated_user["deactivated_at"] is not None
         
         # Try to login with deactivated user
         with pytest.raises(AuthenticationError, match="Account is disabled"):
-            self.authService.authenticate_user(
+            self.auth_service.authenticate_user(
                 email="test@example.com",
                 password="Password123!"
             )
@@ -379,7 +382,7 @@ class TestUserManagement:
     def test_user_role_change(self):
         """Test user role change"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -389,7 +392,7 @@ class TestUserManagement:
         user_id = user["user_id"]
         
         # Change role
-        updated_user = self.authService.change_user_role(
+        updated_user = self.auth_service.change_user_role(
             user_id=user_id,
             new_role="teacher"
         )
@@ -402,7 +405,7 @@ class TestUserManagement:
                 return {
                     "user_id": "test-user-id",
                     "email": "test@example.com",
-                    "password_hash": self.authService.get_password_hash("Password123!"),
+                    "password_hash": self.auth_service.get_password_hash("Password123!"),
                     "name": "Test User",
                     "role": "teacher",  # updated role
                     "is_active": True,
@@ -427,7 +430,7 @@ class TestUserManagement:
         self.mock_user_service.get_user_by_email.side_effect = mock_get_user_by_email_after_role_change
         
         # Verify new role works for authentication
-        auth_result = self.authService.authenticate_user(
+        auth_result = self.auth_service.authenticate_user(
             email="test@example.com",
             password="Password123!"
         )
@@ -436,7 +439,7 @@ class TestUserManagement:
     def test_user_password_change(self):
         """Test user password change"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -447,7 +450,7 @@ class TestUserManagement:
         old_password_hash = user["password_hash"]
         
         # Change password
-        self.authService.change_user_password(
+        self.auth_service.change_user_password(
             user_id=user_id,
             new_password="NewPassword123!"
         )
@@ -458,7 +461,7 @@ class TestUserManagement:
                 return {
                     "user_id": "test-user-id",
                     "email": "test@example.com",
-                    "password_hash": self.authService.get_password_hash("NewPassword123!"),  # new password
+                    "password_hash": self.auth_service.get_password_hash("NewPassword123!"),  # new password
                     "name": "Test User",
                     "role": "student",
                     "is_active": True,
@@ -484,13 +487,13 @@ class TestUserManagement:
         
         # Verify old password doesn't work
         with pytest.raises(AuthenticationError, match="Invalid credentials"):
-            self.authService.authenticate_user(
+            self.auth_service.authenticate_user(
                 email="test@example.com",
                 password="Password123!"
             )
         
         # Verify new password works
-        auth_result = self.authService.authenticate_user(
+        auth_result = self.auth_service.authenticate_user(
             email="test@example.com",
             password="NewPassword123!"
         )
@@ -499,7 +502,7 @@ class TestUserManagement:
     def test_user_profile_update(self):
         """Test user profile update"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -521,7 +524,7 @@ class TestUserManagement:
             }
         }
         
-        updated_user = self.authService.update_user_profile(
+        updated_user = self.auth_service.update_user_profile(
             user_id=user_id,
             **profile_data
         )
@@ -537,7 +540,7 @@ class TestUserManagement:
         # Create multiple users
         users = []
         for i in range(5):
-            user = self.authService.create_user(
+            user = self.auth_service.create_user(
                 email=f"user{i}@example.com",
                 password="Password123!",
                 name=f"User {i}",
@@ -546,7 +549,7 @@ class TestUserManagement:
             users.append(user)
         
         # Search by name
-        search_results = self.authService.search_users(
+        search_results = self.auth_service.search_users(
             query="User 1",
             role="student"
         )
@@ -554,21 +557,21 @@ class TestUserManagement:
         assert search_results[0]["name"] == "User 1"
         
         # Filter by role
-        teacher_results = self.authService.search_users(
+        teacher_results = self.auth_service.search_users(
             query="",
             role="teacher"
         )
         assert len(teacher_results) == 2
         
         # Filter by department (assuming some users have departments)
-        department_results = self.authService.search_users(
+        department_results = self.auth_service.search_users(
             query="",
             department="Computer Science"
         )
         # This will depend on which users were assigned the department
         
         # Pagination
-        paginated_results = self.authService.search_users(
+        paginated_results = self.auth_service.search_users(
             query="User",
             role="student",
             page=1,
@@ -579,7 +582,7 @@ class TestUserManagement:
     def test_user_activity_logging(self):
         """Test user activity logging"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -591,7 +594,7 @@ class TestUserManagement:
         # Log user activities
         activities = []
         for action in ["login", "view_profile", "update_settings"]:
-            activity = self.authService.log_user_activity(
+            activity = self.auth_service.log_user_activity(
                 user_id=user_id,
                 action=action,
                 ip="127.0.0.1"
@@ -610,7 +613,7 @@ class TestUserManagement:
         # Create multiple users
         users = []
         for i in range(3):
-            user = self.authService.create_user(
+            user = self.auth_service.create_user(
                 email=f"bulk_user{i}@example.com",
                 password="Password123!",
                 name=f"Bulk User {i}",
@@ -621,33 +624,33 @@ class TestUserManagement:
         user_ids = [user["user_id"] for user in users]
         
         # Bulk deactivate
-        deactivated_users = self.authService.bulk_deactivate_users(user_ids)
+        deactivated_users = self.auth_service.bulk_deactivate_users(user_ids)
         assert len(deactivated_users) == len(user_ids)
         assert all(user["is_active"] == False for user in deactivated_users)
         
         # Bulk reactivate
-        reactivated_users = self.authService.bulk_reactivate_users(user_ids)
+        reactivated_users = self.auth_service.bulk_reactivate_users(user_ids)
         assert len(reactivated_users) == len(user_ids)
         assert all(user["is_active"] == True for user in reactivated_users)
     
     def test_user_permission_validation(self):
         """Test user permission validation"""
         # Create users with different roles
-        student = self.authService.create_user(
+        student = self.auth_service.create_user(
             email="student@example.com",
             password="Password123!",
             name="Student User",
             role="student"
         )
         
-        teacher = self.authService.create_user(
+        teacher = self.auth_service.create_user(
             email="teacher@example.com",
             password="Password123!",
             name="Teacher User",
             role="teacher"
         )
         
-        admin = self.authService.create_user(
+        admin = self.auth_service.create_user(
             email="admin2@example.com",
             password="Password123!",
             name="Admin User",
@@ -656,34 +659,34 @@ class TestUserManagement:
         
         # Test permission checks
         # Students can view their own profile
-        assert self.authService.check_permission(
+        assert self.auth_service.check_permission(
             user_id=student["user_id"],
             action="view_profile",
             target_user_id=student["user_id"]
         ) == True
         
         # Students cannot view other students' profiles
-        assert self.authService.check_permission(
+        assert self.auth_service.check_permission(
             user_id=student["user_id"],
             action="view_profile",
             target_user_id=teacher["user_id"]
         ) == False
         
         # Teachers can view student profiles
-        assert self.authService.check_permission(
+        assert self.auth_service.check_permission(
             user_id=teacher["user_id"],
             action="view_profile",
             target_user_id=student["user_id"]
         ) == True
         
         # Admins can view all profiles
-        assert self.authService.check_permission(
+        assert self.auth_service.check_permission(
             user_id=admin["user_id"],
             action="view_profile",
             target_user_id=student["user_id"]
         ) == True
         
-        assert self.authService.check_permission(
+        assert self.auth_service.check_permission(
             user_id=admin["user_id"],
             action="view_profile",
             target_user_id=teacher["user_id"]
@@ -692,7 +695,7 @@ class TestUserManagement:
     def test_user_audit_trail(self):
         """Test user audit trail"""
         # Create a user first
-        user = self.authService.create_user(
+        user = self.auth_service.create_user(
             email="test@example.com",
             password="Password123!",
             name="Test User",
@@ -702,23 +705,23 @@ class TestUserManagement:
         user_id = user["user_id"]
         
         # Perform various operations
-        self.authService.update_user(
+        self.auth_service.update_user(
             user_id=user_id,
             name="Updated Name"
         )
         
-        self.authService.change_user_role(
+        self.auth_service.change_user_role(
             user_id=user_id,
             new_role="teacher"
         )
         
-        self.authService.change_user_password(
+        self.auth_service.change_user_password(
             user_id=user_id,
             new_password="NewPassword123!"
         )
         
         # Get audit trail
-        audit_trail = self.authService.get_user_audit_trail(user_id)
+        audit_trail = self.auth_service.get_user_audit_trail(user_id)
         
         # Verify audit entries exist
         assert len(audit_trail) >= 3

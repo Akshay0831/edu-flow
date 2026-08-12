@@ -1,3 +1,5 @@
+from tests.test_utils import assert_response_format, assert_error, assert_success
+from src.core.exceptions import ValidationError, AuthenticationError, NotFoundError
 """Comprehensive unit tests for course management system."""
 
 import pytest
@@ -14,7 +16,7 @@ from src.models.course import (
 from src.services.course_service import CourseService
 from src.core.exceptions import ValidationError, NotFoundError, UnauthorizedError
 from pydantic import ValidationError as PydanticValidationError
-from src.auth.service import AuthService
+from src.core.security import AuthService
 
 
 class TestCourseManagement:

@@ -52,7 +52,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     """Get current user from JWT token"""
     try:
         token = credentials.credentials
-        user_data = _auth_service.decode_token(token)
+        user_data = _auth_service.verify_token(token)
         # Convert TokenData to dictionary
         return user_data.model_dump()
     except Exception:

@@ -1,315 +1,247 @@
-from fastapi import FastAPI, Request, HTTPException, status
+"""
+FastAPI Application for Edu-Flow Backend
+
+This module initializes the FastAPI application with all necessary components:
+- API endpoints
+- Database connections
+- Security middleware
+- CORS configuration
+- Error handling
+- Health checks
+
+Author: Edu-Flow Team
+"""
+
+import uvicorn
+import uuid
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 import time
-from typing import Dict, Any
-from .core.exceptions import AuthenticationError, ValidationError, NotFoundError, ForbiddenError
+from typing import Optional
+from contextlib import asynccontextmanager
 
-# Initialize FastAPI app
+from src.core.exceptions import (
+    BaseError, ValidationError, NotFoundError, AuthenticationError,
+    AuthorizationError, ForbiddenError, ConflictError, DatabaseError,
+    ExternalServiceError, RateLimitError, ConfigurationError
+)
+from src.core.security import auth_service
+from src.config.settings import settings
+from src.services.database_service import database_service, initialize_database
+from src.api.v1.endpoints.auth import router as auth_router
+from src.services.user_service import UserService
+
+# Application lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan context manager"""
+    # Startup
+    app.state.startup_time = time.time()
+    try:
+        # Connect to database and initialize
+        db = await database_service.connect()
+        app.state.database = db
+        success = await initialize_database()
+        if success:
+            print("✅ Database connected and initialized successfully")
+        else:
+            print("❌ Database initialization failed")
+    except Exception as e:
+        print(f"❌ Database startup error: {e}")
+    
+    yield
+    
+    # Shutdown
+    app.state.shutdown_time = time.time()
+    try:
+        await database_service.disconnect()
+        print("✅ Database disconnected successfully")
+    except Exception as e:
+        print(f"❌ Database shutdown error: {e}")
+
+# Create FastAPI app with lifespan
 app = FastAPI(
     title="Edu-Flow API",
-    description="Authentication and User Management Service for Edu-Flow Institution Accreditation System",
+    description="Education Management System API",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
-# Configure middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
 )
 
-app.add_middleware(GZipMiddleware)
+# Add GZip compression middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    """Add security headers to responses"""
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    return response
+# Add security headers middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Response
 
-# Initialize services
-from src.services.user_service import UserService
-from src.api.v1.endpoints.users import router as users_router
-from src.api.v1.endpoints.course_router import router as courses_router
-from src.api.v1.endpoints.students import router as students_router
-from src.core.security import AuthService
-from src.core.services import auth_service, user_service, get_student_service
-
-# Use a consistent secret key for testing
-SECRET_KEY = "your-secret-key-here-in-production-use-environment-variable"
-ALGORITHM = "HS256"
-
-# Set the user service in auth service
-auth_service.user_service = user_service
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure this properly in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Request middleware for logging
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start_time = time.time()
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers to all responses"""
     
-    # Log request
-    print(f"Request: {request.method} {request.url}")
-    
-    response = await call_next(request)
-    
-    # Log response
-    process_time = time.time() - start_time
-    print(f"Response: {response.status_code} - {process_time:.4f}s")
-    
-    return response
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # Add security headers
+        response.headers["x-content-type-options"] = "nosniff"
+        response.headers["x-frame-options"] = "DENY"
+        response.headers["x-xss-protection"] = "1; mode=block"
+        response.headers["strict-transport-security"] = "max-age=31536000; includeSubDomains"
+        response.headers["content-security-policy"] = "default-src 'self'"
+        return response
 
-# Global exception handlers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Import response handler
+from src.core.response_handler import ResponseFormatter
+
+# Custom exception handlers using standardized response format
+@app.exception_handler(BaseError)
+async def base_exception_handler(request: Request, exc: BaseError):
+    """Custom HTTP exception handler"""
+    request_id = getattr(request.state, 'request_id', None)
+    return ResponseFormatter.error(
+        message=exc.message,
+        error_code=exc.error_code,
+        status_code=exc.status_code,
+        details=exc.details,
+        request_id=request_id
+    )
+
 @app.exception_handler(AuthenticationError)
 async def auth_exception_handler(request: Request, exc: AuthenticationError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
+    """Authentication error handler"""
+    return ResponseFormatter.unauthorized(
+        message=exc.message,
+        details=exc.details
+    )
+
+@app.exception_handler(AuthorizationError)
+async def authorization_exception_handler(request: Request, exc: AuthorizationError):
+    """Authorization error handler"""
+    return ResponseFormatter.forbidden(
+        message=exc.message,
+        details=exc.details
     )
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
+    """Validation error handler"""
+    return ResponseFormatter.bad_request(
+        message=exc.message,
+        details=exc.details
     )
 
 @app.exception_handler(NotFoundError)
 async def not_found_exception_handler(request: Request, exc: NotFoundError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
+    """Not found error handler"""
+    return ResponseFormatter.not_found(
+        message=exc.message,
+        details=exc.details
     )
 
 @app.exception_handler(ForbiddenError)
 async def forbidden_exception_handler(request: Request, exc: ForbiddenError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
+    """Forbidden error handler"""
+    return ResponseFormatter.forbidden(
+        message=exc.message,
+        details=exc.details
     )
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail},
+    """Custom HTTP exception handler"""
+    return ResponseFormatter.error(
+        message=str(exc.detail),
+        status_code=exc.status_code
     )
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"error": "Internal server error"},
+    """General exception handler"""
+    request_id = getattr(request.state, 'request_id', None)
+    return ResponseFormatter.error(
+        message="Internal server error",
+        error_code="INTERNAL_ERROR",
+        status_code=500,
+        details={"original_error": str(exc)} if str(exc) != "Internal server error" else None,
+        request_id=request_id
     )
 
-# Health check endpoint
+# Initialize user service and attach to auth service
+from src.services.user_service import UserService
+user_service = UserService()
+from src.core.security import auth_service as global_auth_service
+global_auth_service.user_service = user_service
+
+# Include API routers
+app.include_router(auth_router, prefix="/api/v1")
+
+# Import and include other API routers
+from src.api.v1.endpoints.students import router as students_router
+app.include_router(students_router, prefix="/api/v1")
+
+# Add request ID tracking to request state for all endpoints
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    """Add request ID to all requests"""
+    request.state.request_id = str(uuid.uuid4())
+    response = await call_next(request)
+    # Add request ID to headers
+    response.headers["x-request-id"] = request.state.request_id
+    return response
+
+# API endpoints
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return ResponseFormatter.success({
+        "message": "Edu-Flow Backend API",
+        "version": "1.0.0",
+        "docs_url": "/docs",
+        "uptime": time.time() - app.state.startup_time
+    })
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "message": "Authentication service is running"}
+    return ResponseFormatter.success({
+        "status": "healthy",
+        "timestamp": time.time(),
+        "uptime": time.time() - app.state.startup_time
+    })
 
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint"""
+@app.get("/api/v1/info")
+async def api_info():
+    """API information endpoint"""
     return {
-        "message": "Edu-Flow Authentication API",
+        "name": "Edu-Flow Backend API",
         "version": "1.0.0",
-        "docs": "/docs",
-        "health": "/health"
+        "description": "Backend API for Edu-Flow Institution Management System",
+        "endpoints": {
+            "auth": "/api/v1/auth",
+            "users": "/api/v1/users",
+            "students": "/api/v1/students",
+            "courses": "/api/v1/courses",
+            "teachers": "/api/v1/teachers"
+        }
     }
-
-# Authentication endpoints
-@app.post("/api/v1/auth/register")
-async def register_user(user_data: Dict[str, Any]):
-    """
-    Register a new user
-    
-    Args:
-        user_data: Dictionary containing user information
-            - email (str): User email address
-            - password (str): User password
-            - name (str): User name
-            - role (str): User role (admin, teacher, student)
-    
-    Returns:
-        Dictionary with user ID and tokens
-    """
-    try:
-        user_id = auth_service.register_user(user_data)
-        
-        # Generate tokens
-        tokens = auth_service.login_user({
-            "email": user_data["email"],
-            "password": user_data["password"]
-        })
-        
-        return {
-            "message": "User registered successfully",
-            "user_id": user_id,
-            **tokens
-        }
-    except (AuthenticationError, ValidationError) as e:
-        raise e
-    except KeyError as e:
-        raise HTTPException(status_code=400, detail=f"Missing required field: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/auth/login")
-async def login_user(login_data: Dict[str, Any]):
-    """
-    User login endpoint
-    
-    Args:
-        login_data: Dictionary containing login credentials
-            - email (str): User email address
-            - password (str): User password
-    
-    Returns:
-        Dictionary with access and refresh tokens
-    """
-    try:
-        tokens = auth_service.login_user(login_data)
-        return {
-            "message": "Login successful",
-            **tokens
-        }
-    except AuthenticationError as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/auth/logout")
-async def logout_user(request: Request):
-    """
-    User logout endpoint
-    
-    Args:
-        request: HTTP request containing Authorization header with Bearer token
-    
-    Returns:
-        Dictionary with logout confirmation
-    """
-    # Get token from Authorization header
-    auth_header = request.headers.get("authorization")
-    if not auth_header:
-        raise AuthenticationError("Authorization header missing")
-    
-    try:
-        token = auth_header.split(" ")[1]
-        auth_service.logout_user(token)
-        
-        return {"message": "Logout successful"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/auth/refresh")
-async def refresh_token(refresh_data: Dict[str, Any]):
-    """
-    Refresh access token endpoint
-    
-    Args:
-        refresh_data: Dictionary containing refresh token
-            - refresh_token (str): Refresh token
-    
-    Returns:
-        Dictionary with new access token
-    """
-    if not refresh_data.get("refresh_token"):
-        raise ValidationError("Refresh token is required")
-    
-    try:
-        new_tokens = auth_service.refresh_tokens(refresh_data["refresh_token"])
-        return {
-            "message": "Token refreshed successfully",
-            **new_tokens
-        }
-    except AuthenticationError as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/auth/reset-password")
-async def initiate_password_reset(reset_data: Dict[str, Any]):
-    """
-    Initiate password reset endpoint
-    
-    Args:
-        reset_data: Dictionary containing email
-            - email (str): User email address
-    
-    Returns:
-        Dictionary with reset token
-    """
-    if not reset_data.get("email"):
-        raise ValidationError("Email is required")
-    
-    try:
-        result = auth_service.initiate_password_reset(reset_data["email"])
-        return result
-    except (AuthenticationError, ValidationError) as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/api/v1/auth/confirm-reset")
-async def confirm_password_reset(reset_data: Dict[str, Any]):
-    """
-    Confirm password reset endpoint
-    
-    Args:
-        reset_data: Dictionary containing reset token and new password
-            - reset_token (str): Password reset token
-            - new_password (str): New password
-            - confirm_password (str): Confirm new password
-    
-    Returns:
-        Dictionary with reset confirmation
-    """
-    try:
-        result = auth_service.confirm_password_reset(
-            reset_data["reset_token"],
-            reset_data["new_password"],
-            reset_data["confirm_password"]
-        )
-        return result
-    except (AuthenticationError, ValidationError) as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 # Protected endpoints requiring authentication
 @app.get("/api/v1/users/me")
 async def get_current_user(request: Request):
-    """
-    Get current user information
-    
-    Args:
-        request: HTTP request containing Authorization header with Bearer token
-    
-    Returns:
-        Dictionary with current user information
-    """
+    """Get current user information"""
     auth_header = request.headers.get("authorization")
     if not auth_header:
         raise AuthenticationError("Authorization header missing")
@@ -333,15 +265,7 @@ async def get_current_user(request: Request):
 
 @app.get("/api/v1/teachers/me")
 async def get_teacher_profile(request: Request):
-    """
-    Get teacher profile information
-    
-    Args:
-        request: HTTP request containing Authorization header with Bearer token
-    
-    Returns:
-        Dictionary with teacher profile information
-    """
+    """Get teacher profile information"""
     auth_header = request.headers.get("authorization")
     if not auth_header:
         raise AuthenticationError("Authorization header missing")
@@ -366,15 +290,7 @@ async def get_teacher_profile(request: Request):
 
 @app.get("/api/v1/admin/dashboard")
 async def get_admin_dashboard(request: Request):
-    """
-    Get admin dashboard information
-    
-    Args:
-        request: HTTP request containing Authorization header with Bearer token
-    
-    Returns:
-        Dictionary with admin dashboard information
-    """
+    """Get admin dashboard information"""
     auth_header = request.headers.get("authorization")
     if not auth_header:
         raise AuthenticationError("Authorization header missing")
@@ -400,12 +316,7 @@ async def get_admin_dashboard(request: Request):
 # Endpoint to get password strength requirements
 @app.get("/api/v1/auth/password-requirements")
 async def get_password_requirements():
-    """
-    Get password strength requirements
-    
-    Returns:
-        Dictionary with password requirements
-    """
+    """Get password strength requirements"""
     return {
         "requirements": {
             "min_length": 8,
@@ -421,31 +332,155 @@ async def get_password_requirements():
 # Endpoint to get available user roles
 @app.get("/api/v1/auth/roles")
 async def get_available_roles():
-    """
-    Get available user roles
-    
-    Returns:
-        Dictionary with available roles
-    """
+    """Get available user roles"""
     return {
         "roles": ["admin", "teacher", "student", "staff"],
         "message": "Available roles retrieved successfully"
     }
 
-# Inject auth service into student endpoints
-def get_auth_service():
-    """Dependency to get auth service"""
-    return auth_service
+# Include API routers (these will be populated as we create more endpoints)
+# app.include_router(users_router, prefix="/api/v1")
+# app.include_router(courses_router, prefix="/api/v1") 
+# app.include_router(students_router, prefix="/api/v1")
 
-def get_student_service():
-    """Dependency to get student service"""
-    return StudentService(auth_service)
+# Database endpoints
+@app.get("/api/v1/database/health")
+async def database_health_check():
+    """Database health check endpoint"""
+    try:
+        health = await database_service.health_check()
+        return {
+            "status": "healthy",
+            "database": health,
+            "message": "Database connection successful"
+        }
+    except Exception as e:
+        raise DatabaseError(f"Database health check failed: {e}")
 
-# Include API endpoints with dependency injection
-app.include_router(users_router, prefix="/api/v1")
-app.include_router(courses_router, prefix="/api/v1")
-app.include_router(students_router, prefix="/api/v1")
+@app.post("/api/v1/database/initialize")
+async def initialize_database_endpoint():
+    """Initialize database with default data"""
+    try:
+        success = await initialize_database()
+        if success:
+            return {
+                "status": "success",
+                "message": "Database initialized successfully",
+                "timestamp": time.time()
+            }
+        else:
+            raise DatabaseError("Database initialization failed")
+    except Exception as e:
+        raise DatabaseError(f"Database initialization failed: {e}")
 
+@app.get("/api/v1/database/collections")
+async def get_database_collections():
+    """Get database collection information"""
+    try:
+        collections = {}
+        for collection_name in ['users', 'courses', 'departments', 'enrollments', 'assessments']:
+            try:
+                count = await database_service.count_documents(collection_name, {})
+                collections[collection_name] = count
+            except Exception as e:
+                collections[collection_name] = f"Error: {e}"
+        
+        return {
+            "collections": collections,
+            "total_collections": len(collections),
+            "message": "Collection information retrieved successfully"
+        }
+    except Exception as e:
+        raise DatabaseError(f"Failed to get collection information: {e}")
+
+@app.get("/api/v1/database/departments")
+async def get_departments():
+    """Get all departments"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Debug: Check database service state
+        logger.debug(f"Database service state - db: {database_service.db}")
+        logger.debug(f"Database service state - client: {database_service.client}")
+        
+        departments = await database_service.find_many("departments", {})
+        return {
+            "departments": departments,
+            "count": len(departments),
+            "message": "Departments retrieved successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error in get_departments: {e}")
+        raise DatabaseError(f"Failed to get departments: {e}")
+
+@app.post("/api/v1/database/departments")
+async def create_department(department_data: dict):
+    """Create a new department"""
+    try:
+        # Validate required fields
+        required_fields = ["department_id", "name", "code", "description"]
+        for field in required_fields:
+            if field not in department_data:
+                raise ValidationError(f"Missing required field: {field}")
+        
+        # Check if department already exists
+        existing = await database_service.find_one("departments", {"department_id": department_data["department_id"]})
+        if existing:
+            raise ConflictError("Department with this ID already exists")
+        
+        department_id = await database_service.insert_one("departments", department_data)
+        return {
+            "status": "success",
+            "department_id": department_id,
+            "message": "Department created successfully"
+        }
+    except Exception as e:
+        raise DatabaseError(f"Failed to create department: {e}")
+
+@app.get("/api/v1/database/courses")
+async def get_courses():
+    """Get all courses"""
+    try:
+        courses = await database_service.find_many("courses", {})
+        return {
+            "courses": courses,
+            "count": len(courses),
+            "message": "Courses retrieved successfully"
+        }
+    except Exception as e:
+        raise DatabaseError(f"Failed to get courses: {e}")
+
+@app.post("/api/v1/database/courses")
+async def create_course(course_data: dict):
+    """Create a new course"""
+    try:
+        # Validate required fields
+        required_fields = ["course_id", "title", "code", "department_id", "level", "credits"]
+        for field in required_fields:
+            if field not in course_data:
+                raise ValidationError(f"Missing required field: {field}")
+        
+        # Check if course already exists
+        existing = await database_service.find_one("courses", {"code": course_data["code"]})
+        if existing:
+            raise ConflictError("Course with this code already exists")
+        
+        course_id = await database_service.insert_one("courses", course_data)
+        return {
+            "status": "success",
+            "course_id": course_id,
+            "message": "Course created successfully"
+        }
+    except Exception as e:
+        raise DatabaseError(f"Failed to create course: {e}")
+
+# Start the application
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        "main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
+        log_level="info"
+    )

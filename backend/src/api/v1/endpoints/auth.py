@@ -1,32 +1,22 @@
-"""
-Authentication API Endpoints
+"""Authentication endpoints including login, logout, and JWT management."""
 
-This module provides REST API endpoints for authentication operations:
-- User registration
-- User login
-- User logout
-- Token refresh
-- Password reset
-- User authentication validation
-
-Author: Edu-Flow Team
-"""
-
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from datetime import timedelta
+from typing import Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, field_validator
-
-from src.core.security import AuthService
-from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
+from src.core.security import AuthService, TokenData
+from src.core.exceptions import AuthenticationError, ValidationError
+from src.core.response_handler import ResponseFormatter
+from src.config.settings import settings
 from src.services.user_service import UserService
 
-# Create router
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 
-# Security
+# Security scheme for authentication
 security = HTTPBearer()
+
+# User service is attached to global auth service in main.py
 
 # Base models
 class UserRegistrationRequest(BaseModel):
@@ -43,6 +33,7 @@ class UserRegistrationRequest(BaseModel):
             raise ValueError('Password must be at least 8 characters')
         return v
 
+# Response models
 class UserRegistrationResponse(BaseModel):
     """User registration response model"""
     user_id: str
@@ -50,6 +41,8 @@ class UserRegistrationResponse(BaseModel):
     name: str
     role: str
     message: str
+    access_token: str
+    refresh_token: str
 
 class LoginRequest(BaseModel):
     """Login request model"""
@@ -71,6 +64,8 @@ class TokenRefreshRequest(BaseModel):
 class TokenRefreshResponse(BaseModel):
     """Token refresh response model"""
     access_token: str
+    refresh_token: str
+    token_type: str
     expires_in: int
 
 class PasswordResetRequest(BaseModel):
@@ -86,10 +81,40 @@ class PasswordResetRequest(BaseModel):
             raise ValueError('New password must be at least 8 characters')
         return v
 
-# Mock services (these should be properly injected in a real app)
-user_service = UserService()
-auth_service = AuthService()
-auth_service.user_service = user_service
+# Additional request/response models
+class PasswordChangeRequest(BaseModel):
+    """Password change request model"""
+    current_password: str
+    new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('New password must be at least 8 characters')
+        return v
+
+class PasswordResetConfirmRequest(BaseModel):
+    """Password reset confirmation request model"""
+    email: EmailStr
+    new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('New password must be at least 8 characters')
+        return v
+
+class TokenResponse(BaseModel):
+    """Token response model"""
+    access_token: str
+    refresh_token: str
+    token_type: str
+    expires_in: int
+
+# Import the global auth service
+from src.core.security import auth_service as global_auth_service
 
 # Endpoints
 
@@ -106,28 +131,37 @@ async def register_user(user_request: UserRegistrationRequest):
     Registers a new user and returns user information
     """
     try:
-        user_id = auth_service.create_user(
+        # Create user using the global auth service
+        result = global_auth_service.create_user(
             email=user_request.email,
             password=user_request.password,
             name=user_request.name,
             role=user_request.role
         )
         
-        # Generate tokens
-        tokens = auth_service.login_user({
-            "email": user_request.email,
-            "password": user_request.password
-        })
+        # Extract user_id from result
+        user_id = result.get("user_id", "")
         
-        return {
-            "message": "User registered successfully",
-            "user_id": user_id["user_id"],
-            **tokens
-        }
+        # Generate tokens for the newly created user
+        auth_result = global_auth_service.authenticate_user(
+            email=user_request.email,
+            password=user_request.password
+        )
+        
+        return ResponseFormatter.created({
+            "user_id": user_id,
+            "email": user_request.email,
+            "name": user_request.name,
+            "role": user_request.role,
+            "access_token": auth_result.get("access_token", ""),
+            "refresh_token": auth_result.get("refresh_token", "")
+        }, "User registered successfully")
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return ResponseFormatter.bad_request(e.message, e.details)
+    except AuthenticationError as e:
+        return ResponseFormatter.unauthorized(e.message, e.details)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return ResponseFormatter.error(str(e))
 
 @router.post("/login", response_model=LoginResponse)
 async def login_user(login_request: LoginRequest):
@@ -140,12 +174,34 @@ async def login_user(login_request: LoginRequest):
     Returns JWT tokens for authenticated users
     """
     try:
-        result = auth_service.login_user(login_request.dict())
-        return LoginResponse(**result)
+        print(f"DEBUG: Login request for {login_request.email}")
+        result = global_auth_service.login_user(login_request.model_dump())
+        print(f"DEBUG: Login result: {result}")
+        # Extract user info from nested structure to match LoginResponse expectations
+        user_info = result.get("user", {})
+        login_response = LoginResponse(
+            access_token=result["access_token"],
+            refresh_token=result["refresh_token"],
+            user_id=user_info.get("id", ""),
+            token_type=result["token_type"],
+            expires_in=30 * 60  # 30 minutes in seconds
+        )
+        return ResponseFormatter.success({
+            "access_token": login_response.access_token,
+            "refresh_token": login_response.refresh_token,
+            "token_type": login_response.token_type,
+            "user": {
+                "id": login_response.user_id,
+                "email": user_info.get("email", ""),
+                "name": user_info.get("name", ""),
+                "role": user_info.get("role", "")
+            },
+            "expires_in": login_response.expires_in
+        }, "User login successful")
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return ResponseFormatter.unauthorized(str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return ResponseFormatter.error(str(e))
 
 @router.post("/refresh", response_model=TokenRefreshResponse)
 async def refresh_token(request: TokenRefreshRequest):
@@ -157,12 +213,17 @@ async def refresh_token(request: TokenRefreshRequest):
     Returns new access token
     """
     try:
-        result = auth_service.refresh_token(request.refresh_token)
-        return TokenRefreshResponse(**result)
+        result = global_auth_service.refresh_tokens(request.refresh_token)
+        return ResponseFormatter.success({
+            "access_token": result["access_token"],
+            "refresh_token": result["refresh_token"],
+            "token_type": result["token_type"],
+            "expires_in": result["expires_in"]
+        }, "Token refreshed successfully")
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return ResponseFormatter.unauthorized(str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return ResponseFormatter.error(str(e))
 
 @router.post("/logout")
 async def logout_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -175,10 +236,10 @@ async def logout_user(credentials: HTTPAuthorizationCredentials = Depends(securi
     """
     try:
         token = credentials.credentials
-        auth_service.logout_user(token)
-        return {"message": "Successfully logged out"}
+        global_auth_service.logout_user(token)
+        return ResponseFormatter.success(None, "Successfully logged out")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return ResponseFormatter.error(str(e))
 
 @router.post("/password-reset")
 async def reset_password(password_reset: PasswordResetRequest):
@@ -192,18 +253,68 @@ async def reset_password(password_reset: PasswordResetRequest):
     Updates user password
     """
     try:
-        auth_service.reset_password(
+        global_auth_service.reset_password(
             email=password_reset.email,
             old_password=password_reset.old_password,
             new_password=password_reset.new_password
         )
-        return {"message": "Password successfully reset"}
+        return ResponseFormatter.success(None, "Password successfully reset")
     except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        return ResponseFormatter.unauthorized(str(e))
     except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return ResponseFormatter.bad_request(str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return ResponseFormatter.error(str(e))
+
+@router.post("/forgot-password")
+async def forgot_password(request: dict):
+    """
+    Forgot password endpoint
+    
+    - **email**: Valid email address
+    
+    Initiates password reset flow and returns reset token
+    """
+    try:
+        result = global_auth_service.initiate_password_reset(
+            email=request["email"],
+            user_service=global_auth_service.user_service
+        )
+        return ResponseFormatter.success({
+            "reset_token": result["reset_token"]
+        }, "Password reset initiated")
+    except AuthenticationError as e:
+        return ResponseFormatter.unauthorized(str(e))
+    except ValidationError as e:
+        return ResponseFormatter.bad_request(str(e))
+    except Exception as e:
+        return ResponseFormatter.error(str(e))
+
+@router.post("/confirm-password-reset")
+async def confirm_password_reset(request: dict):
+    """
+    Confirm password reset endpoint
+    
+    - **reset_token**: Valid reset token
+    - **new_password**: New password (minimum 8 characters)
+    - **confirm_password**: Confirm new password
+    
+    Confirms password reset with token
+    """
+    try:
+        success = global_auth_service.confirm_password_reset(
+            reset_token=request["reset_token"],
+            new_password=request["new_password"],
+            confirm_password=request["confirm_password"],
+            user_service=global_auth_service.user_service
+        )
+        return ResponseFormatter.success(None, "Password reset successfully")
+    except AuthenticationError as e:
+        return ResponseFormatter.unauthorized(str(e))
+    except ValidationError as e:
+        return ResponseFormatter.bad_request(str(e))
+    except Exception as e:
+        return ResponseFormatter.error(str(e))
 
 @router.get("/validate", response_model=Dict[str, Any])
 async def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -216,7 +327,7 @@ async def validate_token(credentials: HTTPAuthorizationCredentials = Depends(sec
     """
     try:
         token = credentials.credentials
-        user_data = auth_service.decode_token(token)
+        user_data = global_auth_service.decode_token(token)
         return {
             "valid": True,
             "user_id": user_data["user_id"],

@@ -12,13 +12,14 @@ from src.models.course import (
     CourseStatus, CourseLevel, CreditType, Semester, Grade
 )
 from src.core.exceptions import ValidationError, NotFoundError, UnauthorizedError
-from src.auth.service import AuthService
+from src.core.base_service import BaseService
+from src.core.security import auth_service
 
 
-class CourseService:
+class CourseService(BaseService):
     """Course management service."""
 
-    def __init__(self, auth_service: AuthService):
+    def __init__(self, auth_service=None):
         """Initialize course service."""
         self.auth_service = auth_service
         self.courses: Dict[str, Course] = {}
@@ -544,6 +545,81 @@ class CourseService:
             if p.prerequisite_course_id != prerequisite_course_id
         ]
         
+        course.updated_at = datetime.now(timezone)
+        
+        # Remove prerequisite
+        course.prerequisites = [
+            p for p in course.prerequisites 
+            if p.prerequisite_course_id != prerequisite_course_id
+        ]
+        
         course.updated_at = datetime.now(timezone.utc)
+        
+    # Abstract method implementations from BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new course."""
+        course_data = CourseCreate(**data)
+        course = Course(
+            **course_data.model_dump(exclude_unset=True),
+            course_id=str(uuid4()),
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        self.courses[course.course_id] = course
+        return course.model_dump()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a course by ID."""
+        course = self.courses.get(id)
+        return course.model_dump() if course else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a course by ID."""
+        if id not in self.courses:
+            raise NotFoundError(f"Course {id} not found")
+        
+        course = self.courses[id]
+        
+        # Update fields
+        for key, value in data.items():
+            if hasattr(course, key):
+                setattr(course, key, value)
+        
+        course.updated_at = datetime.now(timezone.utc)
+        return course.model_dump()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a course by ID."""
+        if id not in self.courses:
+            raise NotFoundError(f"Course {id} not found")
+        
+        course = self.courses[id]
+        course.is_active = False
+        course.updated_at = datetime.now(timezone.utc)
+        return True
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List courses with pagination and filtering."""
+        courses = list(self.courses.values())
+        
+        # Apply filters
+        if filters:
+            courses = self.search_courses(filters)
+        
+        # Apply pagination
+        start = skip
+        end = start + limit
+        paginated_courses = courses[start:end]
+        
+        return [course.model_dump() for course in paginated_courses]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count courses with optional filters."""
+        if filters:
+            courses = self.search_courses(filters)
+            return len(courses)
+        return len(self.courses)
         
         return f"Prerequisite removed successfully from course {course_id}"

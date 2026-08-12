@@ -20,7 +20,7 @@ SECRET_KEY = "your-secret-key-here-in-production-use-environment-variable"
 ALGORITHM = "HS256"
 
 # Initialize shared services
-auth_service = AuthService(secret_key=SECRET_KEY, algorithm=ALGORITHM)
+auth_service = AuthService()
 user_service = UserService()
 
 def get_student_service():
