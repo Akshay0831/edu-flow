@@ -87,6 +87,17 @@ class TestStudentTeacherIntegration:
         return repository
     
     @pytest.fixture
+    def mock_qualification_repository(self):
+        """Create mock qualification repository"""
+        repository = Mock()
+        repository.get_by_teacher_id = AsyncMock()
+        repository.create = AsyncMock()
+        repository.update = AsyncMock()
+        repository.delete = AsyncMock()
+        repository.get_by_id = AsyncMock()
+        return repository
+    
+    @pytest.fixture
     def student_service(self, mock_student_repository, mock_academic_record_repository, mock_enrollment_repository):
         """Create student service fixture"""
         return StudentService(
@@ -96,12 +107,11 @@ class TestStudentTeacherIntegration:
         )
     
     @pytest.fixture
-    def teacher_service(self, mock_teacher_repository, mock_course_repository, mock_enrollment_repository):
+    def teacher_service(self, mock_teacher_repository, mock_qualification_repository):
         """Create teacher service fixture"""
         return TeacherService(
             mock_teacher_repository,
-            mock_course_repository,
-            mock_enrollment_repository
+            mock_qualification_repository
         )
     
     @pytest.fixture

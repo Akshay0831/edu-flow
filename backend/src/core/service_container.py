@@ -190,7 +190,19 @@ class ServiceContainer:
     
     def get_service(self, name: str) -> Any:
         """Get a service instance (synchronous version of resolve)."""
-        return self._instances.get(name)
+        # Check if already resolved
+        if name in self._instances:
+            return self._instances[name]
+        if name in self._singletons:
+            return self._singletons[name].instance
+        
+        # Try to resolve if service exists
+        if name in self._services:
+            # For singletons, we can't resolve synchronously because factory might be async
+            # For now, return None and let the caller handle it
+            return None
+        
+        return None
     
     async def resolve(self, name: str) -> Any:
         """Resolve a service by name."""
@@ -485,7 +497,13 @@ async def configure_services(config: Dict[str, Any]):
             database=db_config.get('database', 'edu_flow'),
             username=db_config.get('username', 'user'),
             password=db_config.get('password', 'password'),
-            **db_config.get('options', {})
+            max_connections=db_config.get('max_connections', 10),
+            min_connections=db_config.get('min_connections', 1),
+            connection_timeout=db_config.get('connection_timeout', 30),
+            query_timeout=db_config.get('query_timeout', 30),
+            ssl_mode=db_config.get('ssl_mode', 'disable'),
+            pool_recycle=db_config.get('pool_recycle', 3600),
+            echo=db_config.get('echo', False)
         )
         
         # Initialize database manager first

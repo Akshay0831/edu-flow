@@ -11,7 +11,7 @@ from datetime import datetime, date
 from src.core.exceptions import ValidationError as CustomValidationError
 
 
-def validate_email(email: Optional[str]) -> bool:
+def validate_email(email: Optional[str]) -> str:
     """Validate email format."""
     if not isinstance(email, str):
         raise CustomValidationError("Email must be a string", field="email")
@@ -19,20 +19,20 @@ def validate_email(email: Optional[str]) -> bool:
         raise CustomValidationError("Email cannot be empty", field="email")
     if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         raise CustomValidationError("Invalid email format", field="email")
-    return True
+    return email
 
 
-def validate_phone(phone: Optional[str]) -> bool:
+def validate_phone(phone: Optional[str]) -> Optional[str]:
     """Validate phone number format."""
     if not phone:
-        return True  # Allow None/empty
+        return None  # Allow None/empty
     phone_clean = re.sub(r'[^+\d]', '', str(phone))
     if not re.match(r'^\+[1-9]\d{1,14}$', phone_clean):
         raise CustomValidationError("Invalid phone number format", field="phone")
-    return True
+    return phone_clean
 
 
-def validate_password(password: Optional[str]) -> bool:
+def validate_password(password: Optional[str]) -> str:
     """Validate password strength."""
     if not password:
         raise CustomValidationError("Password is required", field="password")
@@ -46,60 +46,89 @@ def validate_password(password: Optional[str]) -> bool:
         raise CustomValidationError("Password must contain at least one number", field="password")
     if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
         raise CustomValidationError("Password must contain at least one special character", field="password")
-    return True
+    return password
 
 
-def validate_text_length(text: str, max_length: int = 1000) -> bool:
+def validate_text_length(text: str, max_length: int = 1000) -> str:
     """Validate text length."""
     if not isinstance(text, str):
         raise CustomValidationError("Text must be a string", field="text")
     if len(text) > max_length:
         raise CustomValidationError(f"Text must be less than {max_length} characters", field="text")
-    return True
+    return text
 
 
-def validate_date(date_input: Union[str, datetime, date]) -> bool:
-    """Validate date format and ensure it's not in the future."""
-    if isinstance(date_input, str):
-        try:
-            parsed_date = datetime.strptime(date_input, '%Y-%m-%d').date()
-        except ValueError:
-            raise CustomValidationError("Date must be in YYYY-MM-DD format", field="date")
-    elif isinstance(date_input, datetime):
-        parsed_date = date_input.date()
-    elif isinstance(date_input, date):
-        parsed_date = date_input
+def validate_date(date_input: Union[str, datetime, date]) -> str:
+    """Validate date format and ensure it's not in the future. Returns the original string if valid."""
+    if isinstance(date_input, (datetime, date)):
+        # For date/datetime objects, convert back to YYYY-MM-DD format
+        parsed_date = date_input if isinstance(date_input, date) else date_input.date()
+        if parsed_date > date.today():
+            raise CustomValidationError("Date cannot be in the future", field="date")
+        return parsed_date.isoformat()
+    
+    elif isinstance(date_input, str):
+        # Try multiple date formats and return the original string if valid
+        date_formats = [
+            '%Y-%m-%d',  # 2023-06-15
+            '%m/%d/%Y',  # 06/15/2023
+            '%Y/%m/%d',  # 2023/06/15
+            '%B %d, %Y', # June 15, 2023
+            '%b %d, %Y', # Jun 15, 2023
+        ]
+        
+        for fmt in date_formats:
+            try:
+                parsed_date = datetime.strptime(date_input, fmt).date()
+                if parsed_date > date.today():
+                    raise CustomValidationError("Date cannot be in the future", field="date")
+                return date_input  # Return original string format
+            except ValueError:
+                continue
+        
+        raise CustomValidationError("Date must be in one of these formats: YYYY-MM-DD, MM/DD/YYYY, YYYY/MM/DD, Month DD, YYYY", field="date")
     else:
         raise CustomValidationError("Invalid date format", field="date")
-    
-    if parsed_date > date.today():
-        raise CustomValidationError("Date cannot be in the future", field="date")
-    return True
 
 
-def validate_student_id(student_id: str) -> bool:
+def validate_student_id(student_id: str) -> str:
     """Validate student ID format."""
     if not isinstance(student_id, str):
         raise CustomValidationError("Student ID must be a string", field="student_id")
-    if not re.match(r'^[A-Z]{2}\d{6}$', student_id):
-        raise CustomValidationError("Student ID must be in format: AA123456", field="student_id")
-    return True
+    # Accept both STU001 and AA123456 formats
+    if not (re.match(r'^[A-Z]{2,3}\d{3,6}$', student_id) or re.match(r'^STU\d{3,6}$', student_id)):
+        raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")
+    return student_id
 
 
-def validate_grade(grade: Union[str, int]) -> bool:
+def validate_grade(grade: Union[str, int]) -> str:
     """Validate grade format."""
     if not isinstance(grade, (str, int)):
         raise CustomValidationError("Grade must be a string or number", field="grade")
     
     grade_str = str(grade).upper()
-    valid_grades = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F']
+    valid_grades = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F', 'IP', 'IN', 'W', 'AU', 'NC', 'CR']
+    
+    # Handle numeric grades (convert to letter grades based on typical mapping)
+    if grade_str.isdigit():
+        numeric_grade = int(grade_str)
+        if numeric_grade >= 90:
+            grade_str = 'A'
+        elif numeric_grade >= 80:
+            grade_str = 'B'
+        elif numeric_grade >= 70:
+            grade_str = 'C'
+        elif numeric_grade >= 60:
+            grade_str = 'D'
+        else:
+            grade_str = 'F'
     
     if grade_str not in valid_grades:
         raise CustomValidationError(f"Grade must be one of: {', '.join(valid_grades)}", field="grade")
-    return True
+    return grade_str
 
 
-def validate_credits(credits: Union[str, int, float]) -> bool:
+def validate_credits(credits: Union[str, int, float]) -> float:
     """Validate credits format."""
     if not isinstance(credits, (str, int, float)):
         raise CustomValidationError("Credits must be a number", field="credits")
@@ -111,56 +140,75 @@ def validate_credits(credits: Union[str, int, float]) -> bool:
     except ValueError:
         raise CustomValidationError("Credits must be a valid number", field="credits")
     
-    return True
+    return credits_float
 
 
-def validate_course_prerequisites(prerequisites: Optional[List[str]]) -> bool:
-    """Validate course prerequisites format."""
+def validate_course_prerequisites(prerequisites: Optional[Union[str, List[str]]]) -> Optional[List[str]]:
+    """Validate course prerequisites format. Accepts individual course code or list of course codes."""
     if prerequisites is None:
-        return True
+        return None
     
+    # Handle individual course code string
+    if isinstance(prerequisites, str):
+        validate_course_code(prerequisites)
+        return [prerequisites]
+    
+    # Handle list of course codes
     if not isinstance(prerequisites, list):
-        raise CustomValidationError("Prerequisites must be a list", field="prerequisites")
+        raise CustomValidationError("Prerequisites must be a string or list", field="prerequisites")
     
     for prereq in prerequisites:
         if not isinstance(prereq, str):
             raise CustomValidationError("Each prerequisite must be a string", field="prerequisites")
-        if not re.match(r'^[A-Z]{2}\d{3}$', prereq):
-            raise CustomValidationError("Prerequisites must be in format: ABC123", field="prerequisites")
+        validate_course_code(prereq)
     
-    return True
+    return prerequisites
 
 
-def validate_department_head(department_head: Optional[str]) -> bool:
-    """Validate department head format."""
+def validate_department_head(department_head: Optional[str]) -> Optional[str]:
+    """Validate department head format. Accepts either employee ID or human-readable name."""
     if department_head is None:
-        return True
+        return None
     
     if not isinstance(department_head, str):
         raise CustomValidationError("Department head must be a string", field="department_head")
     
-    if not re.match(r'^[A-Z]{2}\d{6}$', department_head):
-        raise CustomValidationError("Department head must be a valid employee ID", field="department_head")
+    if not department_head.strip():
+        raise CustomValidationError("Department head cannot be empty", field="department_head")
     
-    return True
+    department_head = department_head.strip()
+    
+    # Check if it's an employee ID format (AB123456)
+    if re.match(r'^[A-Z]{2}\d{6}$', department_head):
+        return department_head
+    
+    # Check if it's a human-readable name format
+    # Allow both "Title FirstName LastName" and "LastName, Title" formats
+    name_pattern1 = r'^(Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.|Ph\.D\.|M\.D\.|MBA) [A-Z][a-z]+ [A-Z][a-z]+([,] (Ph\.D\.|M\.D\.|MBA))?$'  # Title FirstName LastName
+    name_pattern2 = r'^[A-Z][a-z]+ [A-Z][a-z]+, (Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.|Ph\.D\.|M\.D\.|MBA)$'  # LastName, Title
+    
+    if re.match(name_pattern1, department_head) or re.match(name_pattern2, department_head):
+        return department_head
+    
+    raise CustomValidationError("Department head must be either a valid employee ID (AB123456) or a properly formatted name (Dr. John Smith)", field="department_head")
 
 
-def validate_course_data(course_data: dict) -> bool:
+def validate_course_data(course_data: dict) -> dict:
     """Validate course data with cross-field validation."""
     if not isinstance(course_data, dict):
-        return False
+        raise CustomValidationError("Course data must be a dictionary", field="course_data")
     
     # Check required fields
     required_fields = ["title", "code", "department_id", "level"]
     for field in required_fields:
         if field not in course_data:
-            return False
+            raise CustomValidationError(f"Required field '{field}' is missing", field="course_data")
     
     # Validate course code format
     if not isinstance(course_data["code"], str):
-        return False
+        raise CustomValidationError("Course code must be a string", field="code")
     if not re.match(r'^[A-Z]{2,3}\d{3,4}$', course_data["code"]):
-        return False
+        raise CustomValidationError("Course code must be in format: ABC123", field="code")
     
     # Cross-field validation: course code should match department
     code = course_data["code"].upper()
@@ -179,14 +227,14 @@ def validate_course_data(course_data: dict) -> bool:
         if department == dept:
             # Check if course code starts with any of the expected prefixes
             if not any(code.startswith(prefix) for prefix in prefixes):
-                return False
+                raise CustomValidationError("Course code prefix does not match department", field="course_data")
     
     # Validate level field
     valid_levels = ["beginner", "intermediate", "advanced"]
     if course_data["level"].lower() not in valid_levels:
-        return False
+        raise CustomValidationError(f"Level must be one of: {', '.join(valid_levels)}", field="level")
     
-    return True
+    return course_data
 
 
 def sanitize_input(input_text: str) -> str:
@@ -220,3 +268,128 @@ def sanitize_input(input_text: str) -> str:
     
     # Strip whitespace
     return sanitized.strip()
+
+
+class CommonValidators:
+    """Common validation functions that can be used across the application."""
+    
+    @staticmethod
+    def validate_email(email: Optional[str]) -> str:
+        """Validate email format."""
+        return validate_email(email)
+    
+    @staticmethod
+    def validate_phone(phone: Optional[str]) -> Optional[str]:
+        """Validate phone number format."""
+        return validate_phone(phone)
+    
+    @staticmethod
+    def validate_password(password: Optional[str]) -> str:
+        """Validate password strength."""
+        return validate_password(password)
+    
+    @staticmethod
+    def validate_grade(grade: Union[str, int]) -> str:
+        """Validate grade format."""
+        return validate_grade(grade)
+    
+    @staticmethod
+    def validate_credits(credits: Union[str, int, float]) -> float:
+        """Validate credits format."""
+        return validate_credits(credits)
+    
+    @staticmethod
+    def validate_student_id(student_id: str) -> str:
+        """Validate student ID format."""
+        return validate_student_id(student_id)
+    
+    @staticmethod
+    def validate_date(date_input: Union[str, datetime, date]) -> date:
+        """Validate date format and ensure it's not in the future."""
+        return validate_date(date_input)
+    
+    @staticmethod
+    def validate_course_code(course_code: str) -> bool:
+        """Validate course code format."""
+        if not isinstance(course_code, str):
+            raise CustomValidationError("Course code must be a string", field="course_code")
+        if not re.match(r'^[A-Z]{2,4}\d{3,5}$', course_code):
+            raise CustomValidationError("Course code must be in format: ABC123", field="course_code")
+        return True
+        """Validate course prerequisites format."""
+        return validate_course_prerequisites(prerequisites)
+    
+    @staticmethod
+    def validate_department_head(department_head: Optional[str]) -> Optional[str]:
+        """Validate department head format."""
+        return validate_department_head(department_head)
+    
+    @staticmethod
+    def validate_text_length(text: str, max_length: int = 1000) -> str:
+        """Validate text length."""
+        return validate_text_length(text, max_length)
+    
+    @staticmethod
+    def sanitize_input(input_text: str) -> str:
+        """Basic XSS and SQL injection prevention."""
+        return sanitize_input(input_text)
+    
+    @staticmethod
+    def validate_course_data(course_data: dict) -> dict:
+        """Validate course data with cross-field validation."""
+        return validate_course_data(course_data)
+    
+    @staticmethod
+    def validate_student_id(student_id: str) -> str:
+        """Validate student ID format."""
+        if not isinstance(student_id, str):
+            raise CustomValidationError("Student ID must be a string", field="student_id")
+        # Accept both STU001 and AA123456 formats
+        if not (re.match(r'^[A-Z]{2,3}\d{3,6}$', student_id) or re.match(r'^STU\d{3,6}$', student_id)):
+            raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")
+        return student_id
+
+
+# Standalone validation functions
+def validate_course_code(course_code: str) -> bool:
+    """Validate course code format."""
+    if not isinstance(course_code, str):
+        raise CustomValidationError("Course code must be a string", field="course_code")
+    if not course_code.strip():
+        raise CustomValidationError("Course code must be at least 3 characters", field="course_code")
+    
+    # Allow formats: CS101, ABC123, CS101H, CS101A, CS101-01, CS-101, CS-101H, CS-101A, CS-101-01
+    course_code = course_code.strip()
+    
+    # More specific patterns to avoid CS1000 (4 digits after letters)
+    if re.match(r'^[A-Z]{2,4}-[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS-101 format (department-prefix + course)
+        return True
+    elif re.match(r'^[A-Z]{2,4}-\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS-101 format (letters + dash + numbers)
+        return True
+    elif re.match(r'^[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS101 format (letters + numbers)
+        return True
+    else:
+        raise CustomValidationError("Course code must be in format: ABC123", field="course_code")
+    return True
+
+
+def validate_student_id(student_id: str) -> str:
+    """Validate student ID format."""
+    if not isinstance(student_id, str):
+        raise CustomValidationError("Student ID must be a string", field="student_id")
+    if not student_id.strip():
+        raise CustomValidationError("Student ID must be at least 4 characters", field="student_id")
+    
+    # Accept formats: STU001, AA123456, STU123, ABC12345
+    # More specific patterns: STU001 (3 letters + 3+ digits) or AA123456 (2-3 letters + 6+ digits)
+    if re.match(r'^[A-Z]{3}\d{3,5}$', student_id) and len(student_id) >= 6:
+        # STU001 format (exactly 3 letters + 3+ digits, minimum 6 chars)
+        return student_id
+    elif re.match(r'^[A-Z]{2,3}\d{5,6}$', student_id) and len(student_id) >= 6:
+        # AA123456 format (2-3 letters + 5-6 digits, minimum 6 chars)
+        return student_id
+    else:
+        raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")

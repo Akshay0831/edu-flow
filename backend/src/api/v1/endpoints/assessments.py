@@ -16,9 +16,9 @@ from datetime import datetime
 import logging
 
 from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from src.core.security import verify_token
+from src.core.security import AuthService
 from src.core.response_handler import ResponseFormatter
-from src.services.base_service import AssessmentService, get_assessment_service
+
 
 router = APIRouter()
 security = HTTPBearer()

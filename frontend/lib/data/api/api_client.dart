@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:edu_flow/config/app_config.dart';
 import 'package:edu_flow/core/exceptions/api_exceptions.dart';
 
@@ -11,11 +12,18 @@ class ApiClient {
   
   final AppConfig _config = AppConfig.instance;
   final http.Client _client = http.Client();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   
   // Request timeout
   static const Duration _timeout = Duration(seconds: 30);
   
-  // Headers for all requests
+  // Token management
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _userRoleKey = 'user_role';
+  static const String _userIdKey = 'user_id';
+  
+  // Get headers for requests
   Map<String, String> _getHeaders({bool isAuthRequired = false}) {
     final headers = {
       'Content-Type': 'application/json',
@@ -24,7 +32,6 @@ class ApiClient {
     };
     
     if (isAuthRequired) {
-      // Add authorization header if available
       final token = _getAuthToken();
       if (token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
@@ -34,136 +41,235 @@ class ApiClient {
     return headers;
   }
   
-  // Get authentication token from storage
-  String _getAuthToken() {
-    // This should be implemented with secure storage
-    return ''; // Return empty for now, implement actual token retrieval
+  // Get authentication token from secure storage
+  Future<String> _getAuthToken() async {
+    try {
+      return await _secureStorage.read(key: _accessTokenKey) ?? '';
+    } catch (e) {
+      return '';
+    }
   }
   
-  // Save authentication token
-  void _saveAuthToken(String token) {
-    // This should be implemented with secure storage
-    // For now, just store in memory
+  // Get refresh token from secure storage
+  Future<String> _getRefreshToken() async {
+    try {
+      return await _secureStorage.read(key: _refreshTokenKey) ?? '';
+    } catch (e) {
+      return '';
+    }
   }
   
-  // Generic GET request
+  // Save authentication tokens to secure storage
+  Future<void> _saveAuthToken(String accessToken, {String? refreshToken}) async {
+    try {
+      await _secureStorage.write(key: _accessTokenKey, value: accessToken);
+      if (refreshToken != null) {
+        await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
+      }
+    } catch (e) {
+      throw ApiException(message: 'Failed to save auth token: $e');
+    }
+  }
+  
+  // Save user role to secure storage
+  Future<void> _saveUserRole(String role) async {
+    try {
+      await _secureStorage.write(key: _userRoleKey, value: role);
+    } catch (e) {
+      throw ApiException(message: 'Failed to save user role: $e');
+    }
+  }
+  
+  // Get user role from secure storage
+  Future<String> _getUserRole() async {
+    try {
+      return await _secureStorage.read(key: _userRoleKey) ?? '';
+    } catch (e) {
+      return '';
+    }
+  }
+  
+  // Refresh access token
+  Future<String> _refreshAccessToken() async {
+    try {
+      final refreshToken = await _getRefreshToken();
+      if (refreshToken.isEmpty) {
+        throw ApiException(message: 'No refresh token available');
+      }
+      
+      final response = await _client.post(
+        Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}/auth/refresh'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'refresh_token': refreshToken}),
+        timeout: _timeout,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final newAccessToken = data['access_token'];
+        final newRefreshToken = data['refresh_token'];
+        
+        if (newAccessToken != null) {
+          await _saveAuthToken(newAccessToken, refreshToken: newRefreshToken);
+          return newAccessToken;
+        }
+        
+        throw ApiException(message: 'Failed to refresh token: No access token returned');
+      } else {
+        throw ApiException(message: 'Token refresh failed', statusCode: response.statusCode);
+      }
+    } catch (e) {
+      // If refresh fails, clear stored tokens and throw
+      await _clearAuthTokens();
+      throw ApiException(message: 'Token refresh failed: ${e.toString()}');
+    }
+  }
+  
+  // Clear authentication tokens
+  Future<void> _clearAuthTokens() async {
+    try {
+      await _secureStorage.delete(key: _accessTokenKey);
+      await _secureStorage.delete(key: _refreshTokenKey);
+      await _secureStorage.delete(key: _userRoleKey);
+      await _secureStorage.delete(key: _userIdKey);
+    } catch (e) {
+      throw ApiException(message: 'Failed to clear auth tokens: $e');
+    }
+  }
+  
+  // Generic GET request with automatic token refresh
   Future<Map<String, dynamic>> get(
     String endpoint, {
     bool isAuthRequired = true,
     Map<String, String>? queryParams,
   }) async {
-    try {
-      final url = Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}$endpoint');
-      
-      if (queryParams != null) {
-        url.queryParameters.addAll(queryParams);
-      }
-      
-      final response = await _client.get(
-        url,
-        headers: _getHeaders(isAuthRequired: isAuthRequired),
-        timeout: _timeout,
-      );
-      
-      return _handleResponse(response);
-    } on http.ClientException catch (e) {
-      throw ApiException(
-        message: 'Network error: ${e.message}',
-        statusCode: -1,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Request failed: $e',
-        statusCode: -1,
-      );
-    }
+    return _makeRequest(
+      'GET',
+      endpoint,
+      isAuthRequired: isAuthRequired,
+      queryParams: queryParams,
+    );
   }
   
-  // Generic POST request
+  // Generic POST request with automatic token refresh
   Future<Map<String, dynamic>> post(
     String endpoint, {
     required Map<String, dynamic> data,
     bool isAuthRequired = true,
   }) async {
-    try {
-      final url = Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}$endpoint');
-      
-      final response = await _client.post(
-        url,
-        headers: _getHeaders(isAuthRequired: isAuthRequired),
-        body: jsonEncode(data),
-        timeout: _timeout,
-      );
-      
-      return _handleResponse(response);
-    } on http.ClientException catch (e) {
-      throw ApiException(
-        message: 'Network error: ${e.message}',
-        statusCode: -1,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Request failed: $e',
-        statusCode: -1,
-      );
-    }
+    return _makeRequest(
+      'POST',
+      endpoint,
+      data: data,
+      isAuthRequired: isAuthRequired,
+    );
   }
   
-  // Generic PUT request
+  // Generic PUT request with automatic token refresh
   Future<Map<String, dynamic>> put(
     String endpoint, {
     required Map<String, dynamic> data,
     bool isAuthRequired = true,
   }) async {
-    try {
-      final url = Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}$endpoint');
-      
-      final response = await _client.put(
-        url,
-        headers: _getHeaders(isAuthRequired: isAuthRequired),
-        body: jsonEncode(data),
-        timeout: _timeout,
-      );
-      
-      return _handleResponse(response);
-    } on http.ClientException catch (e) {
-      throw ApiException(
-        message: 'Network error: ${e.message}',
-        statusCode: -1,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Request failed: $e',
-        statusCode: -1,
-      );
-    }
+    return _makeRequest(
+      'PUT',
+      endpoint,
+      data: data,
+      isAuthRequired: isAuthRequired,
+    );
   }
   
-  // Generic DELETE request
+  // Generic DELETE request with automatic token refresh
   Future<Map<String, dynamic>> delete(
     String endpoint, {
     bool isAuthRequired = true,
   }) async {
-    try {
-      final url = Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}$endpoint');
-      
-      final response = await _client.delete(
-        url,
-        headers: _getHeaders(isAuthRequired: isAuthRequired),
-        timeout: _timeout,
-      );
-      
-      return _handleResponse(response);
-    } on http.ClientException catch (e) {
-      throw ApiException(
-        message: 'Network error: ${e.message}',
-        statusCode: -1,
-      );
-    } catch (e) {
-      throw ApiException(
-        message: 'Request failed: $e',
-        statusCode: -1,
-      );
+    return _makeRequest(
+      'DELETE',
+      endpoint,
+      isAuthRequired: isAuthRequired,
+    );
+  }
+  
+  // Make request with automatic token refresh
+  Future<Map<String, dynamic>> _makeRequest(
+    String method,
+    String endpoint, {
+    required bool isAuthRequired,
+    Map<String, dynamic>? data,
+    Map<String, String>? queryParams,
+  }) async {
+    int retryCount = 0;
+    const int maxRetries = 1;
+    
+    while (true) {
+      try {
+        final url = Uri.parse('${_config.apiBaseUrl}${_config.apiVersion}$endpoint');
+        
+        if (queryParams != null) {
+          url.queryParameters.addAll(queryParams);
+        }
+        
+        http.Response response;
+        
+        switch (method.toUpperCase()) {
+          case 'GET':
+            response = await _client.get(
+              url,
+              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              timeout: _timeout,
+            );
+            break;
+          case 'POST':
+            response = await _client.post(
+              url,
+              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              body: jsonEncode(data),
+              timeout: _timeout,
+            );
+            break;
+          case 'PUT':
+            response = await _client.put(
+              url,
+              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              body: jsonEncode(data),
+              timeout: _timeout,
+            );
+            break;
+          case 'DELETE':
+            response = await _client.delete(
+              url,
+              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              timeout: _timeout,
+            );
+            break;
+          default:
+            throw ApiException(message: 'Unsupported HTTP method: $method');
+        }
+        
+        return _handleResponse(response);
+        
+      } on ApiException catch (e) {
+        if (e.statusCode == 401 && isAuthRequired && retryCount < maxRetries) {
+          // Try to refresh token and retry once
+          retryCount++;
+          await _refreshAccessToken();
+        } else {
+          rethrow;
+        }
+      } catch (e) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+        } else {
+          throw ApiException(
+            message: 'Request failed: ${e.toString()}',
+            statusCode: -1,
+          );
+        }
+      }
     }
   }
   
@@ -196,6 +302,7 @@ class ApiClient {
           message: errorJson['message'] ?? 'Request failed with status $statusCode',
           statusCode: statusCode,
           errorDetails: errorJson,
+          errorCode: errorJson['error'],
         );
       } catch (e) {
         throw ApiException(
@@ -250,5 +357,31 @@ class ApiClient {
   // Clean up resources
   void dispose() {
     _client.close();
+  }
+  
+  // Check if user is authenticated
+  Future<bool> isAuthenticated() async {
+    try {
+      final token = await _getAuthToken();
+      final role = await _getUserRole();
+      return token.isNotEmpty && role.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Get current user role
+  Future<String> getUserRole() async {
+    return await _getUserRole();
+  }
+  
+  // Logout user
+  Future<void> logout() async {
+    try {
+      await _clearAuthTokens();
+      // Optionally notify other parts of the app about logout
+    } catch (e) {
+      throw ApiException(message: 'Logout failed: $e');
+    }
   }
 }

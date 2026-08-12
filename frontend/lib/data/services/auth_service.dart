@@ -30,8 +30,9 @@ class AuthService {
           : null;
       
       if (user != null && response['access_token'] != null) {
-        // Save authentication token
-        _apiClient._saveAuthToken(response['access_token']);
+        // Save authentication tokens and user info
+        await _apiClient._saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
+        await _apiClient._saveUserRole(user.role);
       }
       
       return {
@@ -43,7 +44,7 @@ class AuthService {
         'token_type': response['token_type'] ?? 'bearer',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Registration failed: ${e.toString()}');
     }
   }
   
@@ -68,8 +69,9 @@ class AuthService {
           : null;
       
       if (user != null && response['access_token'] != null) {
-        // Save authentication token
-        _apiClient._saveAuthToken(response['access_token']);
+        // Save authentication tokens and user info
+        await _apiClient._saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
+        await _apiClient._saveUserRole(user.role);
       }
       
       return {
@@ -81,7 +83,7 @@ class AuthService {
         'token_type': response['token_type'] ?? 'bearer',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Login failed: ${e.toString()}');
     }
   }
   
@@ -103,7 +105,7 @@ class AuthService {
         'message': response['message'] ?? 'Password reset email sent',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Forgot password failed: ${e.toString()}');
     }
   }
   
@@ -127,7 +129,7 @@ class AuthService {
         'message': response['message'] ?? 'Password reset successful',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Reset password failed: ${e.toString()}');
     }
   }
   
@@ -151,7 +153,7 @@ class AuthService {
         'message': response['message'] ?? 'Password changed successfully',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Change password failed: ${e.toString()}');
     }
   }
   
@@ -165,7 +167,7 @@ class AuthService {
       
       return UserModel.fromJson(response['data']);
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Get current user failed: ${e.toString()}');
     }
   }
   
@@ -191,7 +193,7 @@ class AuthService {
       
       return UserModel.fromJson(response['data']);
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Update user profile failed: ${e.toString()}');
     }
   }
   
@@ -207,8 +209,8 @@ class AuthService {
       };
     } catch (e) {
       // Even if logout fails, clear the token
-      _apiClient._saveAuthToken('');
-      throw ApiException.fromError(e);
+      await _apiClient._clearAuthTokens();
+      throw ApiException(message: 'Logout failed: ${e.toString()}');
     }
   }
   
@@ -236,13 +238,30 @@ class AuthService {
         'token_type': response['token_type'] ?? 'bearer',
       };
     } catch (e) {
-      throw ApiException.fromError(e);
+      throw ApiException(message: 'Token refresh failed: ${e.toString()}');
     }
   }
   
   // Check if user is authenticated
-  bool isAuthenticated() {
-    final token = _apiClient._getAuthToken();
-    return token.isNotEmpty;
+  Future<bool> isAuthenticated() async {
+    return await _apiClient.isAuthenticated();
+  }
+  
+  // Get user role
+  Future<String> getUserRole() async {
+    return await _apiClient.getUserRole();
+  }
+  
+  // Logout user with proper cleanup
+  Future<void> logout() async {
+    try {
+      // Call API logout if needed
+      await _apiClient.post('/auth/logout', data: {}, isAuthRequired: true);
+    } catch (e) {
+      // Ignore errors if logout API call fails, just proceed with token cleanup
+    } finally {
+      // Always clear tokens
+      await _apiClient._clearAuthTokens();
+    }
   }
 }

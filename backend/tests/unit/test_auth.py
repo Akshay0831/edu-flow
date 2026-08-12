@@ -196,7 +196,7 @@ class TestAuthService:
         """Test password reset initiation"""
         
         mock_user_service = Mock()
-        mock_user_service.get_by_email.return_value = {"user_id": "USER123", "email": "test@example.com"}
+        mock_user_service.get_user_by_email.return_value = {"user_id": "USER123", "email": "test@example.com"}
         
         result = self.auth_service.initiate_password_reset("test@example.com", mock_user_service)
         
@@ -208,7 +208,7 @@ class TestAuthService:
         """Test password reset confirmation"""
         
         mock_user_service = Mock()
-        mock_user_service.update_password.return_value = True
+        mock_user_service.change_user_password.return_value = True
         
         # Create a reset token using the actual method
         reset_data = {"sub": "USER123", "email": "test@example.com", "type": "reset"}
@@ -238,7 +238,7 @@ class TestAuthService:
                 mock_user_service
             )
             assert result == True
-            mock_user_service.update_password.assert_called_once()
+            mock_user_service.change_user_password.assert_called_once()
         finally:
             # Restore original secret key
             self.auth_service.secret_key = original_secret_key

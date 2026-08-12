@@ -16,9 +16,9 @@ from datetime import datetime
 import logging
 
 from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from src.core.security import verify_token
+from src.core.security import AuthService
 from src.core.response_handler import ResponseFormatter
-from src.services.base_service import TeacherService, get_teacher_service
+
 
 router = APIRouter()
 security = HTTPBearer()
@@ -29,24 +29,19 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     """Get current authenticated user."""
     try:
         token = credentials.credentials
-        user = await verify_token(token)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired token"
-            )
-        return user
-    except AuthenticationError as e:
+        auth_service = AuthService()
+        token_data = auth_service.verify_token(token)
+        return token_data
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
+            detail="Invalid or expired token"
         )
 
 @router.post("/", response_model=Dict[str, Any])
 async def create_teacher(
     teacher_data: Dict[str, Any],
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    teacher_service: TeacherService = Depends(get_teacher_service)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Create a new teacher."""
     try:
@@ -105,14 +100,25 @@ async def create_teacher(
 
 @router.get("/me", response_model=Dict[str, Any])
 async def get_current_teacher_profile(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    teacher_service: TeacherService = Depends(get_teacher_service)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Get current teacher profile."""
     try:
         # Check if user is a teacher
-        teacher = await teacher_service.get_teacher_by_id(current_user['id'])
-        if not teacher:
+        # TODO: Implement teacher service lookup
+        if current_user.get('role') != 'teacher':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: Teacher role required"
+            )
+        
+        # Return basic profile info for now
+        return {
+            "id": current_user['id'],
+            "name": current_user.get('name'),
+            "email": current_user.get('email'),
+            "role": current_user.get('role')
+        }
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Teacher profile not found"

@@ -62,11 +62,15 @@ class TestAuthenticationIntegration:
         data = response.json()
         
         # Verify response structure
-        response_response_data = TestValidationSystem.assert_success_response(data, required_fields=["user_id", "access_token", "refresh_token"])
+        assert "data" in data
+        user_data = data["data"]
+        assert "user_id" in user_data
+        assert "access_token" in user_data  
+        assert "refresh_token" in user_data
         
         # Verify token validity
-        token_data = self.auth_service.verify_token(response_response_data["access_token"])
-        assert token_data.sub == response_response_data["user_id"]
+        token_data = self.auth_service.verify_token(user_data["access_token"])
+        assert token_data.sub == user_data["user_id"]
         assert token_data.role == auth_test_data["valid_user"]["role"]
     
     def test_user_login_endpoint(self, auth_test_data):
@@ -97,7 +101,11 @@ class TestAuthenticationIntegration:
         data = response.json()
         
         # Verify response structure
-        TestValidationSystem.assert_standard_response(data, expected_success=True)
+        # Test successful response structure
+        assert "data" in data
+        user_data = data["data"]
+        assert "access_token" in user_data
+        assert "refresh_token" in user_data
         if "data" not in data:
             data["data"] = {}
         if "data" not in data:

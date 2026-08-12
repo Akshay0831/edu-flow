@@ -45,9 +45,9 @@ from src.api.v1.endpoints.auth import router as auth_router
 from src.api.v1.endpoints.users import router as users_router
 from src.api.v1.endpoints.courses import router as courses_router
 from src.api.v1.endpoints.students import router as students_router
-from src.api.v1.endpoints.teachers import router as teachers_router
-from src.api.v1.endpoints.assessments import router as assessments_router
-from src.api.v1.endpoints.analytics import router as analytics_router
+from src.api.v1.endpoints.teachers_simple import router as teachers_router
+from src.api.v1.endpoints.assessments_simple import router as assessments_router
+from src.api.v1.endpoints.analytics_simple import router as analytics_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -118,21 +118,23 @@ async def lifespan(app: FastAPI):
         }
         
         initialize_service_container(config)
-        configure_services(config)
+        await configure_services(config)
         
         # Initialize database
         logger.info("🗄️  Initializing database...")
         container = get_service_container()
         
-        db_config = container.get_service('database_config')
-        db_manager = await initialize_database_manager(db_config)
+        db_config = await container.resolve('database_config')
+        db_manager = initialize_database_manager(db_config)
+        await db_manager.initialize()
         container.register_instance('database_manager', db_manager)
         app.state.database = db_manager
         
         # Initialize cache
         logger.info("🏷️  Initializing cache...")
-        cache_config = container.get_service('cache_config')
-        cache_manager = await initialize_cache_manager(cache_config)
+        cache_config = await container.resolve('cache_config')
+        cache_manager = initialize_cache_manager(cache_config)
+        await cache_manager.initialize()
         container.register_instance('cache_manager', cache_manager)
         
         # Initialize API client
@@ -153,9 +155,6 @@ async def lifespan(app: FastAPI):
         user_service = ServiceFactory.create_service('user')
         await user_service.initialize()
         auth_service.user_service = user_service
-        
-        # Set up error handling
-        setup_error_handling(app)
         
         logger.info("✅ All systems initialized successfully")
         logger.info("📊 Health check available at /health")
@@ -200,6 +199,9 @@ app = FastAPI(
     lifespan=lifespan,
     debug=True
 )
+
+# Set up error handling before adding other middleware
+setup_error_handling(app)
 
 # Add CORS middleware
 app.add_middleware(
