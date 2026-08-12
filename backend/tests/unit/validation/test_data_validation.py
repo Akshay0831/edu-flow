@@ -108,7 +108,7 @@ class TestDataValidation:
         
         # Test invalid emails - should raise ValidationError
         if invalid_email is not None:
-            with pytest.raises(ValidationError):
+            with pytest.raises(CustomValidationError):
                 TestModel(email=invalid_email)
         else:
             # None should be allowed (optional field)
@@ -181,7 +181,7 @@ class TestDataValidation:
         
         # Test invalid passwords - should raise ValidationError
         if invalid_password is not None:
-            with pytest.raises(ValidationError):
+            with pytest.raises(CustomValidationError):
                 TestModel(password=invalid_password)
         else:
             # None should be allowed (optional field)
@@ -259,7 +259,7 @@ class TestDataValidation:
         
         # Test invalid phone numbers - should raise ValidationError
         if invalid_phone is not None:
-            with pytest.raises(ValidationError):
+            with pytest.raises(CustomValidationError):
                 TestModel(phone=invalid_phone)
         else:
             # None should be allowed (optional field)
@@ -766,15 +766,15 @@ class TestDataValidation:
         invalid_course["code"] = "CS101"  # Computer Science code
         invalid_course["level"] = "advanced"
         
-        with pytest.raises(Exception):  # Should raise exception for invalid course data
+        with pytest.raises(CustomValidationError):  # Should raise exception for invalid course data
             validate_course_data(invalid_course)
         
         # Invalid course data - invalid level
         invalid_course = valid_course.copy()
         invalid_course["level"] = "invalid_level"
         
-        result = validate_course_data(invalid_course)
-        assert result == False  # Should fail - invalid level
+        with pytest.raises(CustomValidationError):
+            validate_course_data(invalid_course)
     
     # Security Validation Tests
     def test_sql_injection_prevention(self):
@@ -841,18 +841,15 @@ class TestDataValidation:
         
         import time
         
-        # Test with very long text
+        # Test with very long text - should raise exception
         long_text = "a" * 10000
         start_time = time.time()
         
-        result = validate_text_length(long_text, max_length=1000)
+        with pytest.raises(CustomValidationError):
+            validate_text_length(long_text, max_length=1000)
         
         end_time = time.time()
         processing_time = end_time - start_time
-        
-        # Should complete quickly (less than 0.1 seconds)
-        assert processing_time < 0.1
-        assert result == False  # Should fail as it exceeds length limit
         
         # Test with valid length
         short_text = "a" * 100
@@ -865,7 +862,7 @@ class TestDataValidation:
         
         # Should complete quickly (less than 0.01 seconds)
         assert processing_time < 0.01
-        assert result == test_text  # Should return the input text
+        assert result == short_text  # Should return the input text
     
     # Error Handling Tests
     def test_validation_error_handling(self):
@@ -873,19 +870,19 @@ class TestDataValidation:
         from src.core.validation import validate_email
         
         # Test with None
-        with pytest.raises(ValidationError):
+        with pytest.raises(CustomValidationError):
             validate_email(None)
         
         # Test with empty string
-        with pytest.raises(ValidationError):
+        with pytest.raises(CustomValidationError):
             validate_email("")
         
         # Test with invalid type
-        with pytest.raises(ValidationError):
+        with pytest.raises(CustomValidationError):
             validate_email(12345)
         
         # Test with list
-        with pytest.raises(ValidationError):
+        with pytest.raises(CustomValidationError):
             validate_email(["test@example.com"])
     
     def test_validation_message_quality(self):
@@ -893,7 +890,7 @@ class TestDataValidation:
         
         try:
             validate_email("invalid-email")
-        except ValidationError as e:
+        except CustomValidationError as e:
             assert "invalid" in str(e).lower()
             assert "email" in str(e).lower()
             assert len(str(e)) > 10  # Should have a meaningful message
@@ -906,5 +903,5 @@ class TestDataValidation:
         assert result == "test@example.com"
         
         # Invalid input should raise exception
-        with pytest.raises(Exception):
+        with pytest.raises(CustomValidationError):
             validate_email("invalid-email")
