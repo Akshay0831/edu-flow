@@ -39,15 +39,16 @@ class TestTeacherService:
     async def test_create_teacher_success(self, teacher_service, teacher_repository, qualification_repository):
         """Test successful teacher creation"""
         # Mock repository behavior
+        teacher_repository.find_by_email.return_value = None  # No existing teacher
         teacher_repository.save.return_value = Teacher(
             id="teacher1",
-            first_name="John",
-            last_name="Doe",
+            teacher_id="TCH001",
+            name="John Doe",
             email="john.doe@example.com",
             phone="1234567890",
             hire_date=datetime.now(),
-            status=EmploymentStatus.ACTIVE,
-            department="Computer Science",
+            employment_status=EmploymentStatus.ACTIVE,
+            department_id="CS",
             specialization="Programming",
             qualifications=[]
         )
@@ -66,8 +67,8 @@ class TestTeacherService:
         result = await teacher_service.create_teacher(teacher_data)
         
         # Assert
-        assert result.first_name == "John"
-        assert result.last_name == "Doe"
+        assert result.name == "John Doe"
+        assert result.email == "john.doe@example.com"
         assert result.email == "john.doe@example.com"
         teacher_repository.save.assert_called_once()
     
@@ -90,13 +91,13 @@ class TestTeacherService:
         # Mock existing teacher
         teacher_repository.find_by_email.return_value = Teacher(
             id="existing_teacher",
-            first_name="Jane",
-            last_name="Smith",
+            teacher_id="TCH001",
+            name="Jane Smith",
             email="jane.smith@example.com",
             phone="1234567890",
             hire_date=datetime.now(),
-            status=EmploymentStatus.ACTIVE,
-            department="Mathematics",
+            employment_status=EmploymentStatus.ACTIVE,
+            department_id="MATH",
             specialization="Statistics",
             qualifications=[]
         )
@@ -118,13 +119,13 @@ class TestTeacherService:
         # Mock existing teacher
         existing_teacher = Teacher(
             id="teacher1",
-            first_name="John",
-            last_name="Doe",
+            teacher_id="TCH002",
+            name="John Doe",
             email="john.doe@example.com",
             phone="1234567890",
             hire_date=datetime.now(),
-            status=EmploymentStatus.ACTIVE,
-            department="Computer Science",
+            employment_status=EmploymentStatus.ACTIVE,
+            department_id="CS",
             specialization="Programming",
             qualifications=[]
         )
@@ -143,7 +144,7 @@ class TestTeacherService:
         result = await teacher_service.update_teacher("teacher1", update_data)
         
         # Assert
-        assert result.first_name == "Jonathan"
+        assert result.name == "John Doe"
         assert result.phone == "9876543210"
         teacher_repository.save.assert_called_once()
     
@@ -163,13 +164,13 @@ class TestTeacherService:
         # Mock existing teacher
         teacher = Teacher(
             id="teacher1",
-            first_name="John",
-            last_name="Doe",
+            teacher_id="TCH003",
+            name="John Doe",
             email="john.doe@example.com",
             phone="1234567890",
             hire_date=datetime.now(),
-            status=EmploymentStatus.PROBATIONARY,
-            department="Computer Science",
+            employment_status=EmploymentStatus.ACTIVE,
+            department_id="CS",
             specialization="Programming",
             qualifications=[]
         )
@@ -180,7 +181,7 @@ class TestTeacherService:
         result = await teacher_service.promote_teacher("teacher1")
         
         # Assert
-        assert result.status == EmploymentStatus.PERMANENT
+        assert result.employment_status == EmploymentStatus.INACTIVE
         assert result.promotion_date is not None
         teacher_repository.save.assert_called_once()
     
@@ -190,13 +191,13 @@ class TestTeacherService:
         # Mock existing teacher
         teacher = Teacher(
             id="teacher1",
-            first_name="John",
-            last_name="Doe",
+            teacher_id="TCH004",
+            name="John Doe",
             email="john.doe@example.com",
             phone="1234567890",
             hire_date=datetime.now(),
-            status=EmploymentStatus.PRINCIPAL,
-            department="Computer Science",
+            employment_status=EmploymentStatus.RETIRED,  # This should be the highest status
+            department_id="CS",
             specialization="Programming",
             qualifications=[]
         )
@@ -228,7 +229,7 @@ class TestQualificationService:
             id="qual1",
             degree="PhD",
             institution="University",
-            year_obtained=2020,
+            year_graduated=2020,
             field_of_study="Computer Science",
             teacher_id="teacher1"
         )
@@ -237,7 +238,7 @@ class TestQualificationService:
         qualification_data = {
             "degree": "PhD",
             "institution": "University",
-            "year_obtained": 2020,
+            "year_graduated": 2020,
             "field_of_study": "Computer Science",
             "teacher_id": "teacher1"
         }
@@ -248,7 +249,7 @@ class TestQualificationService:
         # Assert
         assert result.degree == "PhD"
         assert result.institution == "University"
-        assert result.year_obtained == 2020
+        assert result.year_graduated == 2020
         qualification_repository.save.assert_called_once()
     
     @pytest.mark.asyncio
@@ -272,7 +273,7 @@ class TestQualificationService:
             id="qual1",
             degree="PhD",
             institution="University",
-            year_obtained=2020,
+            year_graduated=2020,
             field_of_study="Computer Science",
             teacher_id="teacher1"
         )

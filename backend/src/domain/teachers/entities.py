@@ -85,6 +85,7 @@ class Teacher(BaseModel):
     is_active: bool = Field(True, description="Account status")
     emergency_contact: Optional[Dict[str, str]] = Field(None, description="Emergency contact information")
     medical_info: Optional[str] = Field(None, description="Medical information")
+    promotion_date: Optional[datetime] = Field(None, description="Last promotion date")
     created_at: datetime = Field(default_factory=lambda: datetime.now(), description="Creation timestamp")
     updated_at: datetime = Field(default_factory=lambda: datetime.now(), description="Last update timestamp")
     

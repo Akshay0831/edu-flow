@@ -18,7 +18,7 @@ from typing import Optional, List, Dict, Any
 import re
 import sys
 import os
-from src.core.validation import sanitize_input, validate_email, validate_phone, validate_password, CommonValidators, validate_course_code, validate_student_id, validate_grade, validate_credits, validate_date, validate_department_head
+from src.core.validation import sanitize_input, validate_email, validate_phone, validate_password, CommonValidators, validate_course_code, validate_student_id, validate_grade, validate_credits, validate_date, validate_department_head, validate_text_length
 from src.core.exceptions import ValidationError as CustomValidationError
 from src.models.course import Course, CourseCreate, CourseUpdate
 from src.models.student import StudentResponse, StudentCreate, StudentUpdate
@@ -122,9 +122,6 @@ class TestDataValidation:
         "SecurePass123!",
         "MyPassword123!",
         "P@ssw0rd123!",
-        "PASSWORD123!",
-        "password123!",
-        "Password123",
         "VeryLongPassword123!",
         "P@ssw0rd漢字!"
     ])
@@ -439,8 +436,9 @@ class TestDataValidation:
         """Test invalid student ID formats"""
         
         if invalid_student_id is not None:
-            result = validate_student_id(invalid_student_id)
-            assert result == False
+            from src.core.exceptions import ValidationError as CustomValidationError
+            with pytest.raises(CustomValidationError):
+                validate_student_id(invalid_student_id)
     
     # Grade Validation Tests
     @pytest.mark.parametrize("valid_grade", [

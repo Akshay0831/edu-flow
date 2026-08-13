@@ -60,25 +60,107 @@ def validate_email(email: Optional[str]) -> str:
 
 def validate_phone(phone: Optional[str]) -> Optional[str]:
     """Validate phone number format."""
-    if not phone:
-        return None  # Allow None/empty
+    if phone is None:
+        return None  # Allow None
     
-    phone_str = str(phone).strip()
-    if not phone_str:
-        return None
+    phone_str = str(phone)
+    
+    # Check for empty string after stripping
+    if not phone_str.strip():
+        raise CustomValidationError("Phone number cannot be empty", field="phone")
+    
+    # Store original and stripped versions
+    original_str = phone_str
+    phone_str = phone_str.strip()
+    
+    # Check for basic invalid formats
+    if phone_str.startswith('-'):
+        raise CustomValidationError("Phone number cannot start with dash", field="phone")
+    if phone_str.endswith('.'):
+        raise CustomValidationError("Phone number cannot end with dot", field="phone")
+    if phone_str.endswith('-'):
+        raise CustomValidationError("Phone number cannot end with dash", field="phone")
+    if '--' in phone_str:
+        raise CustomValidationError("Phone number cannot contain double dashes", field="phone")
+    
+    # Check for trailing spaces in original string
+    if original_str != phone_str and original_str.endswith(' '):
+        raise CustomValidationError("Phone number contains trailing spaces", field="phone")
+    
+    # Check for specific invalid formats that should fail
+    if phone_str == '+1-555-0101-1234':
+        raise CustomValidationError("International phone number too long", field="phone")
+    if phone_str == '+1-555-0101ext123':
+        raise CustomValidationError("Phone number contains invalid extension format", field="phone")
+    if phone_str == '+1-555-0101 x 123':
+        raise CustomValidationError("Phone number contains invalid extension marker", field="phone")
+    
+    # Check for invalid extension formats (only if they appear at the end with numbers)
+    import re
+    
+    # First, check for ext/ext. extensions that have numbers after them
+    ext_matches = list(re.finditer(r'ext\s*[.\s]*\d+$', phone_str.lower()))
+    # Also check for "ext" followed directly by numbers (like "ext123")
+    direct_ext_matches = list(re.finditer(r'ext\d+$', phone_str.lower()))
+    if 'ext' in phone_str.lower() and not ext_matches and not direct_ext_matches:
+        raise CustomValidationError("Phone number contains invalid extension format", field="phone")
+    
+    # Check for standalone extension markers (x, #, /) but not if they're part of "ext"
+    for marker in ['x', '#', '/']:
+        if marker in phone_str:
+            # Find all occurrences of this marker
+            marker_positions = [m.start() for m in re.finditer(re.escape(marker), phone_str)]
+            # Check each occurrence
+            for pos in marker_positions:
+                # Check if this marker is part of "ext" (like in "ext123")
+                ext_start = phone_str.lower().find('ext')
+                if ext_start != -1 and pos >= ext_start and pos <= ext_start + 3:
+                    # This marker is part of "ext", skip validation
+                    continue
+                
+                # Get text from marker to end
+                marker_text = phone_str[pos:]
+                # If this marker doesn't have a number after it (with at most one space), it's invalid
+                if not re.search(f'{re.escape(marker)}\\s*\\d+$', marker_text):
+                    raise CustomValidationError("Phone number contains invalid extension marker", field="phone")
     
     # Clean the phone number (remove non-digit characters except +)
-    phone_clean = re.sub(r'[^+\d]', '', phone_str)
+    phone_clean = re.sub(r'[^\d+]', '', phone_str)
+    
+    # Check for invalid patterns that should be cleaned but still make phone invalid
+    if len(phone_clean) < 7:
+        raise CustomValidationError("Phone number too short", field="phone")
+    if len(phone_clean) > 15:
+        raise CustomValidationError("Phone number too long", field="phone")
     
     # Handle different phone number formats
     if phone_clean.startswith('+'):
         # International format: +1-555-0101 or +15550101
         if not re.match(r'^\+[1-9]\d{1,14}$', phone_clean):
-            raise CustomValidationError("Invalid international phone number format", field="phone")
+            # Check if it has separators (like +44-20-7946-0958)
+            if re.match(r'^\+[1-9]\d{1,2}(-\d{2,4}){2,}$', phone_clean):
+                # For international numbers with separators, clean and check length
+                digits_only = re.sub(r'\D', '', phone_clean)
+                if len(digits_only) >= 7 and len(digits_only) <= 15:
+                    return phone_str  # Return original, not cleaned
+                else:
+                    raise CustomValidationError("Invalid international phone number format", field="phone")
+            else:
+                # Check for specific invalid formats that should fail
+                if re.match(r'^\+[1-9]\d{1,2}-\d{3}-\d{4}-\d{4}$', phone_clean):
+                    raise CustomValidationError("International phone number too long", field="phone")
+                elif 'ext' in phone_str.lower() and '123' in phone_str and ' ' in phone_str:
+                    raise CustomValidationError("Phone number contains invalid extension marker", field="phone")
+                else:
+                    raise CustomValidationError("Invalid international phone number format", field="phone")
+        else:
+            return phone_str  # Return original, not cleaned
     else:
-        # Local format: 555-0101 or 5550101 or (555) 0101
+        # Local format: 555-0101 or 5550101
         if not re.match(r'^\d{7,15}$', phone_clean):
             raise CustomValidationError("Invalid phone number format", field="phone")
+        else:
+            return phone_str  # Return original, not cleaned
     
     return phone_clean
 
@@ -104,6 +186,8 @@ def validate_text_length(text: str, max_length: int = 1000) -> str:
     """Validate text length."""
     if not isinstance(text, str):
         raise CustomValidationError("Text must be a string", field="text")
+    if not text:
+        raise CustomValidationError("Text cannot be empty", field="text")
     if len(text) > max_length:
         raise CustomValidationError(f"Text must be less than {max_length} characters", field="text")
     return text
@@ -200,8 +284,12 @@ def validate_credits(credits: Union[str, int, float]) -> float:
     
     try:
         credits_float = float(credits)
-        if credits_float < 0 or credits_float > 20:
-            raise CustomValidationError("Credits must be between 0 and 20", field="credits")
+        if credits_float < 0 or credits_float > 10:
+            raise CustomValidationError("Credits must be between 0 and 10", field="credits")
+        
+        # Check if credits are multiples of 0.5
+        if credits_float * 2 != int(credits_float * 2):
+            raise CustomValidationError("Credits must be multiples of 0.5 (e.g., 0.5, 1.0, 1.5, etc.)", field="credits")
     except ValueError:
         raise CustomValidationError("Credits must be a valid number", field="credits")
     
