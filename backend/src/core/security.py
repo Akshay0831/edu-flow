@@ -11,13 +11,15 @@ Author: Edu-Flow Team
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import hashlib
 import re
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
+from src.core.validation import validate_email
+from src.core.exceptions import ValidationError as CustomValidationError
 
 try:
     import bcrypt
@@ -203,7 +205,14 @@ class AuthService:
                 raise AuthenticationError("User service not available")
         
         user = user_service.get_user_by_email(email)
-        if not user or not self.verify_password(password, user["password_hash"]):
+        if not user:
+            raise AuthenticationError("Invalid credentials")
+        
+        # Check if account is deactivated
+        if not user.get("is_active", True):
+            raise AuthenticationError("Account is disabled")
+        
+        if not self.verify_password(password, user["password_hash"]):
             raise AuthenticationError("Invalid credentials")
         
         # Create access token
@@ -261,8 +270,161 @@ class AuthService:
             # Extract the actual user_id from the result
             user_id = user_result["user_id"]
             
-            return {"user_id": str(user_id)}
-        except ValidationError as e:
+            return {
+                "user_id": str(user_id),
+                "password_hash": hashed_password
+            }
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def update_user(self, user_id: str, **kwargs) -> Dict[str, Any]:
+        """Update user information"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate email if provided
+            if "email" in kwargs:
+                validate_email(kwargs["email"])
+            
+            # Validate name if provided
+            if "name" in kwargs and not kwargs["name"].strip():
+                raise CustomValidationError("Name cannot be empty")
+            
+            # Update user using the service method
+            updated_result = self.user_service.update_user(user_id, **kwargs)
+            
+            # Convert boolean result to consistent format with updated data
+            if updated_result is True:
+                # Return a consistent format with the updated values
+                result_data = {"success": True}
+                for key, value in kwargs.items():
+                    result_data[key] = value
+                return result_data
+            
+            return updated_result
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def deactivate_user(self, user_id: str) -> Dict[str, Any]:
+        """Deactivate a user account"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Deactivate user using the service method
+            deactivated_result = self.user_service.deactivate_user(user_id)
+            
+            # Handle boolean return by creating response data
+            if deactivated_result is True:
+                return {
+                    "is_active": False,
+                    "deactivated_at": datetime.now()
+                }
+            
+            return deactivated_result
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def bulk_deactivate_users(self, user_ids: List[str]) -> List[Dict[str, Any]]:
+        """Bulk deactivate multiple user accounts"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate all user IDs
+            valid_user_ids = []
+            for user_id in user_ids:
+                try:
+                    # Check if user exists
+                    user = self.user_service.get_user(user_id)
+                    if user:
+                        valid_user_ids.append(user_id)
+                    else:
+                        # Skip non-existent users but continue with others
+                        continue
+                except:
+                    # Skip users that can't be retrieved but continue with others
+                    continue
+            
+            # Deactivate all valid users
+            deactivated_users = []
+            for user_id in valid_user_ids:
+                try:
+                    result = self.deactivate_user(user_id)
+                    deactivated_users.append(result)
+                except Exception:
+                    # Skip users that can't be deactivated but continue with others
+                    continue
+            
+            return deactivated_users
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def bulk_reactivate_users(self, user_ids: List[str]) -> List[Dict[str, Any]]:
+        """Bulk reactivate multiple user accounts"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate all user IDs
+            valid_user_ids = []
+            for user_id in user_ids:
+                try:
+                    # Check if user exists
+                    user = self.user_service.get_user(user_id)
+                    if user:
+                        valid_user_ids.append(user_id)
+                    else:
+                        # Skip non-existent users but continue with others
+                        continue
+                except:
+                    # Skip users that can't be retrieved but continue with others
+                    continue
+            
+            # Reactivate all valid users (assuming service has reactivate method)
+            reactivated_users = []
+            for user_id in valid_user_ids:
+                try:
+                    # For now, we'll assume there's a reactivate_user method
+                    # or we'll simulate it by updating the user record
+                    result = self.user_service.reactivate_user(user_id)
+                    reactivated_users.append(result)
+                except Exception:
+                    # Skip users that can't be reactivated but continue with others
+                    continue
+            
+            return reactivated_users
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def change_user_role(self, user_id: str, new_role: str) -> Dict[str, Any]:
+        """Change user role"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate role
+            valid_roles = ["student", "teacher", "admin"]
+            if new_role not in valid_roles:
+                raise CustomValidationError(f"Invalid role. Must be one of: {', '.join(valid_roles)}")
+            
+            # Change user role using the service method
+            updated_result = self.user_service.change_user_role(user_id, new_role)
+            
+            # Handle boolean return by creating response data
+            if updated_result is True:
+                return {
+                    "role": new_role
+                }
+            
+            return updated_result
+        except CustomValidationError as e:
             raise e  # Re-raise ValidationError to be caught by API endpoint
     
     def refresh_tokens(self, refresh_token: str) -> Dict[str, str]:
@@ -318,9 +480,218 @@ class AuthService:
         # This method can be enhanced later with token blacklisting
         return True
     
+    def change_user_password(self, user_id: str, new_password: str) -> bool:
+        """Change user password without requiring current password"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate new password strength
+            if not self.validate_password_strength(new_password):
+                raise CustomValidationError("Password does not meet strength requirements")
+            
+            # Hash new password
+            hashed_password = self.get_password_hash(new_password)
+            
+            # Update user password using the service method
+            result = self.user_service.update_user(user_id, password_hash=hashed_password)
+            
+            return result is True or result
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def update_user_profile(self, user_id: str, **profile_data) -> Dict[str, Any]:
+        """Update user profile information"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate profile data
+            if "name" in profile_data and not profile_data["name"].strip():
+                raise CustomValidationError("Name cannot be empty")
+            
+            # Extract password if present (should be handled separately)
+            password_hash = None
+            if "password" in profile_data:
+                password_hash = self.get_password_hash(profile_data.pop("password"))
+            
+            # Update user using the service method
+            if password_hash:
+                result = self.user_service.update_user(user_id, password_hash=password_hash, **profile_data)
+            else:
+                result = self.user_service.update_user(user_id, **profile_data)
+            
+            # Handle boolean return by creating response data
+            if result is True:
+                response_data = {"success": True}
+                response_data.update(profile_data)
+                return response_data
+            
+            return result
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def search_users(self, query: str = None, role: str = None, department: str = None, is_active: bool = None, page: int = None, page_size: int = None) -> List[Dict[str, Any]]:
+        """Search and filter users"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Get all users first
+            all_users = []
+            # Assuming there's a method to get all users, if not, we'll need to mock or create one
+            if hasattr(self.user_service, 'get_all_users'):
+                all_users = self.user_service.get_all_users()
+            else:
+                # Fallback: get users one by one or handle differently
+                # For now, return empty list or handle appropriately
+                return []
+            
+            # Filter users based on criteria
+            filtered_users = []
+            for user in all_users:
+                # Check query filter (search in name or email)
+                if query:
+                    query_lower = query.lower()
+                    name_match = user.get("name", "").lower().find(query_lower) != -1
+                    email_match = user.get("email", "").lower().find(query_lower) != -1
+                    if not (name_match or email_match):
+                        continue
+                
+                # Check role filter
+                if role and user.get("role") != role:
+                    continue
+                
+                # Check department filter
+                if department and user.get("department") != department:
+                    continue
+                
+                # Check active status filter
+                if is_active is not None and user.get("is_active") != is_active:
+                    continue
+                
+                filtered_users.append(user)
+            
+            # Apply pagination if provided
+            if page is not None and page_size is not None:
+                start_idx = (page - 1) * page_size
+                end_idx = start_idx + page_size
+                filtered_users = filtered_users[start_idx:end_idx]
+            
+            return filtered_users
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def log_user_activity(self, user_id: str, action: str, ip: str = None, user_agent: str = None) -> Dict[str, Any]:
+        """Log user activity for auditing purposes"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Validate action
+            valid_actions = ["login", "logout", "create", "update", "delete", "view", "download", "upload", "view_profile", "update_settings"]
+            if action not in valid_actions:
+                raise CustomValidationError(f"Invalid action. Must be one of: {', '.join(valid_actions)}")
+            
+            # Log activity using the service method
+            activity_data = {
+                "user_id": user_id,
+                "action": action,
+                "ip": ip or "unknown",
+                "user_agent": user_agent or "unknown",
+                "timestamp": datetime.now()
+            }
+            
+            result = self.user_service.log_user_activity(**activity_data)
+            
+            # Handle boolean return by creating response data
+            if result is True:
+                return {
+                    "success": True,
+                    "activity_id": f"activity_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    "user_id": user_id,
+                    "action": action,
+                    "ip": ip or "unknown"
+                }
+            
+            return result
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def get_user_audit_trail(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get user audit trail"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Get audit trail from service
+            audit_trail = self.user_service.get_user_audit_trail(user_id)
+            return audit_trail
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
+    def check_permission(self, user_id: str, action: str, target_user_id: str = None, resource: str = None) -> bool:
+        """Check if user has permission to perform an action"""
+        try:
+            # Use provided user_service or the one in auth_service
+            if self.user_service is None:
+                raise AuthenticationError("User service not available")
+            
+            # Get the user
+            user = self.user_service.get_user(user_id)
+            if not user:
+                raise AuthenticationError("User not found")
+            
+            # Admins have all permissions
+            if user.get("role") == "admin":
+                return True
+            
+            # Role-based permissions
+            role = user.get("role", "student")
+            
+            # Define permissions by role
+            permissions = {
+                "student": {
+                    "view_profile": True,  # Can view their own profile
+                    "update_profile": True,  # Can update their own profile
+                    "view_courses": True,
+                    "submit_assignments": True,
+                    "view_grades": True
+                },
+                "teacher": {
+                    "view_profile": True,
+                    "update_profile": True,
+                    "view_courses": True,
+                    "create_courses": True,
+                    "manage_students": True,
+                    "grade_assignments": True
+                }
+            }
+            
+            # Check if action is allowed for the role
+            action_permissions = permissions.get(role, {})
+            has_permission = action_permissions.get(action, False)
+            
+            # Additional permission checks for specific actions
+            if action in ["view_profile", "update_profile"] and target_user_id:
+                # Users can view/update their own profile
+                has_permission = has_permission and (user_id == target_user_id)
+                # Teachers can view other profiles
+                if role == "teacher" and action == "view_profile":
+                    has_permission = True
+            
+            return has_permission
+        except CustomValidationError as e:
+            raise e  # Re-raise ValidationError to be caught by API endpoint
+    
     def change_password(self, user_id: str, current_password: str, new_password: str, user_service) -> bool:
         """Change user password"""
-        user = user_service.get_by_id(user_id)
+        user = user_service.get_user(user_id)
         if not user:
             raise NotFoundError("User not found")
             
@@ -329,7 +700,7 @@ class AuthService:
             
         # Hash new password and update
         hashed_password = self.get_password_hash(new_password)
-        user_service.update_password(user_id, hashed_password)
+        user_service.update_user(user_id, password_hash=hashed_password)
         
         return True
     

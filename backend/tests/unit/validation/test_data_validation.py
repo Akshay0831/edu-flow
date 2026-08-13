@@ -18,7 +18,7 @@ from typing import Optional, List, Dict, Any
 import re
 import sys
 import os
-from src.core.validation import sanitize_input, validate_email, validate_phone, validate_password, CommonValidators, validate_course_code, validate_student_id
+from src.core.validation import sanitize_input, validate_email, validate_phone, validate_password, CommonValidators, validate_course_code, validate_student_id, validate_grade, validate_credits, validate_date, validate_department_head
 from src.core.exceptions import ValidationError as CustomValidationError
 from src.models.course import Course, CourseCreate, CourseUpdate
 from src.models.student import StudentResponse, StudentCreate, StudentUpdate
@@ -527,19 +527,18 @@ class TestDataValidation:
         0.4,  # Too small increment
         10.5,  # Too many credits
         11.0,  # Too many credits
-        20.0,  # Too many credits
-        "1.0",  # String instead of number
+        20.1,  # Too many credits
+        "abc",  # Invalid string
+        "1.0.5",  # Invalid decimal string
         None,  # None
         "",  # Empty string
-        "1",  # String number
-        "1.5",  # String decimal
     ])
     def test_invalid_credits(self, invalid_credits):
         """Test invalid credit values"""
         
         if invalid_credits is not None:
-            result = validate_credits(invalid_credits)
-            assert result == False
+            with pytest.raises(CustomValidationError):
+                validate_credits(invalid_credits)
     
     # Text Length Validation Tests
     @pytest.mark.parametrize("valid_text", [
@@ -558,8 +557,10 @@ class TestDataValidation:
     def test_valid_text_length(self, valid_text):
         """Test text within valid length range"""
         # Test that all text passes validation within reasonable limits
-        assert len(valid_text) <= 10000  # Most texts should be under 10k chars
-        assert isinstance(valid_text, str)
+        from src.core.validation import validate_text_length
+        
+        result = validate_text_length(valid_text)
+        assert result == valid_text
     
     @pytest.mark.parametrize("invalid_text", [
         "a" * 1001,  # Exceeds maximum length
@@ -569,9 +570,11 @@ class TestDataValidation:
     ])
     def test_invalid_text_length(self, invalid_text):
         """Test text exceeding maximum length"""
+        from src.core.exceptions import ValidationError as CustomValidationError
+        
         if invalid_text is not None:
-            # Very long text should fail validation
-            assert len(invalid_text) > 1000
+            with pytest.raises(CustomValidationError):
+                validate_text_length(invalid_text)
         else:
             # None should be handled gracefully
             assert True

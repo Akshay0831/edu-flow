@@ -18,12 +18,19 @@ import logging
 from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
 from src.core.security import AuthService
 from src.core.response_handler import ResponseFormatter
+from src.services.base_service import ServiceFactory
+from src.services.base_service import TeacherService
 
 
 router = APIRouter()
 security = HTTPBearer()
 
 logger = logging.getLogger(__name__)
+
+# Dependency injection functions
+def get_teacher_service():
+    """Get teacher service instance."""
+    return ServiceFactory.create_service('teacher')
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current authenticated user."""
@@ -119,14 +126,14 @@ async def get_current_teacher_profile(
             "email": current_user.get('email'),
             "role": current_user.get('role')
         }
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Teacher profile not found"
-            )
         
-        return ResponseFormatter.success(
-            data=teacher,
-            message="Teacher profile retrieved successfully"
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting teacher profile: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
         )
         
     except HTTPException:

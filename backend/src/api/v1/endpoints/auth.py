@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, field_validator
 from src.core.security import AuthService, TokenData
-from src.core.exceptions import AuthenticationError, ValidationError
+from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
 from src.core.response_handler import ResponseFormatter
 from src.config.settings import settings
 from src.services.user_service import UserService
@@ -253,10 +253,20 @@ async def reset_password(password_reset: PasswordResetRequest):
     Updates user password
     """
     try:
-        global_auth_service.reset_password(
-            email=password_reset.email,
-            old_password=password_reset.old_password,
-            new_password=password_reset.new_password
+        # Get user by email first
+        try:
+            user = global_auth_service.user_service.get_user_by_email(password_reset.email)
+        except NotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        global_auth_service.change_password(
+            user_id=user['id'],
+            current_password=password_reset.old_password,
+            new_password=password_reset.new_password,
+            user_service=global_auth_service.user_service
         )
         return ResponseFormatter.success(None, "Password successfully reset")
     except AuthenticationError as e:

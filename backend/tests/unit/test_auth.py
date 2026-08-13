@@ -179,8 +179,8 @@ class TestAuthService:
         """Test password change functionality"""
         
         mock_user_service = Mock()
-        mock_user_service.get_by_id.return_value = {"_id": "USER123", "password": "old_hash"}
-        mock_user_service.update_password.return_value = True
+        mock_user_service.get_user.return_value = {"_id": "USER123", "password": "old_hash"}
+        mock_user_service.update_user.return_value = True
         
         with patch.object(self.auth_service, 'verify_password', return_value=True):
             result = self.auth_service.change_password(
@@ -190,7 +190,7 @@ class TestAuthService:
                 mock_user_service
             )
             assert result == True
-            mock_user_service.update_password.assert_called_once()
+            mock_user_service.update_user.assert_called_once()
     
     def test_password_reset_initiation(self):
         """Test password reset initiation"""

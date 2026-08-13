@@ -40,7 +40,8 @@ from src.core.database_abstraction import DatabaseConfig, DatabaseType, initiali
 from src.core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
 from src.core.service_container import initialize_service_container, configure_services, get_service_container
 from src.core.api_service import initialize_api_client
-from src.services.base_service import ServiceFactory, UserService, CourseService, StudentService, TeacherService, AssessmentService
+from src.services.base_service import ServiceFactory, CourseService, StudentService, TeacherService, AssessmentService
+from src.services.user_service import UserService
 from src.api.v1.endpoints.auth import router as auth_router
 from src.api.v1.endpoints.users import router as users_router
 from src.api.v1.endpoints.courses import router as courses_router

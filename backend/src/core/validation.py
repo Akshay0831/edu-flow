@@ -6,7 +6,7 @@ These functions are designed to work with the existing test suite and security r
 """
 
 import re
-from typing import Optional, Union, List, Dict, Any
+from typing import Optional, Union, List, Dict, Any, Tuple
 from datetime import datetime, date
 from src.core.exceptions import ValidationError as CustomValidationError
 
@@ -17,8 +17,44 @@ def validate_email(email: Optional[str]) -> str:
         raise CustomValidationError("Email must be a string", field="email")
     if not email:
         raise CustomValidationError("Email cannot be empty", field="email")
+    
+    # Basic structure validation
+    if '@' not in email:
+        raise CustomValidationError("Invalid email format - missing @ symbol", field="email")
+    
+    local_part, domain_part = email.rsplit('@', 1)
+    
+    # Check local part
+    if not local_part:
+        raise CustomValidationError("Invalid email format - missing local part", field="email")
+    if local_part.startswith('.') or local_part.endswith('.'):
+        raise CustomValidationError("Invalid email format - local part cannot start or end with dot", field="email")
+    if '..' in local_part:
+        raise CustomValidationError("Invalid email format - consecutive dots not allowed in local part", field="email")
+    if not re.match(r'^[a-zA-Z0-9._%+-]+$', local_part):
+        raise CustomValidationError("Invalid email format - invalid characters in local part", field="email")
+    
+    # Check domain part
+    if not domain_part:
+        raise CustomValidationError("Invalid email format - missing domain part", field="email")
+    if domain_part.startswith('.') or domain_part.endswith('.'):
+        raise CustomValidationError("Invalid email format - domain cannot start or end with dot", field="email")
+    if '..' in domain_part:
+        raise CustomValidationError("Invalid email format - consecutive dots not allowed in domain", field="email")
+    if '@.' in domain_part or '.@' in domain_part:
+        raise CustomValidationError("Invalid email format - invalid @ position", field="email")
+    
+    # Check TLD (top-level domain)
+    tld = domain_part.split('.')[-1]
+    if len(tld) < 2:
+        raise CustomValidationError("Invalid email format - top-level domain too short", field="email")
+    if not re.match(r'^[a-zA-Z]{2,}$', tld):
+        raise CustomValidationError("Invalid email format - invalid top-level domain", field="email")
+    
+    # Overall pattern validation
     if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         raise CustomValidationError("Invalid email format", field="email")
+    
     return email
 
 
@@ -95,10 +131,21 @@ def validate_student_id(student_id: str) -> str:
     """Validate student ID format."""
     if not isinstance(student_id, str):
         raise CustomValidationError("Student ID must be a string", field="student_id")
-    # Accept both STU001 and AA123456 formats
-    if not (re.match(r'^[A-Z]{2,3}\d{3,6}$', student_id) or re.match(r'^STU\d{3,6}$', student_id)):
+    if not student_id.strip():
+        raise CustomValidationError("Student ID must be at least 4 characters", field="student_id")
+    
+    student_id = student_id.strip()
+    
+    # Accept formats: STU001, AA123456, STU123, ABC12345
+    # More specific patterns: STU001 (3 letters + 3+ digits) or AA123456 (2-3 letters + 6+ digits)
+    if re.match(r'^[A-Z]{3}\d{3,5}$', student_id) and len(student_id) >= 6:
+        # STU001 format (exactly 3 letters + 3+ digits, minimum 6 chars)
+        return student_id
+    elif re.match(r'^[A-Z]{2,3}\d{5,6}$', student_id) and len(student_id) >= 6:
+        # AA123456 format (2-3 letters + 5-6 digits, minimum 6 chars)
+        return student_id
+    else:
         raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")
-    return student_id
 
 
 def validate_grade(grade: Union[str, int]) -> str:
@@ -112,6 +159,9 @@ def validate_grade(grade: Union[str, int]) -> str:
     # Handle numeric grades (convert to letter grades based on typical mapping)
     if grade_str.isdigit():
         numeric_grade = int(grade_str)
+        # Only allow grades between 0 and 100
+        if numeric_grade < 0 or numeric_grade > 100:
+            raise CustomValidationError("Grade must be between 0 and 100", field="grade")
         if numeric_grade >= 90:
             grade_str = 'A'
         elif numeric_grade >= 80:
@@ -135,7 +185,7 @@ def validate_credits(credits: Union[str, int, float]) -> float:
     
     try:
         credits_float = float(credits)
-        if credits_float <= 0 or credits_float > 20:
+        if credits_float < 0 or credits_float > 20:
             raise CustomValidationError("Credits must be between 0 and 20", field="credits")
     except ValueError:
         raise CustomValidationError("Credits must be a valid number", field="credits")
@@ -191,6 +241,31 @@ def validate_department_head(department_head: Optional[str]) -> Optional[str]:
         return department_head
     
     raise CustomValidationError("Department head must be either a valid employee ID (AB123456) or a properly formatted name (Dr. John Smith)", field="department_head")
+
+
+def validate_course_code(course_code: str) -> bool:
+    """Validate course code format."""
+    if not isinstance(course_code, str):
+        raise CustomValidationError("Course code must be a string", field="course_code")
+    if not course_code.strip():
+        raise CustomValidationError("Course code must be at least 3 characters", field="course_code")
+    
+    # Allow formats: CS101, ABC123, CS101H, CS101A, CS101-01, CS-101, CS-101H, CS-101A, CS-101-01
+    course_code = course_code.strip()
+    
+    # More specific patterns to avoid CS1000 (4 digits after letters)
+    if re.match(r'^[A-Z]{2,4}-[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS-101 format (department-prefix + course)
+        return True
+    elif re.match(r'^[A-Z]{2,4}-\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS-101 format (letters + dash + numbers)
+        return True
+    elif re.match(r'^[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
+        # CS101 format (letters + numbers)
+        return True
+    else:
+        raise CustomValidationError("Course code must be in format: ABC123", field="course_code")
+    return True
 
 
 def validate_course_data(course_data: dict) -> dict:
@@ -304,18 +379,17 @@ class CommonValidators:
         return validate_student_id(student_id)
     
     @staticmethod
-    def validate_date(date_input: Union[str, datetime, date]) -> date:
+    def validate_date(date_input: Union[str, datetime, date]) -> str:
         """Validate date format and ensure it's not in the future."""
         return validate_date(date_input)
     
     @staticmethod
     def validate_course_code(course_code: str) -> bool:
         """Validate course code format."""
-        if not isinstance(course_code, str):
-            raise CustomValidationError("Course code must be a string", field="course_code")
-        if not re.match(r'^[A-Z]{2,4}\d{3,5}$', course_code):
-            raise CustomValidationError("Course code must be in format: ABC123", field="course_code")
-        return True
+        return validate_course_code(course_code)
+    
+    @staticmethod
+    def validate_course_prerequisites(prerequisites: Optional[Union[str, List[str]]]) -> Optional[List[str]]:
         """Validate course prerequisites format."""
         return validate_course_prerequisites(prerequisites)
     
@@ -330,66 +404,11 @@ class CommonValidators:
         return validate_text_length(text, max_length)
     
     @staticmethod
-    def sanitize_input(input_text: str) -> str:
-        """Basic XSS and SQL injection prevention."""
-        return sanitize_input(input_text)
-    
-    @staticmethod
     def validate_course_data(course_data: dict) -> dict:
         """Validate course data with cross-field validation."""
         return validate_course_data(course_data)
     
     @staticmethod
-    def validate_student_id(student_id: str) -> str:
-        """Validate student ID format."""
-        if not isinstance(student_id, str):
-            raise CustomValidationError("Student ID must be a string", field="student_id")
-        # Accept both STU001 and AA123456 formats
-        if not (re.match(r'^[A-Z]{2,3}\d{3,6}$', student_id) or re.match(r'^STU\d{3,6}$', student_id)):
-            raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")
-        return student_id
-
-
-# Standalone validation functions
-def validate_course_code(course_code: str) -> bool:
-    """Validate course code format."""
-    if not isinstance(course_code, str):
-        raise CustomValidationError("Course code must be a string", field="course_code")
-    if not course_code.strip():
-        raise CustomValidationError("Course code must be at least 3 characters", field="course_code")
-    
-    # Allow formats: CS101, ABC123, CS101H, CS101A, CS101-01, CS-101, CS-101H, CS-101A, CS-101-01
-    course_code = course_code.strip()
-    
-    # More specific patterns to avoid CS1000 (4 digits after letters)
-    if re.match(r'^[A-Z]{2,4}-[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
-        # CS-101 format (department-prefix + course)
-        return True
-    elif re.match(r'^[A-Z]{2,4}-\d{3}([A-Z]|\-\d{2})?$', course_code):
-        # CS-101 format (letters + dash + numbers)
-        return True
-    elif re.match(r'^[A-Z]{2,4}\d{3}([A-Z]|\-\d{2})?$', course_code):
-        # CS101 format (letters + numbers)
-        return True
-    else:
-        raise CustomValidationError("Course code must be in format: ABC123", field="course_code")
-    return True
-
-
-def validate_student_id(student_id: str) -> str:
-    """Validate student ID format."""
-    if not isinstance(student_id, str):
-        raise CustomValidationError("Student ID must be a string", field="student_id")
-    if not student_id.strip():
-        raise CustomValidationError("Student ID must be at least 4 characters", field="student_id")
-    
-    # Accept formats: STU001, AA123456, STU123, ABC12345
-    # More specific patterns: STU001 (3 letters + 3+ digits) or AA123456 (2-3 letters + 6+ digits)
-    if re.match(r'^[A-Z]{3}\d{3,5}$', student_id) and len(student_id) >= 6:
-        # STU001 format (exactly 3 letters + 3+ digits, minimum 6 chars)
-        return student_id
-    elif re.match(r'^[A-Z]{2,3}\d{5,6}$', student_id) and len(student_id) >= 6:
-        # AA123456 format (2-3 letters + 5-6 digits, minimum 6 chars)
-        return student_id
-    else:
-        raise CustomValidationError("Student ID must be in format: AA123456 or STU001", field="student_id")
+    def sanitize_input(input_text: str) -> str:
+        """Basic XSS and SQL injection prevention."""
+        return sanitize_input(input_text)

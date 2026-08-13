@@ -34,6 +34,16 @@ class UserService:
         self.user_activities = {}  # User activity logging
         self.audit_trail = {}  # User audit trail
         
+    async def initialize(self):
+        """Initialize the user service"""
+        # Initialize any required resources
+        pass
+        
+    async def dispose(self):
+        """Dispose of the user service resources"""
+        # Clean up resources
+        pass
+        
     def validate_email(self, email: str) -> bool:
         """Validate email format"""
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
