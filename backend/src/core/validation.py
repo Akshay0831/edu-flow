@@ -62,9 +62,24 @@ def validate_phone(phone: Optional[str]) -> Optional[str]:
     """Validate phone number format."""
     if not phone:
         return None  # Allow None/empty
-    phone_clean = re.sub(r'[^+\d]', '', str(phone))
-    if not re.match(r'^\+[1-9]\d{1,14}$', phone_clean):
-        raise CustomValidationError("Invalid phone number format", field="phone")
+    
+    phone_str = str(phone).strip()
+    if not phone_str:
+        return None
+    
+    # Clean the phone number (remove non-digit characters except +)
+    phone_clean = re.sub(r'[^+\d]', '', phone_str)
+    
+    # Handle different phone number formats
+    if phone_clean.startswith('+'):
+        # International format: +1-555-0101 or +15550101
+        if not re.match(r'^\+[1-9]\d{1,14}$', phone_clean):
+            raise CustomValidationError("Invalid international phone number format", field="phone")
+    else:
+        # Local format: 555-0101 or 5550101 or (555) 0101
+        if not re.match(r'^\d{7,15}$', phone_clean):
+            raise CustomValidationError("Invalid phone number format", field="phone")
+    
     return phone_clean
 
 
