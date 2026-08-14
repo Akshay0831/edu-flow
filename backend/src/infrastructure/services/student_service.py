@@ -66,12 +66,16 @@ class StudentService(BaseService):
             await self._validate_student_creation(student_data)
             
             # Check if student already exists
-            existing_student = await self.student_repository.get_by_email(student_data['email'])
+            existing_student = await self.repository.get_by_email(student_data['email'])
             if existing_student:
                 raise ConflictError(f"Student with email {student_data['email']} already exists")
             
             # Create student
-            student = await self.student_repository.create(**student_data)
+            result = await self.repository.create(**student_data)
+            if not result.success:
+                raise DatabaseError(f"Failed to create student: {result.error}")
+            
+            student = result.data
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -86,7 +90,7 @@ class StudentService(BaseService):
         """Update an existing student with business logic."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -95,12 +99,12 @@ class StudentService(BaseService):
             
             # Check for email conflicts if email is being updated
             if 'email' in student_data and student_data['email'] != student.email:
-                existing_student = await self.student_repository.get_by_email(student_data['email'])
+                existing_student = await self.repository.get_by_email(student_data['email'])
                 if existing_student:
                     raise ConflictError(f"Student with email {student_data['email']} already exists")
             
             # Update student
-            updated_student = await self.student_repository.update(student_id, **student_data)
+            updated_student = await self.repository.update(student_id, **student_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -119,7 +123,7 @@ class StudentService(BaseService):
                 return self._cache[student_id]
             
             # Get student from repository
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             
             if student:
                 # Cache the result
@@ -134,7 +138,7 @@ class StudentService(BaseService):
     async def get_student_by_email(self, email: str) -> Optional[StudentResponse]:
         """Get a student by email."""
         try:
-            return await self.student_repository.get_by_email(email)
+            return await self.repository.get_by_email(email)
         except Exception as e:
             logger.error(f"Failed to get student by email {email}: {str(e)}")
             raise
@@ -142,7 +146,7 @@ class StudentService(BaseService):
     async def get_student_by_reg_number(self, registration_number: str) -> Optional[StudentResponse]:
         """Get a student by registration number."""
         try:
-            return await self.student_repository.get_by_registration_number(registration_number)
+            return await self.repository.get_by_registration_number(registration_number)
         except Exception as e:
             logger.error(f"Failed to get student by registration number {registration_number}: {str(e)}")
             raise
@@ -151,7 +155,7 @@ class StudentService(BaseService):
         """Delete a student with business logic."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -166,7 +170,7 @@ class StudentService(BaseService):
                 raise ValidationError("Cannot delete student with outstanding dues")
             
             # Delete student
-            result = await self.student_repository.delete(student_id)
+            result = await self.repository.delete(student_id)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -182,7 +186,7 @@ class StudentService(BaseService):
     async def search_students(self, search_term: str, skip: int = 0, limit: int = 100) -> List[StudentResponse]:
         """Search for students by name, email, or registration number."""
         try:
-            students = await self.student_repository.search_students(
+            students = await self.repository.search_students(
                 search_term=search_term,
                 skip=skip,
                 limit=limit
@@ -201,7 +205,7 @@ class StudentService(BaseService):
     async def get_students_by_department(self, department_id: str, skip: int = 0, limit: int = 100) -> List[StudentResponse]:
         """Get students by department."""
         try:
-            students = await self.student_repository.get_by_department(
+            students = await self.repository.get_by_department(
                 department_id=department_id,
                 skip=skip,
                 limit=limit
@@ -220,7 +224,7 @@ class StudentService(BaseService):
     async def get_students_by_class(self, class_id: str, skip: int = 0, limit: int = 100) -> List[StudentResponse]:
         """Get students by class."""
         try:
-            students = await self.student_repository.get_by_class(
+            students = await self.repository.get_by_class(
                 class_id=class_id,
                 skip=skip,
                 limit=limit
@@ -239,7 +243,7 @@ class StudentService(BaseService):
     async def get_students_by_batch(self, batch_id: str, skip: int = 0, limit: int = 100) -> List[StudentResponse]:
         """Get students by batch."""
         try:
-            students = await self.student_repository.get_by_batch(
+            students = await self.repository.get_by_batch(
                 batch_id=batch_id,
                 skip=skip,
                 limit=limit
@@ -261,7 +265,7 @@ class StudentService(BaseService):
         """Enroll a student in a class."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -273,7 +277,7 @@ class StudentService(BaseService):
                 raise NotFoundError(f"Class not found with ID: {class_id}")
             
             # Check if student is already enrolled
-            is_enrolled = await self.student_repository.is_enrolled(student_id, class_id)
+            is_enrolled = await self.repository.is_enrolled(student_id, class_id)
             if is_enrolled:
                 raise ConflictError(f"Student {student_id} is already enrolled in class {class_id}")
             
@@ -282,7 +286,7 @@ class StudentService(BaseService):
                 raise ValidationError(f"Class {class_id} is full")
             
             # Enroll student
-            result = await self.student_repository.enroll_student(
+            result = await self.repository.enroll_student(
                 student_id=student_id,
                 class_id=class_id,
                 enrollment_date=enrollment_date or datetime.utcnow()
@@ -301,17 +305,17 @@ class StudentService(BaseService):
         """Unenroll a student from a class."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
             # Check if student is enrolled
-            is_enrolled = await self.student_repository.is_enrolled(student_id, class_id)
+            is_enrolled = await self.repository.is_enrolled(student_id, class_id)
             if not is_enrolled:
                 raise NotFoundError(f"Student {student_id} is not enrolled in class {class_id}")
             
             # Unenroll student
-            result = await self.student_repository.unenroll_student(
+            result = await self.repository.unenroll_student(
                 student_id=student_id,
                 class_id=class_id,
                 unenrollment_date=unenrollment_date or datetime.utcnow()
@@ -329,7 +333,7 @@ class StudentService(BaseService):
     async def get_student_enrollments(self, student_id: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """Get all enrollments for a student."""
         try:
-            return await self.student_repository.get_student_enrollments(
+            return await self.repository.get_student_enrollments(
                 student_id=student_id,
                 skip=skip,
                 limit=limit
@@ -344,7 +348,7 @@ class StudentService(BaseService):
                               academic_year: str = None, semester: str = None) -> List[Dict[str, Any]]:
         """Get student grades with optional filtering."""
         try:
-            return await self.student_repository.get_student_grades(
+            return await self.repository.get_student_grades(
                 student_id=student_id,
                 subject_id=subject_id,
                 class_id=class_id,
@@ -359,7 +363,7 @@ class StudentService(BaseService):
                                    end_date: date = None, class_id: str = None) -> List[Dict[str, Any]]:
         """Get student attendance records."""
         try:
-            return await self.student_repository.get_student_attendance(
+            return await self.repository.get_student_attendance(
                 student_id=student_id,
                 start_date=start_date,
                 end_date=end_date,
@@ -373,7 +377,7 @@ class StudentService(BaseService):
                                     academic_year: str = None) -> Dict[str, Any]:
         """Get student performance summary."""
         try:
-            return await self.student_repository.get_student_performance(
+            return await self.repository.get_student_performance(
                 student_id=student_id,
                 subject_id=subject_id,
                 academic_year=academic_year
@@ -388,7 +392,7 @@ class StudentService(BaseService):
         """Update student profile information."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -396,7 +400,7 @@ class StudentService(BaseService):
             await self._validate_profile_update(profile_data)
             
             # Update profile
-            updated_student = await self.student_repository.update(student_id, **profile_data)
+            updated_student = await self.repository.update(student_id, **profile_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -411,7 +415,7 @@ class StudentService(BaseService):
         """Update student contact information."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -419,7 +423,7 @@ class StudentService(BaseService):
             await self._validate_contact_update(contact_data)
             
             # Update contacts
-            updated_student = await self.student_repository.update(student_id, **contact_data)
+            updated_student = await self.repository.update(student_id, **contact_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -434,7 +438,7 @@ class StudentService(BaseService):
         """Update student password."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -446,7 +450,7 @@ class StudentService(BaseService):
             await self._validate_password_requirements(new_password)
             
             # Update password
-            result = await self.student_repository.update_password(
+            result = await self.repository.update_password(
                 student_id=student_id,
                 new_password=new_password
             )
@@ -463,7 +467,7 @@ class StudentService(BaseService):
         """Get comprehensive student statistics."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -518,7 +522,7 @@ class StudentService(BaseService):
         """Generate comprehensive student report."""
         try:
             # Validate student exists
-            student = await self.student_repository.get_by_id(student_id)
+            student = await self.repository.get_by_id(student_id)
             if not student:
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
@@ -680,10 +684,16 @@ class StudentService(BaseService):
     
     def _validate_registration_number(self, registration_number: str) -> bool:
         """Validate registration number format."""
-        # Basic validation - alphanumeric with specific format
+        # Accept formats: STU001, AA123456, STU123, ABC12345
+        # More specific patterns: STU001 (3 letters + 3+ digits) or AA123456 (2-3 letters + 6+ digits)
         import re
-        pattern = r'^[A-Z]{2}[0-9]{8}$'  # Example: ED20230001
-        return re.match(pattern, registration_number) is not None
+        if re.match(r'^[A-Z]{3}\d{3,5}$', registration_number) and len(registration_number) >= 6:
+            # STU001 format (exactly 3 letters + 3+ digits, minimum 6 chars)
+            return True
+        elif re.match(r'^[A-Z]{2,3}\d{5,6}$', registration_number) and len(registration_number) >= 6:
+            # AA123456 format (2-3 letters + 5-6 digits, minimum 6 chars)
+            return True
+        return False
     
     def _validate_phone_number(self, phone_number: str) -> bool:
         """Validate phone number format."""

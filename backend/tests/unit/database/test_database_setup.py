@@ -13,6 +13,7 @@ Author: Edu-Flow Team
 """
 
 import asyncio
+import pytest
 import sys
 import os
 from pathlib import Path
@@ -21,6 +22,7 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.append(str(project_root))
 
+@pytest.mark.asyncio
 async def test_mongodb():
     """Test MongoDB connection"""
     try:
@@ -44,6 +46,7 @@ async def test_mongodb():
         print(f"❌ MongoDB connection failed: {str(e)}")
         return False
 
+@pytest.mark.asyncio
 async def test_postgresql():
     """Test PostgreSQL connection"""
     try:
@@ -61,6 +64,7 @@ async def test_postgresql():
         print(f"❌ PostgreSQL connection failed: {str(e)}")
         return False
 
+@pytest.mark.asyncio
 async def test_redis():
     """Test Redis connection"""
     try:
@@ -92,6 +96,7 @@ async def test_redis():
         print(f"❌ Redis connection failed: {str(e)}")
         return False
 
+@pytest.mark.asyncio
 async def test_health_check():
     """Test database health check"""
     try:

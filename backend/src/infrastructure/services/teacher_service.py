@@ -19,8 +19,9 @@ from uuid import uuid4
 from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
 from src.core.logging import get_logger
 from src.core.base_service import BaseService
-from src.infrastructure.repositories.teacher_repository import TeacherRepository
+from src.infrastructure.repositories.base_repository import BaseRepository
 from src.models.user import UserCreate, UserUpdate, User
+from src.models.teacher import TeacherStats
 
 logger = get_logger(__name__)
 
@@ -28,8 +29,8 @@ logger = get_logger(__name__)
 class TeacherService(BaseService):
     """Teacher management service with comprehensive functionality."""
     
-    def __init__(self, teacher_repository: TeacherRepository):
-        super().__init__(teacher_repository)
+    def __init__(self, repository: BaseRepository):
+        super().__init__(repository)
         self._cache = {}
         self._initialized = False
     
@@ -49,7 +50,6 @@ class TeacherService(BaseService):
     async def dispose(self) -> None:
         """Dispose the teacher service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Teacher service disposed successfully")
         except Exception as e:
@@ -65,12 +65,12 @@ class TeacherService(BaseService):
             await self._validate_teacher_creation(teacher_data)
             
             # Check if teacher already exists
-            existing_teacher = await self.teacher_repository.get_by_email(teacher_data['email'])
+            existing_teacher = await self.repository.get_by_email(teacher_data['email'])
             if existing_teacher:
                 raise ConflictError(f"Teacher with email {teacher_data['email']} already exists")
             
             # Create teacher
-            teacher = await self.teacher_repository.create(**teacher_data)
+            teacher = await self.repository.create(**teacher_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -85,7 +85,7 @@ class TeacherService(BaseService):
         """Update an existing teacher with business logic."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -94,12 +94,12 @@ class TeacherService(BaseService):
             
             # Check for email conflicts if email is being updated
             if 'email' in teacher_data and teacher_data['email'] != teacher.email:
-                existing_teacher = await self.teacher_repository.get_by_email(teacher_data['email'])
+                existing_teacher = await self.repository.get_by_email(teacher_data['email'])
                 if existing_teacher:
                     raise ConflictError(f"Teacher with email {teacher_data['email']} already exists")
             
             # Update teacher
-            updated_teacher = await self.teacher_repository.update(teacher_id, **teacher_data)
+            updated_teacher = await self.repository.update(teacher_id, **teacher_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -118,7 +118,7 @@ class TeacherService(BaseService):
                 return self._cache[teacher_id]
             
             # Get teacher from repository
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             
             if teacher:
                 # Cache the result
@@ -133,15 +133,16 @@ class TeacherService(BaseService):
     async def get_teacher_by_email(self, email: str) -> Optional[User]:
         """Get a teacher by email."""
         try:
-            return await self.teacher_repository.get_by_email(email)
+            return await self.repository.get_by_email(email)
         except Exception as e:
             logger.error(f"Failed to get teacher by email {email}: {str(e)}")
             raise
     
-    async def get_teacher_by_employee_id(self, employee_id: str) -> Optional[User]:
+    async def get_teacher_by_employee_id(self, employee_id: str) -> Optional[Dict]:
         """Get a teacher by employee ID."""
         try:
-            return await self.teacher_repository.get_by_employee_id(employee_id)
+            teacher = await self.repository.get_by_employee_id(employee_id)
+            return teacher.dict() if teacher else None
         except Exception as e:
             logger.error(f"Failed to get teacher by employee ID {employee_id}: {str(e)}")
             raise
@@ -150,7 +151,7 @@ class TeacherService(BaseService):
         """Delete a teacher with business logic."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -165,7 +166,7 @@ class TeacherService(BaseService):
                 raise ValidationError("Cannot delete teacher with assigned students")
             
             # Delete teacher
-            result = await self.teacher_repository.delete(teacher_id)
+            result = await self.repository.delete(teacher_id)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -181,7 +182,7 @@ class TeacherService(BaseService):
     async def search_teachers(self, search_term: str, skip: int = 0, limit: int = 100) -> List[User]:
         """Search for teachers by name, email, or employee ID."""
         try:
-            teachers = await self.teacher_repository.search_teachers(
+            teachers = await self.repository.search_teachers(
                 search_term=search_term,
                 skip=skip,
                 limit=limit
@@ -200,7 +201,7 @@ class TeacherService(BaseService):
     async def get_teachers_by_department(self, department_id: str, skip: int = 0, limit: int = 100) -> List[User]:
         """Get teachers by department."""
         try:
-            teachers = await self.teacher_repository.get_by_department(
+            teachers = await self.repository.get_by_department(
                 department_id=department_id,
                 skip=skip,
                 limit=limit
@@ -219,7 +220,7 @@ class TeacherService(BaseService):
     async def get_teachers_by_subject(self, subject_id: str, skip: int = 0, limit: int = 100) -> List[User]:
         """Get teachers by subject expertise."""
         try:
-            teachers = await self.teacher_repository.get_by_subject(
+            teachers = await self.repository.get_by_subject(
                 subject_id=subject_id,
                 skip=skip,
                 limit=limit
@@ -238,7 +239,7 @@ class TeacherService(BaseService):
     async def get_teachers_by_qualification(self, qualification: str, skip: int = 0, limit: int = 100) -> List[User]:
         """Get teachers by qualification."""
         try:
-            teachers = await self.teacher_repository.get_by_qualification(
+            teachers = await self.repository.get_by_qualification(
                 qualification=qualification,
                 skip=skip,
                 limit=limit
@@ -260,7 +261,7 @@ class TeacherService(BaseService):
         """Add subject expertise for a teacher."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -276,7 +277,7 @@ class TeacherService(BaseService):
                 raise ValidationError(f"Invalid expertise level: {expertise_level}")
             
             # Add subject expertise
-            result = await self.teacher_repository.add_subject_expertise(
+            result = await self.repository.add_subject_expertise(
                 teacher_id=teacher_id,
                 subject_id=subject_id,
                 expertise_level=expertise_level
@@ -295,12 +296,12 @@ class TeacherService(BaseService):
         """Remove subject expertise from a teacher."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
             # Remove subject expertise
-            result = await self.teacher_repository.remove_subject_expertise(
+            result = await self.repository.remove_subject_expertise(
                 teacher_id=teacher_id,
                 subject_id=subject_id
             )
@@ -318,7 +319,7 @@ class TeacherService(BaseService):
         """Update subject expertise level for a teacher."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -334,7 +335,7 @@ class TeacherService(BaseService):
                 raise ValidationError(f"Invalid expertise level: {expertise_level}")
             
             # Update subject expertise
-            result = await self.teacher_repository.update_subject_expertise(
+            result = await self.repository.update_subject_expertise(
                 teacher_id=teacher_id,
                 subject_id=subject_id,
                 expertise_level=expertise_level
@@ -352,7 +353,7 @@ class TeacherService(BaseService):
     async def get_teacher_subjects(self, teacher_id: str) -> List[Dict[str, Any]]:
         """Get all subjects that a teacher is qualified to teach."""
         try:
-            return await self.teacher_repository.get_teacher_subjects(teacher_id)
+            return await self.repository.get_teacher_subjects(teacher_id)
         except Exception as e:
             logger.error(f"Failed to get teacher subjects for {teacher_id}: {str(e)}")
             raise
@@ -364,7 +365,7 @@ class TeacherService(BaseService):
         """Assign a teacher to a class."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -376,7 +377,7 @@ class TeacherService(BaseService):
                 raise NotFoundError(f"Class not found with ID: {class_id}")
             
             # Check if teacher is already assigned to class
-            is_assigned = await self.teacher_repository.is_assigned_to_class(teacher_id, class_id)
+            is_assigned = await self.repository.is_assigned_to_class(teacher_id, class_id)
             if is_assigned:
                 raise ConflictError(f"Teacher {teacher_id} is already assigned to class {class_id}")
             
@@ -386,7 +387,7 @@ class TeacherService(BaseService):
                 raise ValidationError(f"Teacher {teacher_id} does not have expertise in subject {subject_id}")
             
             # Assign teacher to class
-            result = await self.teacher_repository.assign_to_class(
+            result = await self.repository.assign_to_class(
                 teacher_id=teacher_id,
                 class_id=class_id,
                 assigned_by_id=assigned_by_id,
@@ -407,17 +408,17 @@ class TeacherService(BaseService):
         """Remove a teacher from a class."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
             # Check if teacher is assigned to class
-            is_assigned = await self.teacher_repository.is_assigned_to_class(teacher_id, class_id)
+            is_assigned = await self.repository.is_assigned_to_class(teacher_id, class_id)
             if not is_assigned:
                 raise NotFoundError(f"Teacher {teacher_id} is not assigned to class {class_id}")
             
             # Remove teacher from class
-            result = await self.teacher_repository.remove_from_class(
+            result = await self.repository.remove_from_class(
                 teacher_id=teacher_id,
                 class_id=class_id,
                 removed_by_id=removed_by_id,
@@ -436,7 +437,7 @@ class TeacherService(BaseService):
     async def get_teacher_classes(self, teacher_id: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """Get all classes assigned to a teacher."""
         try:
-            return await self.teacher_repository.get_teacher_classes(
+            return await self.repository.get_teacher_classes(
                 teacher_id=teacher_id,
                 skip=skip,
                 limit=limit
@@ -451,7 +452,7 @@ class TeacherService(BaseService):
         """Submit a performance evaluation for a teacher."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -459,7 +460,7 @@ class TeacherService(BaseService):
             await self._validate_evaluation_data(evaluation_data)
             
             # Submit evaluation
-            result = await self.teacher_repository.submit_performance_evaluation(
+            result = await self.repository.submit_performance_evaluation(
                 teacher_id=teacher_id,
                 **evaluation_data
             )
@@ -476,7 +477,7 @@ class TeacherService(BaseService):
     async def get_teacher_evaluations(self, teacher_id: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """Get all performance evaluations for a teacher."""
         try:
-            return await self.teacher_repository.get_teacher_evaluations(
+            return await self.repository.get_teacher_evaluations(
                 teacher_id=teacher_id,
                 skip=skip,
                 limit=limit
@@ -488,7 +489,7 @@ class TeacherService(BaseService):
     async def get_teacher_performance_summary(self, teacher_id: str, start_date: date = None, end_date: date = None) -> Dict[str, Any]:
         """Get teacher performance summary."""
         try:
-            return await self.teacher_repository.get_teacher_performance_summary(
+            return await self.repository.get_teacher_performance_summary(
                 teacher_id=teacher_id,
                 start_date=start_date,
                 end_date=end_date
@@ -502,7 +503,7 @@ class TeacherService(BaseService):
     async def calculate_workload(self, teacher_id: str, start_date: date = None, end_date: date = None) -> Dict[str, Any]:
         """Calculate teacher workload."""
         try:
-            return await self.teacher_repository.calculate_workload(
+            return await self.repository.calculate_workload(
                 teacher_id=teacher_id,
                 start_date=start_date,
                 end_date=end_date
@@ -529,7 +530,7 @@ class TeacherService(BaseService):
         """Update teacher profile information."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -537,7 +538,7 @@ class TeacherService(BaseService):
             await self._validate_profile_update(profile_data)
             
             # Update profile
-            updated_teacher = await self.teacher_repository.update(teacher_id, **profile_data)
+            updated_teacher = await self.repository.update(teacher_id, **profile_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -552,7 +553,7 @@ class TeacherService(BaseService):
         """Update teacher credentials."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -564,7 +565,7 @@ class TeacherService(BaseService):
             await self._validate_password_requirements(new_password)
             
             # Update password
-            result = await self.teacher_repository.update_password(
+            result = await self.repository.update_password(
                 teacher_id=teacher_id,
                 new_password=new_password
             )
@@ -579,7 +580,7 @@ class TeacherService(BaseService):
         """Update teacher qualifications."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -587,7 +588,7 @@ class TeacherService(BaseService):
             await self._validate_qualifications(qualifications)
             
             # Update qualifications
-            result = await self.teacher_repository.update_qualifications(
+            result = await self.repository.update_qualifications(
                 teacher_id=teacher_id,
                 qualifications=qualifications
             )
@@ -607,7 +608,7 @@ class TeacherService(BaseService):
         """Get comprehensive teacher statistics."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -626,24 +627,9 @@ class TeacherService(BaseService):
             # Get workload
             workload = await self.calculate_workload(teacher_id, start_date, end_date)
             
-            # Create stats object
-            stats = TeacherStats(
-                teacher_id=teacher_id,
-                teacher_name=teacher.name,
-                total_classes=total_classes,
-                active_classes=active_classes,
-                total_evaluations=total_evaluations,
-                performance_score=round(performance_score, 2),
-                subjects_taught=len(teacher.subjects_taught),
-                total_students_taught=workload.get('total_students', 0),
-                average_class_size=workload.get('average_class_size', 0),
-                workload_hours_per_week=workload.get('total_hours_per_week', 0),
-                compliance_status=self._get_compliance_status(teacher_id),
-                last_evaluation_date=evaluations[-1]['created_at'] if evaluations else None,
-                last_class_assignment=classes[-1]['assignment_date'] if classes else None
-            )
-            
-            return stats
+            # Get stats from repository
+            stats = await self.repository.get_teacher_stats(teacher_id, start_date, end_date)
+            return stats.dict()
             
         except Exception as e:
             logger.error(f"Failed to get teacher stats for {teacher_id}: {str(e)}")
@@ -654,7 +640,7 @@ class TeacherService(BaseService):
         """Generate comprehensive teacher report."""
         try:
             # Validate teacher exists
-            teacher = await self.teacher_repository.get_by_id(teacher_id)
+            teacher = await self.repository.get_by_id(teacher_id)
             if not teacher:
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
@@ -837,7 +823,7 @@ class TeacherService(BaseService):
         """Validate employee ID format."""
         # Basic validation - alphanumeric with specific format
         import re
-        pattern = r'^[A-Z]{2}[0-9]{6}$'  # Example: ED20230001
+        pattern = r'^EMP[0-9]{3}$'  # Example: EMP001
         return re.match(pattern, employee_id) is not None
     
     def _validate_phone_number(self, phone_number: str) -> bool:
@@ -1087,7 +1073,7 @@ class TeacherService(BaseService):
     
     async def get(self, id: str) -> Optional[Dict]:
         """Get a teacher entity by ID."""
-        teacher = await self.get_teacher_by_id(id)
+        teacher = await self.get_teacher(id)
         return teacher.dict() if teacher else None
     
     async def update(self, id: str, data: Dict) -> Dict:
@@ -1101,9 +1087,9 @@ class TeacherService(BaseService):
     
     async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
         """List all teacher entities."""
-        teachers = await self.get_all_teachers(skip=skip, limit=limit)
+        teachers = await self.repository.get_all(skip=skip, limit=limit)
         return [teacher.dict() for teacher in teachers]
     
     async def count(self, filters: Dict = None) -> int:
         """Count total number of teacher entities."""
-        return await self.get_teacher_count()
+        return await self.repository.count()

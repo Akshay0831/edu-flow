@@ -46,9 +46,9 @@ class BaseModel(Base):
         self.updated_at = kwargs.get('updated_at', datetime.now())
         self.is_active = kwargs.get('is_active', True)
         
-        # Set specific attributes
+        # Set specific attributes, skip properties
         for key, value in kwargs.items():
-            if hasattr(self, key):
+            if hasattr(self, key) and not isinstance(getattr(type(self), key, None), property):
                 setattr(self, key, value)
     
     def to_dict(self) -> Dict[str, Any]:

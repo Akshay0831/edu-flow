@@ -17,6 +17,7 @@ from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, C
 from src.infrastructure.services.student_service import StudentService
 from src.infrastructure.repositories.student_repository import StudentRepository
 from src.models.student import StudentCreate, StudentUpdate, StudentResponse, StudentStatistics
+from src.infrastructure.repositories.base_repository import QueryResult
 from tests.mock_database_manager import MockDatabaseManager
 
 
@@ -39,10 +40,10 @@ class TestStudentServiceUnit:
         return {
             'name': 'John Doe',
             'email': 'john.doe@example.com',
-            'registration_number': 'REG001',
+            'registration_number': 'STU001',
             'date_of_birth': '2000-01-01',
-            'gender': 'M',
-            'phone_number': '+1234567890',
+            'gender': 'male',
+            'phone_number': '+1-1234567890',
             'address': '123 Main St, City',
             'student_id': 'STU001',
             'enrollment_date': '2023-09-01',
@@ -56,18 +57,31 @@ class TestStudentServiceUnit:
     async def test_create_student_success(self, student_service, mock_repository, sample_student_data):
         """Test successful student creation."""
         # Mock repository methods
-        mock_repository.create.return_value = AsyncMock()
-        mock_repository.create.return_value.id = str(uuid4())
-        mock_repository.create.return_value.dict.return_value = {
+        # Create a mock StudentResponse for the create method
+        mock_student_response = Mock(spec=StudentResponse)
+        mock_student_response.id = str(uuid4())
+        mock_student_response.dict.return_value = {
             'id': str(uuid4()),
             **sample_student_data
         }
+        
+        # Mock create to return QueryResult with StudentResponse data
+        mock_repository.create.return_value = QueryResult(
+            success=True, 
+            data=mock_student_response
+        )
+        
+        # Mock get_by_email to return None (no existing student)
+        mock_repository.get_by_email.return_value = None
         
         # Test
         result = await student_service.create(sample_student_data)
         
         # Assertions
-        mock_repository.create.assert_called_once_with(sample_student_data)
+        mock_repository.create.assert_called_once()
+        # Check that create was called with the correct data as keyword arguments
+        call_args = mock_repository.create.call_args
+        assert call_args.kwargs == sample_student_data
         assert result['name'] == sample_student_data['name']
         assert result['email'] == sample_student_data['email']
     
