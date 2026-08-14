@@ -17,7 +17,7 @@ import json
 
 from src.core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
 from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
+from src.infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
 
 logger = get_logger(__name__)
 
@@ -70,7 +70,7 @@ class MarkQuery:
     search_term: str = None
 
 
-class MarkRepository(BaseRepository):
+class MarkRepository(BaseRepositoryWithDB):
     """
     Repository for Marks entity operations.
     
@@ -85,9 +85,7 @@ class MarkRepository(BaseRepository):
         Args:
             database_manager: Database connection manager instance
         """
-        super().__init__("marks")
-        self.db = database_manager
-        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
+        super().__init__("marks", database_manager)
         
     async def create(self, mark_data: Dict[str, Any]) -> QueryResult:
         """

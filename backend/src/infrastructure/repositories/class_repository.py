@@ -18,7 +18,7 @@ import json
 from src.core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
 from src.core.logging import get_logger
 from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
-from src.domain.classes.class_entity import Class
+from src.models.class_model import ClassCreate, ClassUpdate, ClassResponse, ClassStats, AttendanceRecord
 
 logger = get_logger(__name__)
 

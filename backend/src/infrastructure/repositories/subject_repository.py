@@ -17,8 +17,8 @@ import json
 
 from src.core.exceptions import DatabaseError, NotFoundError, ValidationError
 from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
-from src.domain.courses.subject_entity import Subject
+from src.infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
+from src.models.subject_model import SubjectCreate, SubjectUpdate, SubjectResponse
 
 logger = get_logger(__name__)
 
@@ -52,7 +52,7 @@ class SubjectQuery:
     search_term: str = None
 
 
-class SubjectRepository(BaseRepository):
+class SubjectRepository(BaseRepositoryWithDB):
     """
     Repository for Subject entity operations.
     
@@ -67,10 +67,8 @@ class SubjectRepository(BaseRepository):
         Args:
             database_manager: Database connection manager instance
         """
-        super().__init__("subjects")
-        self.db = database_manager
-        self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
-        
+        super().__init__("subjects", database_manager)
+    
     async def create(self, subject_data: Dict[str, Any]) -> QueryResult:
         """
         Create a new subject in the database.
