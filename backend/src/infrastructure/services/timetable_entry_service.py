@@ -29,23 +29,26 @@ class TimetableEntryService(BaseService):
     """Timetable entry management service with comprehensive functionality."""
     
     def __init__(self, timetable_entry_repository: TimetableEntryRepository):
-        super().__init__()
-        self.timetable_entry_repository = timetable_entry_repository
+        super().__init__(timetable_entry_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the timetable entry service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Timetable entry service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize timetable entry service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the timetable entry service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Timetable entry service disposed successfully")
         except Exception as e:
@@ -1030,4 +1033,35 @@ class TimetableEntryService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate timetable entry cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new timetable entry entity."""
+        timetable_entry = await self.create_timetable_entry(data)
+        return timetable_entry.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a timetable entry entity by ID."""
+        timetable_entry = await self.get_timetable_entry_by_id(id)
+        return timetable_entry.dict() if timetable_entry else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a timetable entry entity by ID."""
+        timetable_entry = await self.update_timetable_entry(id, data)
+        return timetable_entry.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a timetable entry entity by ID."""
+        return await self.delete_timetable_entry(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all timetable entry entities."""
+        timetable_entries = await self.get_all_timetable_entries(skip=skip, limit=limit)
+        return [timetable_entry.dict() for timetable_entry in timetable_entries]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of timetable entry entities."""
+        return await self.get_timetable_entry_count()
         self._cache.clear()

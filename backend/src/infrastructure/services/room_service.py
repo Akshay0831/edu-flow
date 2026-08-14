@@ -30,23 +30,26 @@ class RoomService(BaseService):
     """Room management service with comprehensive functionality."""
     
     def __init__(self, room_repository: RoomRepository):
-        super().__init__()
-        self.room_repository = room_repository
+        super().__init__(room_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the room service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Room service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize room service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the room service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Room service disposed successfully")
         except Exception as e:
@@ -1205,4 +1208,35 @@ class RoomService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate room cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new room entity."""
+        room = await self.create_room(data)
+        return room.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a room entity by ID."""
+        room = await self.get_room_by_id(id)
+        return room.dict() if room else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a room entity by ID."""
+        room = await self.update_room(id, data)
+        return room.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a room entity by ID."""
+        return await self.delete_room(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all room entities."""
+        rooms = await self.get_all_rooms(skip=skip, limit=limit)
+        return [room.dict() for room in rooms]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of room entities."""
+        return await self.get_room_count()
         self._cache.clear()

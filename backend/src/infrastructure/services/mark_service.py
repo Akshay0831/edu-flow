@@ -30,23 +30,26 @@ class MarkService(BaseService):
     """Mark management service with comprehensive functionality."""
     
     def __init__(self, mark_repository: MarkRepository):
-        super().__init__()
-        self.mark_repository = mark_repository
+        super().__init__(mark_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the mark service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Mark service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize mark service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the mark service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Mark service disposed successfully")
         except Exception as e:
@@ -62,15 +65,17 @@ class MarkService(BaseService):
             await self._validate_mark_creation(mark_data)
             
             # Check if mark already exists
-            existing_mark = await self.mark_repository.get_by_student_assessment(
-                mark_data['student_id'], 
-                mark_data['assessment_id']
-            )
+            # Check if mark already exists using filter
+            existing_result = await self.repository.filter({
+                'student_id': mark_data['student_id'],
+                'assessment_id': mark_data['assessment_id']
+            })
+            existing_mark = existing_result.data[0] if existing_result.data else None
             if existing_mark:
                 raise ConflictError(f"Mark for student {mark_data['student_id']} in assessment {mark_data['assessment_id']} already exists")
             
             # Create mark
-            mark = await self.mark_repository.create(**mark_data)
+            mark = await self.repository.create(**mark_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -118,7 +123,7 @@ class MarkService(BaseService):
                 return self._cache[mark_id]
             
             # Get mark from repository
-            mark = await self.mark_repository.get_by_id(mark_id)
+            mark = await self.repository.get_by_id(mark_id)
             
             if mark:
                 # Cache the result
@@ -767,7 +772,9 @@ class MarkService(BaseService):
                 raise ValidationError(f"Required field '{field}' is missing or empty")
         
         # Validate mark value
-        await self._validate_mark_value(data)
+        issues = self._validate_mark_value(data)
+        if issues:
+            raise ValidationError("; ".join(issues))
         
         # Validate grade exists
         from src.infrastructure.repositories.teacher_repository import TeacherRepository
@@ -783,12 +790,12 @@ class MarkService(BaseService):
         if not student:
             raise NotFoundError(f"Student not found with ID: {data['student_id']}")
         
-        # Validate assessment exists
-        from src.infrastructure.repositories.assessment_repository import AssessmentRepository
-        assessment_repo = AssessmentRepository()
-        assessment = await assessment_repo.get_by_id(data['assessment_id'])
-        if not assessment:
-            raise NotFoundError(f"Assessment not found with ID: {data['assessment_id']}")
+        # TODO: Validate assessment exists when assessment repository is implemented
+        # from src.infrastructure.repositories.assessment_repository import AssessmentRepository
+        # assessment_repo = AssessmentRepository()
+        # assessment = await assessment_repo.get_by_id(data['assessment_id'])
+        # if not assessment:
+        #     raise NotFoundError(f"Assessment not found with ID: {data['assessment_id']}")
     
     async def _validate_mark_update(self, data: Dict[str, Any]) -> None:
         """Validate mark update data."""
@@ -1016,4 +1023,35 @@ class MarkService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate mark cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new mark entity."""
+        mark = await self.create_mark(data)
+        return mark.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a mark entity by ID."""
+        mark = await self.get_mark(id)
+        return mark.dict() if mark else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a mark entity by ID."""
+        mark = await self.update_mark(id, data)
+        return mark.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a mark entity by ID."""
+        return await self.delete_mark(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all mark entities."""
+        marks = await self.get_all_marks(skip=skip, limit=limit)
+        return [mark.dict() for mark in marks]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of mark entities."""
+        return await self.get_mark_count()
         self._cache.clear()

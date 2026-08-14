@@ -64,8 +64,6 @@ class TestStudentService:
         at_risk = student_service.identify_at_risk_students()
         assert isinstance(at_risk, list)
         print(f"✓ Identified {len(at_risk)} at-risk students")
-        
-        return True
     
     def test_student_risk_assessment(self, student_service):
         """Test student risk assessment"""

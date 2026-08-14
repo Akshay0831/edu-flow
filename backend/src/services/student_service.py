@@ -779,7 +779,7 @@ class StudentService:
         
         # Calculate average GPA and attendance
         gpas = [s.get("gpa", 0.0) for s in self.students.values()]
-        attendances = [s.get("attendance_rate", 0.0) for s in self.students.values()]
+        attendances = [s.get("attendance_rate", 0.0) for s in self.students.values() if s.get("attendance_rate") is not None]
         
         average_gpa = sum(gpas) / len(gpas) if gpas else 0.0
         average_attendance = sum(attendances) / len(attendances) if attendances else 0.0
@@ -799,14 +799,26 @@ class StudentService:
             attendance_rate = student.get("attendance_rate", 1.0)
             
             # Determine risk level
-            if gpa <= 1.5 or attendance_rate < 0.7:
-                risk_level = RiskLevel.CRITICAL
-            elif gpa < 2.0 or attendance_rate < 0.8:
-                risk_level = RiskLevel.HIGH
-            elif gpa < 2.5 or attendance_rate < 0.9:
-                risk_level = RiskLevel.MEDIUM
+            attendance_rate = student.get("attendance_rate", 1.0)
+            if attendance_rate is not None:
+                if gpa <= 1.5 or attendance_rate < 0.7:
+                    risk_level = RiskLevel.CRITICAL
+                elif gpa < 2.0 or attendance_rate < 0.8:
+                    risk_level = RiskLevel.HIGH
+                elif gpa < 2.5 or attendance_rate < 0.9:
+                    risk_level = RiskLevel.MEDIUM
+                else:
+                    risk_level = RiskLevel.LOW
             else:
-                risk_level = RiskLevel.LOW
+                # If attendance rate is None, only use GPA for risk assessment
+                if gpa <= 1.5:
+                    risk_level = RiskLevel.CRITICAL
+                elif gpa < 2.0:
+                    risk_level = RiskLevel.HIGH
+                elif gpa < 2.5:
+                    risk_level = RiskLevel.MEDIUM
+                else:
+                    risk_level = RiskLevel.LOW
             
             by_risk_level[risk_level] = by_risk_level.get(risk_level, 0) + 1
         

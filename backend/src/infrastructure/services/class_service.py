@@ -29,23 +29,26 @@ class ClassService(BaseService):
     """Class management service with comprehensive functionality."""
     
     def __init__(self, class_repository: ClassRepository):
-        super().__init__()
-        self.class_repository = class_repository
+        super().__init__(class_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the class service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Class service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize class service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the class service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Class service disposed successfully")
         except Exception as e:
@@ -1065,3 +1068,34 @@ class ClassService(BaseService):
     async def _invalidate_cache(self) -> None:
         """Invalidate class cache."""
         self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new class entity."""
+        # Reuse existing method
+        class_obj = await self.create_class(data)
+        return class_obj.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a class entity by ID."""
+        class_obj = await self.get_class_by_id(id)
+        return class_obj.dict() if class_obj else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a class entity by ID."""
+        class_obj = await self.update_class(id, data)
+        return class_obj.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a class entity by ID."""
+        return await self.delete_class(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all class entities."""
+        classes = await self.get_all_classes(skip=skip, limit=limit)
+        return [class_obj.dict() for class_obj in classes]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of class entities."""
+        return await self.get_class_count()

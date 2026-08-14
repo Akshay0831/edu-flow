@@ -80,7 +80,9 @@ class ServiceContainer:
         mark_repository = MarkRepository(mock_db_manager)
         timetable_entry_repository = TimetableEntryRepository(mock_db_manager)
         grade_repository = GradeRepository(mock_db_manager)
-        # Laboratory and Room repositories don't have concrete implementations yet
+        # Mock repositories for Laboratory and Room services
+        laboratory_repository = MockDatabaseManager()  # Temporary mock
+        room_repository = MockDatabaseManager()  # Temporary mock
         
         # Store repositories for dependency injection
         self._repositories.update({
@@ -92,7 +94,9 @@ class ServiceContainer:
             'department_repository': department_repository,
             'mark_repository': mark_repository,
             'timetable_entry_repository': timetable_entry_repository,
-            'grade_repository': grade_repository
+            'grade_repository': grade_repository,
+            'laboratory_repository': laboratory_repository,
+            'room_repository': room_repository
         })
         
         # Student Service
@@ -117,7 +121,7 @@ class ServiceContainer:
         self.register(
             name='course_service',
             service_class=CourseService,
-            dependencies=['course_repository', 'teacher_repository'],
+            dependencies=['course_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -126,7 +130,7 @@ class ServiceContainer:
         self.register(
             name='class_service',
             service_class=ClassService,
-            dependencies=['class_repository', 'subject_repository', 'teacher_repository'],
+            dependencies=['class_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -135,7 +139,7 @@ class ServiceContainer:
         self.register(
             name='subject_service',
             service_class=SubjectService,
-            dependencies=['subject_repository', 'department_repository'],
+            dependencies=['subject_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -153,7 +157,7 @@ class ServiceContainer:
         self.register(
             name='mark_service',
             service_class=MarkService,
-            dependencies=['student_repository', 'course_repository', 'mark_repository'],
+            dependencies=['mark_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -162,7 +166,7 @@ class ServiceContainer:
         self.register(
             name='timetable_entry_service',
             service_class=TimetableEntryService,
-            dependencies=['timetable_entry_repository', 'class_repository'],
+            dependencies=['timetable_entry_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -171,7 +175,7 @@ class ServiceContainer:
         self.register(
             name='grade_service',
             service_class=GradeService,
-            dependencies=['grade_repository', 'student_repository'],
+            dependencies=['grade_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -180,7 +184,7 @@ class ServiceContainer:
         self.register(
             name='laboratory_service',
             service_class=LaboratoryService,
-            dependencies=['laboratory_repository', 'room_repository'],
+            dependencies=['laboratory_repository'],
             singleton=True,
             auto_dispose=True
         )
@@ -367,22 +371,12 @@ class ServiceContainer:
         """Build dependency graph for services."""
         graph = {}
         
-        # Add services and their dependencies
+        # Add services and their dependencies (excluding repository dependencies)
         for service_name in self._services:
             dependencies = self.get_dependencies(service_name)
-            graph[service_name] = dependencies
-        
-        # Add repositories that are dependencies (but don't have dependencies themselves)
-        all_dependencies = set()
-        for service_deps in self._services.values():
-            all_dependencies.update(service_deps.get('dependencies', []))
-        
-        # Filter to only include repository dependencies (not other services)
-        repository_dependencies = [dep for dep in all_dependencies if dep.endswith('_repository')]
-        
-        for repo in repository_dependencies:
-            if repo not in graph:
-                graph[repo] = []  # Repositories have no dependencies
+            # Filter out repository dependencies - they don't need to be in the graph
+            service_dependencies = [dep for dep in dependencies if not dep.endswith('_repository')]
+            graph[service_name] = service_dependencies
         
         return graph
     

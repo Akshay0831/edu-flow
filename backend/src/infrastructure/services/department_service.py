@@ -29,23 +29,26 @@ class DepartmentService(BaseService):
     """Department management service with comprehensive functionality."""
     
     def __init__(self, department_repository: DepartmentRepository):
-        super().__init__()
-        self.department_repository = department_repository
+        super().__init__(department_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the department service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Department service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize department service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the department service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Department service disposed successfully")
         except Exception as e:
@@ -61,12 +64,12 @@ class DepartmentService(BaseService):
             await self._validate_department_creation(department_data)
             
             # Check if department already exists
-            existing_department = await self.department_repository.get_by_code(department_data['department_code'])
+            existing_department = await self.repository.get_by_code(department_data['department_code'])
             if existing_department:
                 raise ConflictError(f"Department with code {department_data['department_code']} already exists")
             
             # Create department
-            department = await self.department_repository.create(**department_data)
+            department = await self.repository.create(**department_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -90,12 +93,12 @@ class DepartmentService(BaseService):
             
             # Check for code conflicts if department_code is being updated
             if 'department_code' in department_data and department_data['department_code'] != department.department_code:
-                existing_department = await self.department_repository.get_by_code(department_data['department_code'])
+                existing_department = await self.repository.get_by_code(department_data['department_code'])
                 if existing_department:
                     raise ConflictError(f"Department with code {department_data['department_code']} already exists")
             
             # Update department
-            updated_department = await self.department_repository.update(department_id, **department_data)
+            updated_department = await self.repository.update(department_id, **department_data)
             
             # Invalidate cache
             await self._invalidate_cache()
@@ -114,7 +117,7 @@ class DepartmentService(BaseService):
                 return self._cache[department_id]
             
             # Get department from repository
-            department = await self.department_repository.get_by_id(department_id)
+            department = await self.repository.get_by_id(department_id)
             
             if department:
                 # Cache the result
@@ -978,4 +981,35 @@ class DepartmentService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate department cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new department entity."""
+        department = await self.create_department(data)
+        return department.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a department entity by ID."""
+        department = await self.get_department(id)
+        return department.dict() if department else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a department entity by ID."""
+        department = await self.update_department(id, data)
+        return department.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a department entity by ID."""
+        return await self.delete_department(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all department entities."""
+        departments = await self.get_all_departments(skip=skip, limit=limit)
+        return [department.dict() for department in departments]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of department entities."""
+        return await self.get_department_count()
         self._cache.clear()

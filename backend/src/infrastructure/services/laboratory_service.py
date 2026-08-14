@@ -32,23 +32,26 @@ class LaboratoryService(BaseService):
     """Laboratory management service with comprehensive functionality."""
     
     def __init__(self, laboratory_repository: LaboratoryRepository):
-        super().__init__()
-        self.laboratory_repository = laboratory_repository
+        super().__init__(laboratory_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the laboratory service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Laboratory service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize laboratory service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the laboratory service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Laboratory service disposed successfully")
         except Exception as e:
@@ -1195,4 +1198,35 @@ class LaboratoryService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate laboratory cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new laboratory entity."""
+        laboratory = await self.create_laboratory(data)
+        return laboratory.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a laboratory entity by ID."""
+        laboratory = await self.get_laboratory_by_id(id)
+        return laboratory.dict() if laboratory else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a laboratory entity by ID."""
+        laboratory = await self.update_laboratory(id, data)
+        return laboratory.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a laboratory entity by ID."""
+        return await self.delete_laboratory(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all laboratory entities."""
+        laboratories = await self.get_all_laboratories(skip=skip, limit=limit)
+        return [laboratory.dict() for laboratory in laboratories]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of laboratory entities."""
+        return await self.get_laboratory_count()
         self._cache.clear()

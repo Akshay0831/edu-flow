@@ -102,6 +102,12 @@ class TestDatabaseService:
     @pytest.mark.asyncio
     async def test_connection_failure(self):
         """Test database connection failure"""
+        # Reset the singleton instance to test connection failure
+        database_service._instance = None
+        database_service._initialized = False
+        database_service.client = None
+        database_service.db = None
+        
         with patch('src.services.database_service.AsyncIOMotorClient', side_effect=Exception("Connection failed")):
             with pytest.raises(DatabaseError, match="Failed to connect to database"):
                 await database_service.connect()

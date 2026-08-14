@@ -29,23 +29,26 @@ class SubjectService(BaseService):
     """Subject management service with comprehensive functionality."""
     
     def __init__(self, subject_repository: SubjectRepository):
-        super().__init__()
-        self.subject_repository = subject_repository
+        super().__init__(subject_repository)
         self._cache = {}
+        self._initialized = False
     
     async def initialize(self) -> None:
         """Initialize the subject service."""
         try:
-            await super().initialize()
+            self._initialized = True
             logger.info("Subject service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize subject service: {str(e)}")
             raise
     
+    def is_initialized(self) -> bool:
+        """Check if the service is initialized."""
+        return self._initialized
+    
     async def dispose(self) -> None:
         """Dispose the subject service."""
         try:
-            await super().dispose()
             self._cache.clear()
             logger.info("Subject service disposed successfully")
         except Exception as e:
@@ -860,4 +863,35 @@ class SubjectService(BaseService):
     
     async def _invalidate_cache(self) -> None:
         """Invalidate subject cache."""
+        self._cache.clear()
+    
+    # Abstract method implementations required by BaseService
+    
+    async def create(self, data: Dict) -> Dict:
+        """Create a new subject entity."""
+        subject = await self.create_subject(data)
+        return subject.dict()
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a subject entity by ID."""
+        subject = await self.get_subject_by_id(id)
+        return subject.dict() if subject else None
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a subject entity by ID."""
+        subject = await self.update_subject(id, data)
+        return subject.dict()
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a subject entity by ID."""
+        return await self.delete_subject(id)
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List all subject entities."""
+        subjects = await self.get_all_subjects(skip=skip, limit=limit)
+        return [subject.dict() for subject in subjects]
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count total number of subject entities."""
+        return await self.get_subject_count()
         self._cache.clear()

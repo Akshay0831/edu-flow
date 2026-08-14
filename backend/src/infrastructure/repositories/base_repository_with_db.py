@@ -141,3 +141,15 @@ class BaseRepositoryWithDB(BaseRepository):
         except Exception as e:
             self.logger.error(f"Failed to filter entities: {str(e)}")
             return QueryResult(success=False, error=f"Failed to filter entities: {str(e)}")
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count entities with optional filters."""
+        try:
+            if filters:
+                count = await self.db.count_documents(self._collection_name, filters)
+            else:
+                count = await self.db.count_documents(self._collection_name, {})
+            return count
+        except Exception as e:
+            self.logger.error(f"Failed to count entities: {str(e)}")
+            return 0
