@@ -16,13 +16,13 @@ from unittest.mock import patch, AsyncMock
 import asyncio
 import json
 
-from ...src.api.v1 import app
-from ...src.core.database import get_db
-from ...src.models import user, student, course, teacher, department, enrollment
-from ...src.core.database import Base
-from ...src.services.user_service import UserService
-from ...src.services.student_service import StudentService
-from ...src.services.course_service import CourseService
+from src.api.v1 import app
+from src.core.dependencies import get_db
+from src.models import user, student, course, teacher, department_model
+from src.database.postgresql import Base
+from src.services.user_service import UserService
+from src.services.student_service import StudentService
+from src.services.course_service import CourseService
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_integration.db"

@@ -36,13 +36,36 @@ class MockSettings:
     algorithm = "HS256"
     jwt_secret_key = "test_jwt_secret_key"
     jwt_algorithm = "HS256"
+    access_token_expire_minutes = 30
+    refresh_token_expire_days = 7
+    
+    # Database settings
+    database_name = "edu_flow"
+    database_url = "sqlite:///./test.db"
+    mongodb_url = "mongodb://localhost:27017/edu_flow"
+    redis_url = "redis://localhost:6379"
+    
+    # CORS settings
+    cors_origins = ["*"]
+    cors_allow_credentials = True
+    cors_allow_methods = ["*"]
+    cors_allow_headers = ["*"]
+    
+    # Rate limiting settings
+    rate_limit_enabled = True
+    rate_limit_requests = 100
+    rate_limit_window = 60
+    
+    # Cache settings
+    cache_enabled = True
+    cache_ttl = 3600
 
 # Patch settings
 with patch('src.config.settings.settings', MockSettings()):
     from src.api.v1 import app
-    from src.core.database import get_db
+    from src.core.dependencies import get_db
     from src.models.user import User, UserRole
-    from src.models.student import Student
+    from src.models.student import StudentBase as Student
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

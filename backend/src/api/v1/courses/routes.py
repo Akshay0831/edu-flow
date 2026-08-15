@@ -15,11 +15,11 @@ from datetime import datetime, timedelta
 import json
 from logging import getLogger
 
-from ...models.course import Course
-from ...services.course_service import CourseService
-from ...core.dependencies import get_db, get_current_user, get_current_active_admin, get_current_active_teacher
-from ...core.exceptions import CourseNotFoundError, DepartmentNotFoundError, EnrollmentError
-from ...models.user import User, UserRole
+from src.models.course import Course
+from src.services.course_service import CourseService
+from src.core.dependencies import get_db, get_current_user, get_current_active_admin, get_current_active_teacher
+from src.core.exceptions import CourseNotFoundError, DepartmentNotFoundError, EnrollmentError
+from src.models.user import User, UserRole
 
 logger = getLogger(__name__)
 

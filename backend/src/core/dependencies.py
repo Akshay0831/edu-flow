@@ -108,6 +108,85 @@ def validate_admin_permissions(current_user: str = Depends(get_current_user)):
     
     return current_user
 
+# SQLAlchemy session dependencies
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+
+def get_db() -> Session:
+    """
+    Mock database session dependency for SQLAlchemy.
+    
+    Returns:
+        Mock database session
+        
+    Note: This is a mock implementation for development.
+    In production, you would use actual SQLAlchemy session management.
+    """
+    try:
+        # Mock session - replace with actual SQLAlchemy session
+        mock_session = {
+            "mock_db_session": True,
+            "connection": "mock_sql_connection"
+        }
+        return mock_session
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection failed: {str(e)}"
+        )
+
+def get_current_active_admin(current_user: str = Depends(get_current_user)):
+    """
+    Validate active admin permissions.
+    
+    Args:
+        current_user: Current user ID from JWT token
+        
+    Returns:
+        User ID if user has active admin permissions
+        
+    Raises:
+        HTTPException: If user doesn't have admin permissions
+    """
+    # Mock implementation - replace with actual permission checking
+    # In a real implementation, you would:
+    # 1. Check the user's role in the database
+    # 2. Verify they have admin privileges and are active
+    
+    if current_user != "mock_admin_user_id":  # Mock check
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    
+    return current_user
+
+def get_current_active_teacher(current_user: str = Depends(get_current_user)):
+    """
+    Validate active teacher permissions.
+    
+    Args:
+        current_user: Current user ID from JWT token
+        
+    Returns:
+        User ID if user has active teacher permissions
+        
+    Raises:
+        HTTPException: If user doesn't have teacher permissions
+    """
+    # Mock implementation - replace with actual permission checking
+    # In a real implementation, you would:
+    # 1. Check the user's role in the database
+    # 2. Verify they have teacher privileges and are active
+    
+    if current_user != "mock_teacher_user_id":  # Mock check
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Teacher privileges required"
+        )
+    
+    return current_user
+
 def validate_teacher_permissions(current_user: str = Depends(get_current_user)):
     """
     Validate teacher permissions.

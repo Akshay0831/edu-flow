@@ -68,31 +68,31 @@ def setup_test_data():
     mark_service = MarkService(mark_repository)
     
     # Create test departments
-        dept1_data = {
-            "name": "Computer Science",
-            "code": "CS",
-            "description": "Computer Science Department",
-            "head_id": None
-        }
-        
-        dept2_data = {
-            "name": "Mathematics", 
-            "code": "MATH",
-            "description": "Mathematics Department",
-            "head_id": None
-        }
-        
-        dept1 = asyncio.run(department_service.create_department(dept1_data))
-        dept2 = asyncio.run(department_service.create_department(dept2_data))
-        
-        # Create test teachers
-        teacher1_data = {
-            "name": "Dr. Smith",
-            "email": "smith@example.com",
-            "employee_id": "T001",
-            "department_id": dept1.id,
-            "specialization": "Algorithms",
-            "qualification": "PhD",
+    dept1_data = {
+        "name": "Computer Science",
+        "code": "CS",
+        "description": "Computer Science Department",
+        "head_id": None
+    }
+    
+    dept2_data = {
+        "name": "Mathematics", 
+        "code": "MATH",
+        "description": "Mathematics Department",
+        "head_id": None
+    }
+    
+    dept1 = asyncio.run(department_service.create_department(dept1_data))
+    dept2 = asyncio.run(department_service.create_department(dept2_data))
+    
+    # Create test teachers
+    teacher1_data = {
+        "name": "Dr. Smith",
+        "email": "smith@example.com",
+        "employee_id": "T001",
+        "department_id": dept1.id,
+        "specialization": "Algorithms",
+        "qualification": "PhD",
             "experience_years": 10
         }
         

@@ -30,7 +30,7 @@ except ImportError:
     bcrypt = None
 
 from src.core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
-from src.config.settings import settings
+from ..config.settings import settings
 
 # Mock imports for models if not available
 try:
@@ -49,18 +49,18 @@ class SecurityConfig:
     
     # OAuth2 configuration
     OAUTH2_CONFIG = {
-        "clientId": settings.CLIENT_ID,
-        "clientSecret": settings.CLIENT_SECRET,
-        "authUrl": settings.AUTH_URL,
-        "tokenUrl": settings.TOKEN_URL,
-        "scopes": settings.SCOPES or ["openid", "profile", "email"]
+        "clientId": "default-client-id",
+        "clientSecret": "default-client-secret",
+        "authUrl": "http://localhost:8000/auth",
+        "tokenUrl": "http://localhost:8000/token",
+        "scopes": ["openid", "profile", "email"]
     }
     
     # JWT configuration
-    SECRET_KEY = settings.SECRET_KEY
+    SECRET_KEY = settings.secret_key
     ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES or 30
-    REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS or 7
+    ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes or 30
+    REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days or 7
 
 # Token data model
 class TokenData(BaseModel):

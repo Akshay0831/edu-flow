@@ -21,7 +21,7 @@ from datetime import datetime
 import json
 
 from ...core.security import SecurityConfig
-from ...core.exceptions import EduFlowException, DatabaseError, AuthenticationError
+from ...core.exceptions import BaseError, AuthenticationError, DatabaseError
 from ...config.settings import settings
 from .users.routes import router as users_router
 from .students.routes import router as students_router
@@ -40,13 +40,13 @@ app = FastAPI(
 )
 
 # Global exception handlers
-@app.exception_handler(EduFlowException)
-async def edu_flow_exception_handler(request: Request, exc: EduFlowException):
+@app.exception_handler(BaseError)
+async def edu_flow_exception_handler(request: Request, exc: BaseError):
     """Handle Edu-Flow specific exceptions"""
-    logger.error(f"Edu-Flow Exception: {exc.detail}")
+    logger.error(f"Edu-Flow Exception: {exc.message}")
     return JSONResponse(
-        status_code=exc.status_code,
-        content={"error": exc.detail, "code": exc.code}
+        status_code=500,
+        content={"error": exc.message, "code": exc.error_code}
     )
 
 @app.exception_handler(DatabaseError)
@@ -79,7 +79,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_HOSTS,
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,7 +88,7 @@ app.add_middleware(
 # Trusted host middleware
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=settings.ALLOWED_HOSTS
+    allowed_hosts=["*"]
 )
 
 # Request logging middleware

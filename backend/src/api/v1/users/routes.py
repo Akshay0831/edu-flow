@@ -16,14 +16,15 @@ from datetime import datetime, timedelta
 import json
 from logging import getLogger
 
-from ...models.user import User, UserRole
-from ...services.user_service import UserService
-from ...core.security import create_access_token, verify_password, get_password_hash
-from ...core.dependencies import get_db, get_current_user, get_current_active_admin
-from ...core.exceptions import UserNotFoundError, UserExistsError, AuthenticationError
-from ...config.settings import settings
+from src.models.user import User, UserRole
+from src.services.user_service import UserService
+from src.core.security import SecurityConfig
+from src.core.dependencies import get_db, get_current_user, get_current_active_admin
+from src.core.exceptions import UserNotFoundError, UserExistsError, AuthenticationError
+from src.config.settings import settings
 
 logger = getLogger(__name__)
+security_config = SecurityConfig()
 
 router = APIRouter(prefix="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
@@ -55,7 +56,7 @@ async def login_for_access_token(
             raise AuthenticationError("Invalid credentials")
             
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
+        access_token = security_config.create_access_token(
             data={"sub": user.email}, expires_delta=access_token_expires
         )
         

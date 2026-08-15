@@ -164,6 +164,97 @@ class MigrationError(BaseError):
         )
 
 
+class UserNotFoundError(BaseError):
+    """Exception raised when a user is not found."""
+    
+    def __init__(self, user_id: str = None, email: str = None, details: Dict = None):
+        message = "User not found"
+        if user_id:
+            message += f" with ID: {user_id}"
+        if email:
+            message += f" with email: {email}"
+        super().__init__(
+            message=message,
+            error_code='USER_NOT_FOUND',
+            details={'user_id': user_id, 'email': email, **(details or {})}
+        )
+
+
+class UserExistsError(BaseError):
+    """Exception raised when trying to create a user that already exists."""
+    
+    def __init__(self, email: str = None, user_id: str = None, details: Dict = None):
+        message = "User already exists"
+        if email:
+            message += f" with email: {email}"
+        if user_id:
+            message += f" with ID: {user_id}"
+        super().__init__(
+            message=message,
+            error_code='USER_EXISTS',
+            details={'email': email, 'user_id': user_id, **(details or {})}
+        )
+
+
+class StudentNotFoundError(BaseError):
+    """Exception raised when a student is not found."""
+    
+    def __init__(self, student_id: str = None, email: str = None, details: Dict = None):
+        message = "Student not found"
+        if student_id:
+            message += f" with ID: {student_id}"
+        if email:
+            message += f" with email: {email}"
+        super().__init__(
+            message=message,
+            error_code='STUDENT_NOT_FOUND',
+            details={'student_id': student_id, 'email': email, **(details or {})}
+        )
+
+
+class CourseNotFoundError(BaseError):
+    """Exception raised when a course is not found."""
+    
+    def __init__(self, course_id: str = None, course_name: str = None, details: Dict = None):
+        message = "Course not found"
+        if course_id:
+            message += f" with ID: {course_id}"
+        if course_name:
+            message += f" with name: {course_name}"
+        super().__init__(
+            message=message,
+            error_code='COURSE_NOT_FOUND',
+            details={'course_id': course_id, 'course_name': course_name, **(details or {})}
+        )
+
+
+class DepartmentNotFoundError(BaseError):
+    """Exception raised when a department is not found."""
+    
+    def __init__(self, department_id: str = None, department_name: str = None, details: Dict = None):
+        message = "Department not found"
+        if department_id:
+            message += f" with ID: {department_id}"
+        if department_name:
+            message += f" with name: {department_name}"
+        super().__init__(
+            message=message,
+            error_code='DEPARTMENT_NOT_FOUND',
+            details={'department_id': department_id, 'department_name': department_name, **(details or {})}
+        )
+
+
+class EnrollmentError(BaseError):
+    """Exception raised for enrollment-related errors."""
+    
+    def __init__(self, message: str, details: Dict = None):
+        super().__init__(
+            message=message,
+            error_code='ENROLLMENT_ERROR',
+            details=details or {}
+        )
+
+
 class UnauthorizedError(BaseError):
     """Exception raised for unauthorized access."""
     
