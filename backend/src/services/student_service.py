@@ -28,6 +28,7 @@ from ..models.student import (
 )
 from ..core.security import AuthService
 from ..core.exceptions import ValidationError, NotFoundError, ForbiddenError, AuthenticationError
+from ..services.database_manager import db_manager
 
 class StudentService:
     """Student management service with comprehensive functionality"""
@@ -38,9 +39,21 @@ class StudentService:
         self.academic_records: List[Dict[str, Any]] = []
         self.enrollment_records: List[Dict[str, Any]] = []
         self.audit_trail: List[Dict[str, Any]] = []
+        self._db_initialized = False
+        
+    async def initialize(self):
+        """Initialize the student service"""
+        await db_manager.initialize()
+        self._db_initialized = True
         
         # Initialize with some test data
         self._initialize_test_data()
+    
+    async def dispose(self):
+        """Dispose of the student service resources"""
+        if self._db_initialized:
+            await db_manager.close()
+        self._db_initialized = False
     
     def _initialize_test_data(self):
         """Initialize with sample student data for testing"""

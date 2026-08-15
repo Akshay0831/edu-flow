@@ -6,20 +6,23 @@ This module provides authentication, authorization, and security utilities:
 - Password hashing and validation
 - Session management
 - Security middleware
+- Multi-provider authentication support (Firebase, JWT, Custom Auth)
 
 Author: Edu-Flow Team
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 import hashlib
 import re
+from abc import ABC, abstractmethod
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
 from src.core.validation import validate_email
 from src.core.exceptions import ValidationError as CustomValidationError
+from src.core.auth_gateway import AuthProvider, auth_gateway
 
 try:
     import bcrypt
@@ -29,8 +32,35 @@ except ImportError:
 from src.core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
 from src.config.settings import settings
 
+# Mock imports for models if not available
+try:
+    from src.models.user import User
+    from src.models.student import Student
+except ImportError:
+    User = None
+    Student = None
+
 # Password context for hashing with fallback
 pwd_context = CryptContext(schemes=["sha256_crypt", "bcrypt"], deprecated="auto")
+
+# Security configuration
+class SecurityConfig:
+    """Security configuration for the API"""
+    
+    # OAuth2 configuration
+    OAUTH2_CONFIG = {
+        "clientId": settings.CLIENT_ID,
+        "clientSecret": settings.CLIENT_SECRET,
+        "authUrl": settings.AUTH_URL,
+        "tokenUrl": settings.TOKEN_URL,
+        "scopes": settings.SCOPES or ["openid", "profile", "email"]
+    }
+    
+    # JWT configuration
+    SECRET_KEY = settings.SECRET_KEY
+    ALGORITHM = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES or 30
+    REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS or 7
 
 # Token data model
 class TokenData(BaseModel):
@@ -39,65 +69,62 @@ class TokenData(BaseModel):
     role: Optional[str] = None
     exp: Optional[datetime] = None
     type: Optional[str] = None
+    provider: Optional[str] = None
 
 class AuthService:
-    """Authentication service for handling JWT tokens and password management"""
+    """Enhanced authentication service using the authentication gateway"""
     
     def __init__(self, user_service=None):
         self.pwd_context = pwd_context
+        self.user_service = user_service
+        self.auth_gateway = auth_gateway
         self.secret_key = settings.secret_key
         self.algorithm = settings.algorithm
         self.access_token_expire_minutes = settings.access_token_expire_minutes
-        self.user_service = user_service
-        
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    
+    def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
-        
-        # Map user_id to sub if present
-        if "user_id" in to_encode:
-            to_encode["sub"] = to_encode.pop("user_id")
-        
         if expires_delta:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
-            
-        to_encode.update({"exp": expire})
+        
+        to_encode.update({"exp": expire, "type": "access", "provider": AuthProvider.JWT})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
     
-    def decode_token(self, token: str) -> dict:
-        """Decode and validate JWT token"""
+    async def authenticate_user(self, credentials: Dict[str, Any], provider: str = None) -> Dict[str, Any]:
+        """Authenticate user with specified provider"""
+        return await self.auth_gateway.authenticate(credentials, provider)
+    
+    async def verify_token(self, token: str, provider: str = None) -> Dict[str, Any]:
+        """Verify token using specified provider"""
+        return await self.auth_gateway.verify_token(token, provider)
+    
+    async def create_user(self, user_data: Dict[str, Any], provider: str = None) -> Dict[str, Any]:
+        """Create user using specified provider"""
+        return await self.auth_gateway.create_user(user_data, provider)
+    
+    async def authenticate_with_fallback(self, credentials: Dict[str, Any], preferred_provider: str = None) -> Dict[str, Any]:
+        """Authenticate with fallback mechanism"""
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
-            return payload
-        except JWTError:
-            raise AuthenticationError("Invalid token")
+            # Try preferred provider first
+            if preferred_provider:
+                return await self.auth_gateway.authenticate(credentials, preferred_provider)
+        except Exception:
+            pass  # Fall through to default provider
+        
+        # Fall back to default provider
+        return await self.auth_gateway.authenticate(credentials)
     
-    def create_refresh_token(self, data: dict) -> str:
-        """Create JWT refresh token"""
-        to_encode = data.copy()
-        
-        # Map user_id to sub if present
-        if "user_id" in to_encode:
-            to_encode["sub"] = to_encode.pop("user_id")
-        
-        expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
-        to_encode.update({"exp": expire, "type": "refresh"})
-        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
-        return encoded_jwt
+    def get_password_hash(self, password: str) -> str:
+        """Hash password"""
+        return pwd_context.hash(password)
     
-    def create_token_pair(self, data: dict) -> dict:
-        """Create access and refresh token pair"""
-        access_token = self.create_access_token(data)
-        refresh_token = self.create_refresh_token(data)
-        
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verify password"""
+        return pwd_context.verify(plain_password, hashed_password)
     
     def refresh_access_token(self, refresh_token: str) -> dict:
         """Refresh access token using refresh token"""

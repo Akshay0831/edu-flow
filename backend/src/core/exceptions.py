@@ -152,6 +152,18 @@ class ConfigurationError(BaseError):
         )
 
 
+class MigrationError(BaseError):
+    """Exception raised for migration errors."""
+    
+    def __init__(self, message: str, migration_version: str = None, details: Dict = None):
+        self.migration_version = migration_version
+        super().__init__(
+            message=message,
+            error_code='MIGRATION_ERROR',
+            details={'migration_version': migration_version, **(details or {})}
+        )
+
+
 class UnauthorizedError(BaseError):
     """Exception raised for unauthorized access."""
     

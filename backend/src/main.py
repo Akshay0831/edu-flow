@@ -43,6 +43,7 @@ from src.core.api_service import initialize_api_client
 from src.services.base_service import ServiceFactory, CourseService, StudentService, TeacherService, AssessmentService
 from src.services.user_service import UserService
 from src.api.v1.endpoints.auth import router as auth_router
+from src.api.v1.endpoints.auth_enhanced import router as auth_enhanced_router
 from src.api.v1.endpoints.users import router as users_router
 from src.api.v1.endpoints.courses import router as courses_router
 from src.api.v1.endpoints.students import router as students_router
@@ -324,6 +325,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 # Include API routers
 app.include_router(auth_router, prefix="/api/v1", tags=["authentication"])
+app.include_router(auth_enhanced_router, prefix="/api/v1", tags=["enhanced-authentication"])
 app.include_router(users_router, prefix="/api/v1", tags=["users"])
 app.include_router(courses_router, prefix="/api/v1", tags=["courses"])
 app.include_router(students_router, prefix="/api/v1", tags=["students"])

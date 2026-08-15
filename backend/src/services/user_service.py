@@ -22,6 +22,7 @@ from uuid import uuid4
 
 from ..core.security import AuthService
 from ..core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from ..services.database_manager import db_manager
 
 
 class UserService:
@@ -33,16 +34,20 @@ class UserService:
         self.users = {}  # In-memory storage for demo
         self.user_activities = {}  # User activity logging
         self.audit_trail = {}  # User audit trail
+        self._db_initialized = False
         
     async def initialize(self):
         """Initialize the user service"""
-        # Initialize any required resources
-        pass
+        # Initialize database manager
+        await db_manager.initialize()
+        self._db_initialized = True
         
     async def dispose(self):
         """Dispose of the user service resources"""
-        # Clean up resources
-        pass
+        # Clean up database connections
+        if self._db_initialized:
+            await db_manager.close()
+        self._db_initialized = False
         
     def validate_email(self, email: str) -> bool:
         """Validate email format"""
@@ -66,7 +71,7 @@ class UserService:
         valid_roles = ['student', 'teacher', 'admin', 'staff']
         return role in valid_roles
     
-    def create_user(self, email: str, password: str, name: str, role: str, **kwargs) -> Dict[str, Any]:
+    async def create_user(self, email: str, password: str, name: str, role: str, **kwargs) -> Dict[str, Any]:
         """
         Create a new user
         
@@ -94,7 +99,8 @@ class UserService:
             raise ValidationError("Invalid role")
         
         # Check if user already exists
-        if any(user['email'] == email for user in self.users.values()):
+        existing_user = await self.get_user_by_email(email)
+        if existing_user:
             raise ValidationError("User with this email already exists")
         
         # Create user
@@ -115,22 +121,65 @@ class UserService:
             **kwargs
         }
         
-        # Store user
-        self.users[user_id] = user
+        # Store user in database
+        try:
+            # Use database transaction
+            async with db_manager.transaction():
+                # Insert user
+                insert_query = """
+                    INSERT INTO users (user_id, email, name, role, password_hash, is_active, 
+                                     created_at, updated_at, last_login, deactivated_at, department)
+                    VALUES (:user_id, :email, :name, :role, :password_hash, :is_active,
+                           :created_at, :updated_at, :last_login, :deactivated_at, :department)
+                """
+                
+                await db_manager.execute_update(insert_query, {
+                    'user_id': user_id,
+                    'email': email,
+                    'name': name,
+                    'role': role,
+                    'password_hash': user['password_hash'],
+                    'is_active': True,
+                    'created_at': now,
+                    'updated_at': now,
+                    'last_login': None,
+                    'deactivated_at': None,
+                    'department': kwargs.get('department')
+                })
+                
+                # Log audit trail
+                await self._log_audit_trail_db(user_id, 'create_user', {'email': email, 'role': role})
+                
+                # Cache user in memory
+                self.users[user_id] = user
         
-        # Log audit trail
-        self._log_audit_trail(user_id, 'create_user', {'email': email, 'role': role})
+        except Exception as e:
+            raise DatabaseError(f"Failed to create user: {e}")
         
         return {
             **user,
             'password_hash': None  # Don't return password hash
         }
     
-    def get_user(self, user_id: str) -> Dict[str, Any]:
+    async def get_user(self, user_id: str) -> Dict[str, Any]:
         """Get user by ID"""
+        # Check cache first
         user = self.users.get(user_id)
-        if not user:
+        if user:
+            user_data = user.copy()
+            user_data['password_hash'] = None
+            return user_data
+        
+        # Query database
+        query = "SELECT * FROM users WHERE user_id = :user_id"
+        result = await db_manager.execute_query(query, {'user_id': user_id})
+        
+        if not result:
             raise NotFoundError("User not found")
+        
+        user = result[0]
+        # Cache user
+        self.users[user_id] = user
         
         # Don't return password hash
         user_data = user.copy()
@@ -138,11 +187,24 @@ class UserService:
         
         return user_data
     
-    def get_user_by_email(self, email: str) -> Dict[str, Any]:
+    async def get_user_by_email(self, email: str) -> Dict[str, Any]:
         """Get user by email"""
-        user = next((u for u in self.users.values() if u['email'] == email), None)
-        if not user:
+        # Check cache first
+        for user in self.users.values():
+            if user['email'] == email:
+                # Return user with password hash for internal authentication
+                return user.copy()
+        
+        # Query database
+        query = "SELECT * FROM users WHERE email = :email"
+        result = await db_manager.execute_query(query, {'email': email})
+        
+        if not result:
             raise NotFoundError("User not found")
+        
+        user = result[0]
+        # Cache user
+        self.users[user['user_id']] = user
         
         # Return user with password hash for internal authentication
         return user.copy()
