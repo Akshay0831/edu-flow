@@ -32,11 +32,11 @@ export default function UpdateFeedback() {
 
     useEffect(() => {
         const fetchData = async () => {
-            let subjectsData = await (await serverRequest("http://localhost:4000/documents/Subject")).json()
+            let subjectsData = await (await serverRequest("http://localhost:8000/documents/Subject")).json()
             setSubjects(subjectsData);
 
             if (isUpdate) {
-                const marksData = (await (await serverRequest("http://localhost:4000/documents/Feedback")).json()).filter(doc => doc._id == id)[0];
+                const marksData = (await (await serverRequest("http://localhost:8000/documents/Feedback")).json()).filter(doc => doc._id == id)[0];
                 setFeedback(marksData["values"]);
                 setSubjectID(marksData["Subject"]);
             }
@@ -141,7 +141,7 @@ export default function UpdateFeedback() {
         }
         if (isUpdate) feedbackDoc._id = id;
 
-        serverRequest(`http://localhost:4000/Feedback`, isUpdate ? "PUT" : "POST", feedbackDoc, { "Content-Type": "application/json; charset=UTF-8" })
+        serverRequest(`http://localhost:8000/Feedback`, isUpdate ? "PUT" : "POST", feedbackDoc, { "Content-Type": "application/json; charset=UTF-8" })
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

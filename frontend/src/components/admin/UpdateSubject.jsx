@@ -63,7 +63,7 @@ export default function UpdateSubject() {
     useEffect(() => {
         const fetchData = async () => {
             if (isUpdate) {
-                const subjectsData = (await (await serverRequest("http://localhost:4000/documents/Subject")).json()).filter(doc => doc._id == id)[0];
+                const subjectsData = (await (await serverRequest("http://localhost:8000/documents/Subject")).json()).filter(doc => doc._id == id)[0];
                 setSchemeCode(subjectsData["Scheme Code"]);
                 setSubjectCode(subjectsData["Subject Code"]);
                 setSubjectName(subjectsData["Subject Name"]);
@@ -73,7 +73,7 @@ export default function UpdateSubject() {
                 setDepartmentID(subjectsData["Department"]);
             }
 
-            const departmentsData = await (await serverRequest("http://localhost:4000/documents/Department")).json();
+            const departmentsData = await (await serverRequest("http://localhost:8000/documents/Department")).json();
             setDepartments(departmentsData);
         }
         fetchData();
@@ -93,7 +93,7 @@ export default function UpdateSubject() {
         };
         subject._id = id;
 
-        serverRequest(`http://localhost:4000/Subject`, isUpdate ? "PUT" : "POST", subject)
+        serverRequest(`http://localhost:8000/Subject`, isUpdate ? "PUT" : "POST", subject)
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

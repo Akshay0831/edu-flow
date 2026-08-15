@@ -31,7 +31,7 @@ export default function AnalyticsOfStudent(props) {
 
     useEffect(() => {
         let fetchData = async () => {
-            let studentsJSON = await (await serverRequest("http://localhost:4000/documents/Student")).json();
+            let studentsJSON = await (await serverRequest("http://localhost:8000/documents/Student")).json();
             if (department)
                 studentsJSON = studentsJSON.filter(doc => doc.Department == department);
             setStudents(studentsJSON);
@@ -43,7 +43,7 @@ export default function AnalyticsOfStudent(props) {
         event.preventDefault();
         if (studentID.length) {
             setIsLoading(true);
-            let data = await (await serverRequest(`http://localhost:4000/Analytics/predict_SEE_marks?Subject=${subject}&Student=${studentID}`)).json();
+            let data = await (await serverRequest(`http://localhost:8000/Analytics/predict_SEE_marks?Subject=${subject}&Student=${studentID}`)).json();
             let IALabels = [];
             let IAGraphData = [];
             let SEE = data.Marks["Marks Gained"].SEE;

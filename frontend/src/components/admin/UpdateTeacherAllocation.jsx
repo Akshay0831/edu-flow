@@ -36,17 +36,17 @@ export default function UpdateTeacherAllocation() {
     useEffect(() => {
         const fetchData = async () => {
             if (isUpdate) {
-                const teacherAllocData = (await (await serverRequest("http://localhost:4000/documents/Teacher Allocation")).json()).filter(doc => doc._id == id)[0];
+                const teacherAllocData = (await (await serverRequest("http://localhost:8000/documents/Teacher Allocation")).json()).filter(doc => doc._id == id)[0];
                 setClassID(teacherAllocData["Class"]);
                 setSubjectID(teacherAllocData["Subject"]);
                 setTeacherID(teacherAllocData["Teacher"]);
                 setDeparmentID(teacherAllocData["Department"]);
             }
 
-            setClasses(await (await serverRequest("http://localhost:4000/Class")).json());
-            setSubjects(await (await serverRequest("http://localhost:4000/documents/Subject")).json());
-            setTeachers(await (await serverRequest("http://localhost:4000/documents/Teacher")).json());
-            setDepartments(await (await serverRequest("http://localhost:4000/documents/Department")).json());
+            setClasses(await (await serverRequest("http://localhost:8000/Class")).json());
+            setSubjects(await (await serverRequest("http://localhost:8000/documents/Subject")).json());
+            setTeachers(await (await serverRequest("http://localhost:8000/documents/Teacher")).json());
+            setDepartments(await (await serverRequest("http://localhost:8000/documents/Department")).json());
         }
         fetchData();
     }, []);
@@ -62,7 +62,7 @@ export default function UpdateTeacherAllocation() {
             }
         };
         if (isUpdate) teacherAllocData._id = id;
-        serverRequest(`http://localhost:4000/Teacher Allocation`, isUpdate ? "PUT" : "POST", teacherAllocData)
+        serverRequest(`http://localhost:8000/Teacher Allocation`, isUpdate ? "PUT" : "POST", teacherAllocData)
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

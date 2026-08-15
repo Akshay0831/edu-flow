@@ -6,13 +6,13 @@ import serverRequest from "../../helper/serverRequest";
 export default class DocumentsAccess extends Component {
     constructor(props) {
         super(props);
-        this.serverLink = 'http://localhost:4000/';
+        this.serverLink = 'http://localhost:8000/';
         document.title = "Documents Access"
         this.state = { listOfDocs: [] };
     }
 
     async componentDidMount() {
-        let listOfDocs = (await (await serverRequest("http://localhost:4000/getDirectoryTree")).json())['public'];
+        let listOfDocs = (await (await serverRequest("http://localhost:8000/getDirectoryTree")).json())['public'];
         this.setState({ listOfDocs: listOfDocs });
     }
 

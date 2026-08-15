@@ -38,7 +38,7 @@ export default function Analytics() {
     useEffect(() => {
         document.title = "Analytics";
         let fetchData = async () => {
-            let data = await serverRequest("http://localhost:4000/Analytics");
+            let data = await serverRequest("http://localhost:8000/Analytics");
             data = await data.json();
 
             setDepartments(data.departments);
@@ -81,7 +81,7 @@ export default function Analytics() {
         event.preventDefault();
         setIsLoading(true);
         if (subject.length > 0) {
-            let data = await serverRequest("http://localhost:4000/Analytics/" + subject);
+            let data = await serverRequest("http://localhost:8000/Analytics/" + subject);
             data = await data.json();
             let Subject = data.Subject;
             let Marks = data.Marks;

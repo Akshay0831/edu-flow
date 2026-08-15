@@ -9,7 +9,7 @@ export default class BatchInput extends Component {
 
     constructor(props) {
         super(props);
-        this.serverURL = 'http://localhost:4000';
+        this.serverURL = 'http://localhost:8000';
         this.subjectCode = props.subjectCode;
         this.subjectId = props.subjectId;
         this.deptId = props.deptId;

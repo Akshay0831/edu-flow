@@ -33,12 +33,12 @@ export default function UpdateStudentMarks() {
 
     useEffect(() => {
         const fetchData = async () => {
-            setStudents(await (await serverRequest("http://localhost:4000/documents/Student")).json());
-            let subjectsData = await (await serverRequest("http://localhost:4000/documents/Subject")).json()
+            setStudents(await (await serverRequest("http://localhost:8000/documents/Student")).json());
+            let subjectsData = await (await serverRequest("http://localhost:8000/documents/Subject")).json()
             setSubjects(subjectsData);
 
             if (isUpdate) {
-                const marksData = (await (await serverRequest("http://localhost:4000/documents/Marks")).json()).filter(doc => doc._id == id)[0];
+                const marksData = (await (await serverRequest("http://localhost:8000/documents/Marks")).json()).filter(doc => doc._id == id)[0];
                 setMarksGained(marksData["Marks Gained"]);
                 setSubjectID(marksData["Subject"]);
                 setStudentID(marksData["Student"]);
@@ -59,7 +59,7 @@ export default function UpdateStudentMarks() {
             }
         }
         if (isUpdate) marks.Marks._id = id;
-        serverRequest(`http://localhost:4000/Marks`, isUpdate ? "PUT" : "POST", marks)
+        serverRequest(`http://localhost:8000/Marks`, isUpdate ? "PUT" : "POST", marks)
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

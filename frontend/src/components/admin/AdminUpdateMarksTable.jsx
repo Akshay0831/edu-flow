@@ -29,7 +29,7 @@ export default class AdminUpdateMarksTable extends Component {
     };
 
     async componentDidMount() {
-        let marks = await (await serverRequest("http://localhost:4000/Marks/update")).json();
+        let marks = await (await serverRequest("http://localhost:8000/Marks/update")).json();
         this.setState({ marks: marks });
         this.validated = true;
         document.title = "Update Marks";
@@ -80,7 +80,7 @@ export default class AdminUpdateMarksTable extends Component {
 
     updateDocument(marksObj) {
         if (this.validated)
-            serverRequest((marksObj._id ? ("http://localhost:4000/documents/Marks/update/" + marksObj._id) : "http://localhost:4000/documents/Marks/add"), "POST", marksObj)
+            serverRequest((marksObj._id ? ("http://localhost:8000/documents/Marks/update/" + marksObj._id) : "http://localhost:8000/documents/Marks/add"), "POST", marksObj)
                 .then((res) => {
                     if (res.status == 200) {
                         this.toasts("Updated Successfully!", toast.success);
@@ -92,7 +92,7 @@ export default class AdminUpdateMarksTable extends Component {
     handleBatchChange = async (event) => {
         let batchYear = event.target.value;
         this.setState({ batch: batchYear, marks: false });
-        let marksObj = await (await serverRequest("http://localhost:4000/Marks/update")).json();
+        let marksObj = await (await serverRequest("http://localhost:8000/Marks/update")).json();
         this.setState({ marks: marksObj });
     }
 

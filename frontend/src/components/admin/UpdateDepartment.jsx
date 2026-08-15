@@ -30,15 +30,15 @@ export default function UpdateDepartment() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // console.log((await (await serverRequest("http://localhost:4000/documents/Department")).json()).filter(doc => doc._id == "64256326539b7e514a91fe64" )[0]);
+            // console.log((await (await serverRequest("http://localhost:8000/documents/Department")).json()).filter(doc => doc._id == "64256326539b7e514a91fe64" )[0]);
             if (isUpdate) {
-                const departmentData = (await (await serverRequest("http://localhost:4000/documents/Department")).json()).filter(doc => doc._id == id)[0];
+                const departmentData = (await (await serverRequest("http://localhost:8000/documents/Department")).json()).filter(doc => doc._id == id)[0];
                 console.log(departmentData);
                 setName(departmentData["Department Name"]);
                 setHOD(departmentData["HoD"]);
             }
 
-            const teachersData = await (await serverRequest("http://localhost:4000/documents/Teacher")).json();
+            const teachersData = await (await serverRequest("http://localhost:8000/documents/Teacher")).json();
             setTeachers(teachersData);
         }
         fetchData();
@@ -53,7 +53,7 @@ export default function UpdateDepartment() {
             }
         }
         if (isUpdate) department._id = id;
-        serverRequest(`http://localhost:4000/Department`, isUpdate ? "PUT" : "POST", department, { "Content-Type": "application/json; charset=UTF-8" })
+        serverRequest(`http://localhost:8000/Department`, isUpdate ? "PUT" : "POST", department, { "Content-Type": "application/json; charset=UTF-8" })
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

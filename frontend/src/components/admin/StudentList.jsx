@@ -7,13 +7,13 @@ import serverRequest from "../../helper/serverRequest";
 export default class StudentList extends Component {
 
     async componentDidMount() {
-        let data = await (await serverRequest("http://localhost:4000/Student/update")).json();
+        let data = await (await serverRequest("http://localhost:8000/Student/update")).json();
         this.setState({ Students: data });
         document.title = "Students by Class";
     }
 
     async deleteClicked(id) {
-        let res = await serverRequest("http://localhost:4000/Student", "DELETE", { _id: id }, { "Content-type": "application/json; charset=UTF-8" });
+        let res = await serverRequest("http://localhost:8000/Student", "DELETE", { _id: id }, { "Content-type": "application/json; charset=UTF-8" });
         if (res.status == 200) {
             let stud = (this.state.Students).filter((doc) => doc._id !== id);
             this.setState({ Students: stud });

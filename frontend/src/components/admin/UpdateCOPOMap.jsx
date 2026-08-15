@@ -32,9 +32,9 @@ export default function UpdateCOPOMap() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // console.log((await (await serverRequest("http://localhost:4000/documents/Department")).json()).filter(doc => doc._id == "64256326539b7e514a91fe64" )[0]);
+            // console.log((await (await serverRequest("http://localhost:8000/documents/Department")).json()).filter(doc => doc._id == "64256326539b7e514a91fe64" )[0]);
             if (isUpdate) {
-                const COPOMapData = (await (await serverRequest("http://localhost:4000/documents/CO PO Map")).json()).filter(doc => doc._id == id)[0];
+                const COPOMapData = (await (await serverRequest("http://localhost:8000/documents/CO PO Map")).json()).filter(doc => doc._id == id)[0];
                 console.log(COPOMapData);
                 setSubjectID(COPOMapData["Subject"]);
                 setCO(COPOMapData["CO"]);
@@ -42,7 +42,7 @@ export default function UpdateCOPOMap() {
                 setValue(COPOMapData["Value"]);
             }
 
-            const subjectsData = await (await serverRequest("http://localhost:4000/documents/Subject")).json();
+            const subjectsData = await (await serverRequest("http://localhost:8000/documents/Subject")).json();
             setSubjects(subjectsData);
         }
         fetchData();
@@ -58,7 +58,7 @@ export default function UpdateCOPOMap() {
                 "Value": val,
             }
         }
-        serverRequest(`http://localhost:4000/CO PO Map`, isUpdate ? "PUT" : "POST", copoMap, { "Content-Type": "application/json; charset=UTF-8" })
+        serverRequest(`http://localhost:8000/CO PO Map`, isUpdate ? "PUT" : "POST", copoMap, { "Content-Type": "application/json; charset=UTF-8" })
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

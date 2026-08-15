@@ -76,7 +76,7 @@ export default function SignIn() {
 
             setUser({ uid: uid, userType: userType, userMail: userCredential.user.email, token: token });
 
-            const endpoint = "http://localhost:4000/login";
+            const endpoint = "http://localhost:8000/login";
             const body = { email: userCredential.user.email, userId: uid, userType };
             await serverRequest(endpoint, "POST", body);
 
@@ -117,7 +117,7 @@ export default function SignIn() {
                 throw new Error("UserType not set");
             setUser({ uid: uid, userType: userType, userMail: email, token: token });
 
-            const endpoint = "http://localhost:4000/login";
+            const endpoint = "http://localhost:8000/login";
             const body = { email, userId: uid, userType };
             await serverRequest(endpoint, "POST", body);
 

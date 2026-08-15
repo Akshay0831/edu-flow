@@ -32,13 +32,13 @@ export default function UpdateClassAllocation() {
     useEffect(() => {
         const fetchData = async () => {
             if (isUpdate) {
-                const classAllocData = (await (await serverRequest("http://localhost:4000/documents/Class Allocation")).json()).find(doc => doc._id == id);
+                const classAllocData = (await (await serverRequest("http://localhost:8000/documents/Class Allocation")).json()).find(doc => doc._id == id);
                 setClassID(classAllocData["Class"]);
                 setStudentID(classAllocData["Student"]);
             }
 
-            setClasses(await (await serverRequest("http://localhost:4000/Class")).json());
-            setStudents(await (await serverRequest("http://localhost:4000/documents/Student")).json());
+            setClasses(await (await serverRequest("http://localhost:8000/Class")).json());
+            setStudents(await (await serverRequest("http://localhost:8000/documents/Student")).json());
         }
         fetchData();
     }, []);
@@ -52,7 +52,7 @@ export default function UpdateClassAllocation() {
             }
         };
         if (isUpdate) classAllocData._id = id;
-        serverRequest(`http://localhost:4000/Class Allocation`, isUpdate ? "PUT" : "POST", classAllocData, { "Content-Type": "application/json; charset=UTF-8" })
+        serverRequest(`http://localhost:8000/Class Allocation`, isUpdate ? "PUT" : "POST", classAllocData, { "Content-Type": "application/json; charset=UTF-8" })
             .then(async res => {
                 if (!res.ok)
                     throw new Error(await res.json());

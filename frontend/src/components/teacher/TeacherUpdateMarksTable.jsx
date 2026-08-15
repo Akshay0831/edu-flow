@@ -33,7 +33,7 @@ function deepCopyObject(originalObject, defaultValue = null) {
 }
 
 export default function TeacherUpdateMarksTable(props) {
-    const serverURL = 'http://localhost:4000/';
+    const serverURL = 'http://localhost:8000/';
     document.title = "Update Marks Table";
 
     const { user } = useContext(AuthContext);
@@ -109,7 +109,7 @@ export default function TeacherUpdateMarksTable(props) {
     }
 
     function updateDocument(marksObj) {
-        serverRequest((marksObj._id ? ("http://localhost:4000/documents/Marks/update/" + marksObj._id) : "http://localhost:4000/documents/Marks/add"), "POST", marksObj)
+        serverRequest((marksObj._id ? ("http://localhost:8000/documents/Marks/update/" + marksObj._id) : "http://localhost:8000/documents/Marks/add"), "POST", marksObj)
             .then((res) => {
                 if (res.status == 200) {
                     this.toasts("Updated Successfully!", toast.success);

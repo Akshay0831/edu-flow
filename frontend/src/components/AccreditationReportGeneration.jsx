@@ -37,8 +37,8 @@ export default function AccreditationReportGeneration(props) {
 
         useEffect(() => {
             let fetchData = async () => {
-                setDepartments(await (await serverRequest("http://localhost:4000/documents/Department")).json());
-                setOriginalSubjects(await (await serverRequest("http://localhost:4000/documents/Subject")).json());
+                setDepartments(await (await serverRequest("http://localhost:8000/documents/Department")).json());
+                setOriginalSubjects(await (await serverRequest("http://localhost:8000/documents/Subject")).json());
             }
             fetchData();
         }, []);
@@ -70,7 +70,7 @@ export default function AccreditationReportGeneration(props) {
             };
             if (subjectId) {
                 let subject = subjects.find(sub => sub._id == subjectId);
-                let response = await serverRequest("http://localhost:4000/reportGeneration/" + subjectId, "POST", options);
+                let response = await serverRequest("http://localhost:8000/reportGeneration/" + subjectId, "POST", options);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(new Blob([blob]));
                 const link = document.createElement('a');
@@ -94,7 +94,7 @@ export default function AccreditationReportGeneration(props) {
             };
             // console.log(options);
             try {
-                let response = await serverRequest("http://localhost:4000/reportGeneration/gapAnalysis", "POST", options);
+                let response = await serverRequest("http://localhost:8000/reportGeneration/gapAnalysis", "POST", options);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(new Blob([blob]));
                 const link = document.createElement('a');

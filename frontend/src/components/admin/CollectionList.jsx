@@ -60,7 +60,7 @@ const MetaData = {
             { isFilterable: true, isSortable: true, prop: 'Student', title: 'Student' },
         ],
         bodyParseFunc: async (json) => {
-            let depts = await (await serverRequest("http://localhost:4000/" + "documents/Department")).json();
+            let depts = await (await serverRequest("http://localhost:8000/" + "documents/Department")).json();
             for (let doc of json)
                 for (let col in doc) {
                     if (col == "Class" && doc[col]) {
@@ -195,7 +195,7 @@ const MetaData = {
 };
 
 export default function CollectionList() {
-    const serverURL = 'http://localhost:4000/';
+    const serverURL = 'http://localhost:8000/';
     document.title = "Collection List";
 
     const location = useLocation();

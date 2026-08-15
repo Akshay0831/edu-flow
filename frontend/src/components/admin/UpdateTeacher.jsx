@@ -33,7 +33,7 @@ export default function UpdateTeacher() {
     useEffect(() => {
         const fetchData = async () => {
             if (isUpdate) {
-                const teachersData = (await (await serverRequest("http://localhost:4000/documents/Teacher")).json()).filter(doc => doc._id == id)[0];
+                const teachersData = (await (await serverRequest("http://localhost:8000/documents/Teacher")).json()).filter(doc => doc._id == id)[0];
                 console.log(teachersData);
                 setMail(teachersData["Mail"]);
                 setRole(teachersData["Role"]);
@@ -41,7 +41,7 @@ export default function UpdateTeacher() {
                 setDepartmentID(teachersData["Department"]);
             }
 
-            const departmentsData = await (await serverRequest("http://localhost:4000/documents/Department")).json();
+            const departmentsData = await (await serverRequest("http://localhost:8000/documents/Department")).json();
             setDepartments(departmentsData);
         }
         fetchData();
@@ -58,7 +58,7 @@ export default function UpdateTeacher() {
             }
         }
         if (isUpdate) teacher._id = id;
-        serverRequest(`http://localhost:4000/Teacher`, (isUpdate ? "PUT" : "POST"), teacher)
+        serverRequest(`http://localhost:8000/Teacher`, (isUpdate ? "PUT" : "POST"), teacher)
             .then(async (res) => {
                 if (!res.ok)
                     throw new Error(await res.json());

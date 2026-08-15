@@ -19,7 +19,7 @@ export default function COPOMapper() {
         });
     }
 
-    const serverURL = 'http://localhost:4000/';
+    const serverURL = 'http://localhost:8000/';
     document.title = "CO PO Mapper";
 
     const { user } = useContext(AuthContext);

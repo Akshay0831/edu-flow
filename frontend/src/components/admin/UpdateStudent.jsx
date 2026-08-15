@@ -37,21 +37,21 @@ export default function UpdateStudent() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const departmentsData = await (await serverRequest("http://localhost:4000/documents/Department")).json();
+            const departmentsData = await (await serverRequest("http://localhost:8000/documents/Department")).json();
             setDepartments(departmentsData);
 
-            const classesData = await (await serverRequest("http://localhost:4000/documents/Class")).json();
+            const classesData = await (await serverRequest("http://localhost:8000/documents/Class")).json();
             setOriginalClasses(classesData);
 
             if (isUpdate) {
-                const studentData = (await (await serverRequest("http://localhost:4000/documents/Student")).json()).filter(doc => doc._id == id)[0];
+                const studentData = (await (await serverRequest("http://localhost:8000/documents/Student")).json()).filter(doc => doc._id == id)[0];
                 setName(studentData["Student Name"]);
                 setUsn(studentData["USN"]);
                 setAdmissionYear(studentData["Admission Year"]);
                 setBatch(studentData["Batch"]);
                 setDepartmentID(studentData["Department"]);
                 setClasses(classesData.filter(obj => obj["Department"] == studentData["Department"]))
-                const classAllocData = (await (await serverRequest("http://localhost:4000/documents/Class Allocation")).json()).filter(doc => doc.Student == studentData._id)[0];
+                const classAllocData = (await (await serverRequest("http://localhost:8000/documents/Class Allocation")).json()).filter(doc => doc.Student == studentData._id)[0];
                 setClassID(classAllocData["Class"]);
             }
         }
@@ -72,7 +72,7 @@ export default function UpdateStudent() {
                 Class: { _id: classID }
             };
             if (isUpdate) student.Student._id = id;
-            serverRequest(`http://localhost:4000/Student`, isUpdate ? "PUT" : "POST", student)
+            serverRequest(`http://localhost:8000/Student`, isUpdate ? "PUT" : "POST", student)
                 .then(async (res) => {
                     if (!res.ok)
                         throw new Error(await res.json());
