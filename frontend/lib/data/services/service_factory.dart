@@ -5,6 +5,9 @@ import 'package:edu_flow/data/services/user_service.dart';
 import 'package:edu_flow/data/services/student_service.dart';
 import 'package:edu_flow/data/services/teacher_service.dart';
 import 'package:edu_flow/data/services/course_service.dart';
+import 'package:edu_flow/data/services/assessment_service.dart';
+import 'package:edu_flow/data/services/analytics_service.dart';
+import 'package:edu_flow/data/services/feedback_service.dart';
 import 'package:edu_flow/data/services/auth_state_service.dart';
 
 // Create service providers using Riverpod for dependency injection
@@ -34,6 +37,21 @@ final courseServiceProvider = Provider<CourseService>((ref) {
   return CourseService();
 });
 
+// Assessment Service
+final assessmentServiceProvider = Provider<AssessmentService>((ref) {
+  return AssessmentService();
+});
+
+// Analytics Service
+final analyticsServiceProvider = Provider<AnalyticsService>((ref) {
+  return AnalyticsService();
+});
+
+// Feedback Service
+final feedbackServiceProvider = Provider<FeedbackService>((ref) {
+  return FeedbackService();
+});
+
 // API Client Singleton
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient.instance;
@@ -59,6 +77,15 @@ class ServiceFactory {
 
   // Get course service
   CourseService get courses => ref.read(courseServiceProvider);
+
+  // Get assessment service
+  AssessmentService get assessments => ref.read(assessmentServiceProvider);
+
+  // Get analytics service
+  AnalyticsService get analytics => ref.read(analyticsServiceProvider);
+
+  // Get feedback service
+  FeedbackService get feedback => ref.read(feedbackServiceProvider);
 
   // Get API client
   ApiClient get api => ref.read(apiClientProvider);

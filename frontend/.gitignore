@@ -11,6 +11,13 @@
 # production
 /build
 
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.lock
+pubspec.lock
+
 # misc
 .DS_Store
 .env.local

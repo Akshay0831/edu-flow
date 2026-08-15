@@ -24,7 +24,7 @@ class ApiClient {
   static const String _userIdKey = 'user_id';
   
   // Get headers for requests
-  Map<String, String> _getHeaders({bool isAuthRequired = false}) {
+  Future<Map<String, String>> _getHeaders({bool isAuthRequired = false}) async {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -32,7 +32,7 @@ class ApiClient {
     };
     
     if (isAuthRequired) {
-      final token = _getAuthToken();
+      final token = await _getAuthToken();
       if (token.isNotEmpty) {
         headers['Authorization'] = 'Bearer $token';
       }
@@ -104,8 +104,7 @@ class ApiClient {
           'Accept': 'application/json',
         },
         body: jsonEncode({'refresh_token': refreshToken}),
-        timeout: _timeout,
-      );
+      ).timeout(_timeout);
       
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -219,32 +218,28 @@ class ApiClient {
           case 'GET':
             response = await _client.get(
               url,
-              headers: _getHeaders(isAuthRequired: isAuthRequired),
-              timeout: _timeout,
-            );
+              headers: await _getHeaders(isAuthRequired: isAuthRequired),
+            ).timeout(_timeout);
             break;
           case 'POST':
             response = await _client.post(
               url,
-              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              headers: await _getHeaders(isAuthRequired: isAuthRequired),
               body: jsonEncode(data),
-              timeout: _timeout,
-            );
+            ).timeout(_timeout);
             break;
           case 'PUT':
             response = await _client.put(
               url,
-              headers: _getHeaders(isAuthRequired: isAuthRequired),
+              headers: await _getHeaders(isAuthRequired: isAuthRequired),
               body: jsonEncode(data),
-              timeout: _timeout,
-            );
+            ).timeout(_timeout);
             break;
           case 'DELETE':
             response = await _client.delete(
               url,
-              headers: _getHeaders(isAuthRequired: isAuthRequired),
-              timeout: _timeout,
-            );
+              headers: await _getHeaders(isAuthRequired: isAuthRequired),
+            ).timeout(_timeout);
             break;
           default:
             throw ApiException(message: 'Unsupported HTTP method: $method');
@@ -336,9 +331,8 @@ class ApiClient {
       
       final response = await _client.get(
         url,
-        headers: _getHeaders(isAuthRequired: isAuthRequired),
-        timeout: _timeout,
-      );
+        headers: await _getHeaders(isAuthRequired: isAuthRequired),
+      ).timeout(_timeout);
       
       return response;
     } on http.ClientException catch (e) {

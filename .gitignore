@@ -174,3 +174,32 @@ firebase-project-credentials.json
 
 .github/
 *.db
+
+# Flutter/Dart specific files and directories
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.lock
+pubspec.lock
+
+# IDE specific
+.idea/
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.sublime-project
+.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
