@@ -1,0 +1,363 @@
+{
+  "status_summary": {
+    "total_components": 42,
+    "operational_components": 30,
+    "functional_components": 11,
+    "needs_attention_components": 1,
+    "critical_components": 0,
+    "overall_status": "functional",
+    "health_score": 71.42857142857143
+  },
+  "category_summary": {
+    "FileStructure": 10,
+    "RustAI": 16,
+    "Configuration": 3,
+    "Dependencies": 6,
+    "CodeQuality": 7
+  },
+  "status_details": [
+    {
+      "category": "FileStructure",
+      "component": "src/main.py",
+      "status": "operational",
+      "message": "Critical file exists: src/main.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.332962"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/core/dependencies.py",
+      "status": "operational",
+      "message": "Critical file exists: src/core/dependencies.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333114"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/core/security.py",
+      "status": "operational",
+      "message": "Critical file exists: src/core/security.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333285"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/auth/service.py",
+      "status": "operational",
+      "message": "Critical file exists: src/auth/service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333457"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/config/logging_config.py",
+      "status": "operational",
+      "message": "Critical file exists: src/config/logging_config.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333597"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/models/student.py",
+      "status": "functional",
+      "message": "Functional file exists: src/models/student.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333716"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/models/course.py",
+      "status": "functional",
+      "message": "Functional file exists: src/models/course.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333840"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/services/course_service.py",
+      "status": "functional",
+      "message": "Functional file exists: src/services/course_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.333967"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/services/student_service.py",
+      "status": "functional",
+      "message": "Functional file exists: src/services/student_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334083"
+    },
+    {
+      "category": "FileStructure",
+      "component": "src/services/user_service.py",
+      "status": "functional",
+      "message": "Functional file exists: src/services/user_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334192"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/__init__.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/__init__.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334312"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/container.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/container.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334432"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/config/settings.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/config/settings.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334586"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/rust_ai_config.json",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/rust_ai_config.json",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334741"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/course_recommendation_service.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/course_recommendation_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334860"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/knowledge_search_service.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/knowledge_search_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.334970"
+    },
+    {
+      "category": "RustAI",
+      "component": "src/services/rust_ai_services/adaptive_learning_service.py",
+      "status": "operational",
+      "message": "Rust AI file exists: src/services/rust_ai_services/adaptive_learning_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.335074"
+    },
+    {
+      "category": "Configuration",
+      "component": "rust_ai_config.json",
+      "status": "operational",
+      "message": "Rust AI configuration loaded: 3 services, 4 models",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.335603"
+    },
+    {
+      "category": "Configuration",
+      "component": "services_count",
+      "status": "functional",
+      "message": "Services configured: ['course_recommendation', 'knowledge_search', 'adaptive_learning']",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.335788"
+    },
+    {
+      "category": "Configuration",
+      "component": "models_count",
+      "status": "functional",
+      "message": "Models configured: ['performance_prediction', 'course_recommendation', 'knowledge_search', 'adaptive_learning']",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.335883"
+    },
+    {
+      "category": "Dependencies",
+      "component": "fastapi",
+      "status": "operational",
+      "message": "Critical dependency found: FastAPI framework",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336438"
+    },
+    {
+      "category": "Dependencies",
+      "component": "uvicorn",
+      "status": "operational",
+      "message": "Critical dependency found: ASGI server",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336592"
+    },
+    {
+      "category": "Dependencies",
+      "component": "sqlalchemy",
+      "status": "operational",
+      "message": "Critical dependency found: SQL ORM",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336687"
+    },
+    {
+      "category": "Dependencies",
+      "component": "pymongo",
+      "status": "functional",
+      "message": "Additional dependency found: MongoDB driver",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336773"
+    },
+    {
+      "category": "Dependencies",
+      "component": "redis",
+      "status": "functional",
+      "message": "Additional dependency found: Redis client",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336845"
+    },
+    {
+      "category": "Dependencies",
+      "component": "pydantic",
+      "status": "functional",
+      "message": "Additional dependency found: Data validation",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.336916"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/main.py",
+      "status": "operational",
+      "message": "Syntax valid: src/main.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.341215"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/auth/service.py",
+      "status": "operational",
+      "message": "Syntax valid: src/auth/service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.345106"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/core/security.py",
+      "status": "operational",
+      "message": "Syntax valid: src/core/security.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.350204"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/services/rust_ai_services/container.py",
+      "status": "operational",
+      "message": "Syntax valid: src/services/rust_ai_services/container.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.353362"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/services/rust_ai_services/course_recommendation_service.py",
+      "status": "operational",
+      "message": "Syntax valid: src/services/rust_ai_services/course_recommendation_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.355520"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/services/rust_ai_services/knowledge_search_service.py",
+      "status": "operational",
+      "message": "Syntax valid: src/services/rust_ai_services/knowledge_search_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.357690"
+    },
+    {
+      "category": "CodeQuality",
+      "component": "src/services/rust_ai_services/adaptive_learning_service.py",
+      "status": "operational",
+      "message": "Syntax valid: src/services/rust_ai_services/adaptive_learning_service.py",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.359903"
+    },
+    {
+      "category": "RustAI",
+      "component": "container_initialization",
+      "status": "operational",
+      "message": "Rust AI container initialized successfully",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.769715"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_discovery",
+      "status": "operational",
+      "message": "Found 3 services: ['course_recommendation', 'knowledge_search', 'adaptive_learning']",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.769898"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_course_recommendation",
+      "status": "operational",
+      "message": "Service course_recommendation accessible: CourseRecommendationService",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.770144"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_course_recommendation_get_recommendations",
+      "status": "needs_attention",
+      "message": "Service course_recommendation method needs attention: 'dict' object has no attribute 'current_semester'",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.770302"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_knowledge_search",
+      "status": "operational",
+      "message": "Service knowledge_search accessible: KnowledgeSearchService",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.770418"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_knowledge_search_search",
+      "status": "operational",
+      "message": "Service knowledge_search search method working",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.770753"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_adaptive_learning",
+      "status": "operational",
+      "message": "Service adaptive_learning accessible: AdaptiveLearningService",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.770884"
+    },
+    {
+      "category": "RustAI",
+      "component": "service_adaptive_learning_get_adaptive_path",
+      "status": "functional",
+      "message": "Service adaptive_learning get_adaptive_path method working",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.771169"
+    },
+    {
+      "category": "RustAI",
+      "component": "container_shutdown",
+      "status": "operational",
+      "message": "Rust AI container shutdown successfully",
+      "details": null,
+      "timestamp": "2026-08-15T20:44:03.771970"
+    }
+  ],
+  "generated_at": "2026-08-15T20:44:03.772191",
+  "recommendations": [
+    "\ud83d\udfe0 ATTENTION: Some components need attention but system can function",
+    "\ud83d\udfe2 RUST AI SERVICES: Core functionality implemented and working",
+    "\u2699\ufe0f CONFIGURATION: System properly configured",
+    "\ud83d\udcc8 SYSTEM HEALTH: Majority of components are operational"
+  ]
+}
