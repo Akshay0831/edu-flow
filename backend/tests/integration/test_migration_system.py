@@ -17,7 +17,7 @@ import json
 import tempfile
 import os
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch, AsyncMock, mock_open
 
 from src.core.database_migrations import (
     MigrationManager, MigrationStatus, MigrationScript, MigrationResult

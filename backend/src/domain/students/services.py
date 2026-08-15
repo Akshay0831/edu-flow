@@ -11,6 +11,7 @@ This module contains domain services for student management:
 from datetime import datetime, date, timedelta
 from typing import List, Optional, Dict, Any
 import uuid
+from uuid import uuid4
 
 from .entities import Student, AcademicRecord, EnrollmentRecord, GradeLevel, AcademicStanding, RiskLevel, EnrollmentStatus
 from ...infrastructure.exceptions import NotFoundError, ValidationError
@@ -28,7 +29,7 @@ class StudentService:
         """Create a new student"""
         # Create student entity
         student = Student(
-            id=str(uuid4()),
+            id=str(uuid4),
             **student_data
         )
         
@@ -336,7 +337,7 @@ class EnrollmentService:
         """Create a new enrollment"""
         # Create enrollment record entity
         enrollment = EnrollmentRecord(
-            id=str(uuid4()),
+            id=str(uuid4),
             student_id=enrollment_data["student_id"],
             course_id=enrollment_data["course_id"],
             semester=enrollment_data["semester"],

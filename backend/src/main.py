@@ -50,6 +50,8 @@ from src.api.v1.endpoints.students import router as students_router
 from src.api.v1.endpoints.teachers_simple import router as teachers_router
 from src.api.v1.endpoints.assessments_simple import router as assessments_router
 from src.api.v1.endpoints.analytics_simple import router as analytics_router
+from src.api.v1.endpoints.see_prediction import router as see_prediction_router
+from src.api.v1.endpoints.analytics_advanced import router as analytics_advanced_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -332,6 +334,8 @@ app.include_router(students_router, prefix="/api/v1", tags=["students"])
 app.include_router(teachers_router, prefix="/api/v1", tags=["teachers"])
 app.include_router(assessments_router, prefix="/api/v1", tags=["assessments"])
 app.include_router(analytics_router, prefix="/api/v1", tags=["analytics"])
+app.include_router(see_prediction_router, prefix="/api/v1", tags=["see-prediction"])
+app.include_router(analytics_advanced_router, prefix="/api/v1", tags=["advanced-analytics"])
 
 # Health check endpoint
 @app.get("/health")

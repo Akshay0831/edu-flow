@@ -41,6 +41,16 @@ class MigrationStatus(str, Enum):
 
 
 @dataclass
+class MigrationResult:
+    """Migration result container"""
+    success: bool
+    message: str
+    migration_id: Optional[str] = None
+    rollback_id: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+@dataclass
 class MigrationInfo:
     """Migration information container"""
     migration_id: str

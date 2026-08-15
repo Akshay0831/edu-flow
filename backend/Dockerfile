@@ -26,12 +26,10 @@ FROM base as dependencies
 
 # Copy requirements files
 COPY requirements.txt .
-COPY requirements-dev.txt .  # For development dependencies
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -r requirements-dev.txt
+    && pip install --no-cache-dir -r requirements.txt
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser

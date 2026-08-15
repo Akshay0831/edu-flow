@@ -27,7 +27,7 @@ from tests.mock_database_manager import MockDatabaseManager
 class TestDatabasePerformance:
     """Database performance tests for Edu-Flow backend."""
     
-@pytest.fixture(scope="class")
+    @pytest.fixture(scope="class")
     def system_services(self):
         """Create and initialize all services."""
         container = ServiceContainer()

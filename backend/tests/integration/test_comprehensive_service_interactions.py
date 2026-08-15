@@ -93,24 +93,24 @@ def setup_test_data():
         "department_id": dept1.id,
         "specialization": "Algorithms",
         "qualification": "PhD",
-            "experience_years": 10
-        }
-        
-        teacher2_data = {
-            "name": "Dr. Johnson",
-            "email": "johnson@example.com",
-            "employee_id": "T002",
-            "department_id": dept2.id,
-            "specialization": "Calculus",
-            "qualification": "PhD",
-            "experience_years": 8
-        }
-        
-        teacher1 = asyncio.run(teacher_service.create_teacher(teacher1_data))
-        teacher2 = asyncio.run(teacher_service.create_teacher(teacher2_data))
-        
-        # Create test courses
-        course1_data = {
+        "experience_years": 10
+    }
+    
+    teacher2_data = {
+        "name": "Dr. Johnson",
+        "email": "johnson@example.com",
+        "employee_id": "T002",
+        "department_id": dept2.id,
+        "specialization": "Calculus",
+        "qualification": "PhD",
+        "experience_years": 8
+    }
+    
+    teacher1 = asyncio.run(teacher_service.create_teacher(teacher1_data))
+    teacher2 = asyncio.run(teacher_service.create_teacher(teacher2_data))
+    
+    # Create test courses
+    course1_data = {
             "name": "Data Structures",
             "code": "CS101",
             "description": "Introduction to data structures",
@@ -119,8 +119,8 @@ def setup_test_data():
             "level": GradeLevel.TENTH,
             "prerequisites": []
         }
-        
-        course2_data = {
+    
+    course2_data = {
             "name": "Calculus I",
             "code": "MATH101", 
             "description": "Introduction to differential calculus",
@@ -129,9 +129,12 @@ def setup_test_data():
             "level": GradeLevel.TENTH,
             "prerequisites": []
         }
-        
-        course1 = asyncio.run(course_service.create_course(course1_data))
-        course2 = asyncio.run(course_service.create_course(course2_data))
+    
+    course1 = asyncio.run(course_service.create_course(course1_data))
+    course2 = asyncio.run(course_service.create_course(course2_data))
+    
+    student2_data = {
+        "name": "Alice Johnson",
         "email": "student2@example.com", 
         "password": "Password123",
         "name": "Bob Smith",
@@ -142,8 +145,8 @@ def setup_test_data():
         "gpa": 3.2
     }
     
-student1 = asyncio.run(student_service.create_student(student1_data))
-        student2 = asyncio.run(student_service.create_student(student2_data))
+    student1 = asyncio.run(student_service.create_student(student1_data))
+    student2 = asyncio.run(student_service.create_student(student2_data))
     
     # Create test classes
     class1_data = {
@@ -166,8 +169,8 @@ student1 = asyncio.run(student_service.create_student(student1_data))
         "schedule": "Tue/Thu 11:00-12:30"
     }
     
-class1 = asyncio.run(class_service.create_class(class1_data))
-        class2 = asyncio.run(class_service.create_class(class2_data))
+    class1 = asyncio.run(class_service.create_class(class1_data))
+    class2 = asyncio.run(class_service.create_class(class2_data))
     
     # Enroll students in classes
     mark1_data = {
@@ -184,8 +187,8 @@ class1 = asyncio.run(class_service.create_class(class1_data))
         "status": "enrolled"
     }
     
-mark1 = asyncio.run(mark_service.create_enrollment(mark1_data))
-        mark2 = asyncio.run(mark_service.create_enrollment(mark2_data))
+    mark1 = asyncio.run(mark_service.create_enrollment(mark1_data))
+    mark2 = asyncio.run(mark_service.create_enrollment(mark2_data))
     
     return {
         'student_service': student_service,

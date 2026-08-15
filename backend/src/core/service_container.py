@@ -80,6 +80,38 @@ class ServiceContainer:
         """Register built-in services."""
         self.register_singleton('config', self)
         self.register_singleton('logger', get_logger(__name__))
+        
+        # Import and register feedback service
+        try:
+            from src.services.feedback_service import FeedbackService
+            self.register_scoped('feedback_service', FeedbackService)
+            logger.debug("Registered feedback service")
+        except ImportError as e:
+            logger.warning(f"Could not register feedback service: {e}")
+        
+        # Import and register Excel integration service
+        try:
+            from src.services.excel_integration_service import ExcelIntegrationService
+            self.register_scoped('excel_integration_service', ExcelIntegrationService)
+            logger.debug("Registered Excel integration service")
+        except ImportError as e:
+            logger.warning(f"Could not register Excel integration service: {e}")
+        
+        # Import and register SEE prediction service
+        try:
+            from src.services.see_prediction_service import SEEPredictionService
+            self.register_scoped('see_prediction_service', SEEPredictionService)
+            logger.debug("Registered SEE prediction service")
+        except ImportError as e:
+            logger.warning(f"Could not register SEE prediction service: {e}")
+        
+        # Import and register advanced analytics service
+        try:
+            from src.services.analytics_service import AdvancedAnalyticsService
+            self.register_scoped('advanced_analytics_service', AdvancedAnalyticsService)
+            logger.debug("Registered advanced analytics service")
+        except ImportError as e:
+            logger.warning(f"Could not register advanced analytics service: {e}")
     
     def register_transient(self, name: str, service_type: Type, implementation: Type = None, 
                          dependencies: List[str] = None, decorators: List[Callable] = None,
@@ -387,6 +419,22 @@ class ServiceContainer:
                 health_status['services'][name] = f'error: {str(e)}'
         
         return health_status
+    
+    def get_feedback_service(self):
+        """Get the feedback service instance."""
+        return self.get_service('feedback_service')
+    
+    def get_excel_integration_service(self):
+        """Get the Excel integration service instance."""
+        return self.get_service('excel_integration_service')
+    
+    def get_see_prediction_service(self):
+        """Get the SEE prediction service instance."""
+        return self.get_service('see_prediction_service')
+    
+    def get_advanced_analytics_service(self):
+        """Get the advanced analytics service instance."""
+        return self.get_service('advanced_analytics_service')
 
 
 # Global service container instance

@@ -26,6 +26,10 @@ from ...config.settings import settings
 from .users.routes import router as users_router
 from .students.routes import router as students_router
 from .courses.routes import router as courses_router
+from .endpoints.feedback_processing import router as feedback_processing_router
+from .endpoints.excel_integration import router as excel_integration_router
+from .endpoints.see_prediction import router as see_prediction_router
+from .endpoints.analytics_advanced import router as analytics_advanced_router
 
 logger = getLogger(__name__)
 
@@ -109,6 +113,10 @@ async def log_requests(request: Request, call_next):
 app.include_router(users_router)
 app.include_router(students_router)
 app.include_router(courses_router)
+app.include_router(feedback_processing_router)
+app.include_router(excel_integration_router)
+app.include_router(see_prediction_router)
+app.include_router(analytics_advanced_router)
 
 # Health check endpoint
 @app.get("/health")
@@ -128,6 +136,9 @@ async def api_info():
             "users": "/users",
             "students": "/students",
             "courses": "/courses",
+            "feedback": "/feedback",
+            "excel": "/excel",
+            "see_prediction": "/see-prediction",
             "health": "/health"
         }
     }
