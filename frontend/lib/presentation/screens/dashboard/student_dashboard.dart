@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:edu_flow/core/services/service_factory.dart';
+import 'package:edu_flow/data/services/analytics_service.dart';
+import 'package:edu_flow/data/services/course_service.dart';
+import 'package:edu_flow/data/services/service_factory.dart';
 import 'package:edu_flow/presentation/widgets/common/loading_indicator.dart';
 
 class StudentDashboard extends ConsumerStatefulWidget {
@@ -16,12 +18,13 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   bool _isLoading = true;
   Map<String, dynamic> _dashboardData = {};
   List<Map<String, dynamic>> _courses = [];
+  List<Map<String, dynamic>> _upcomingDeadlines = [];
 
   @override
   void initState() {
     super.initState();
-    _analyticsService = ref.read(analyticsService);
-    _courseService = ref.read(courseService);
+    _analyticsService = ref.read(analyticsServiceProvider);
+    _courseService = ref.read(courseServiceProvider);
     _loadDashboardData();
   }
 
@@ -44,6 +47,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           'grade': course['grade'] ?? 'N/A',
           'status': course['status'] ?? 'enrolled',
         }).toList();
+        _upcomingDeadlines = (_dashboardData['upcoming_deadlines'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
         _isLoading = false;
       });
     } catch (e) {
@@ -220,9 +224,14 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                     ),
                   ),
                 ),
-            else
-              const Text('No courses found'),
-          ],
+                if (_courses.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No courses found'),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -324,9 +333,14 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                     ],
                   ),
                 ),
-            else
-              const Text('No upcoming deadlines'),
-          ],
+                if (true)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No upcoming deadlines'),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

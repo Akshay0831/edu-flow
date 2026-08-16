@@ -121,7 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   
                   const SizedBox(height: 8),
                   
-                  Fill out the form below to get started',
+                  Text(
+                    'Fill out the form below to get started',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary,
                     ),

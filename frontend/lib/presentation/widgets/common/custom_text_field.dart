@@ -20,6 +20,7 @@ class CustomTextField extends StatefulWidget {
   final EdgeInsetsGeometry? contentPadding;
   final bool? showCursor;
   final bool autofocus;
+  final VoidCallback? onTap;
 
   const CustomTextField({
     super.key,
@@ -42,6 +43,7 @@ class CustomTextField extends StatefulWidget {
     this.autofocus = false,
     this.prefixIcon,
     this.suffixIcon,
+    this.onTap,
   });
 
   @override
@@ -90,6 +92,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             controller: widget.controller,
             obscureText: _obscureText,
             enabled: widget.enabled,
+            onTap: widget.onTap,
             keyboardType: widget.keyboardType,
             textInputAction: widget.textInputAction,
             onChanged: widget.onChanged,

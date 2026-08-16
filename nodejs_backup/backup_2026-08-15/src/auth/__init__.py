@@ -1,1 +1,0 @@
-"""Authentication package for FastAPI backend."""

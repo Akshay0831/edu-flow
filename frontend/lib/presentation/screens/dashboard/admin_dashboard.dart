@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:edu_flow/core/services/service_factory.dart';
+import 'package:edu_flow/data/services/analytics_service.dart';
+import 'package:edu_flow/data/services/service_factory.dart';
 import 'package:edu_flow/presentation/widgets/common/loading_indicator.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
@@ -18,7 +19,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-    _analyticsService = ref.read(analyticsService);
+    _analyticsService = ref.read(analyticsServiceProvider);
     _loadDashboardData();
   }
 
@@ -172,9 +173,14 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                     ],
                   ),
                 ),
-            else
-              const Text('No recent activity'),
-          ],
+                if (_dashboardData['recent_activities'] == null)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No recent activity'),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -209,7 +215,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                 _buildActionChip('Add Teacher', Icons.person_add, () {
                   // Navigate to add teacher
                 }),
-                _buildActionChip('Add Course', Icons.add_course, () {
+                _buildActionChip('Add Course', Icons.add, () {
                   // Navigate to add course
                 }),
                 _buildActionChip('Generate Report', Icons.assessment, () {

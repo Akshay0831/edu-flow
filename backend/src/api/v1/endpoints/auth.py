@@ -149,11 +149,8 @@ async def register_user(
         
         # Generate tokens for the newly created user
         auth_result = await global_auth_service.authenticate_user(
-            credentials={
-                "email": user_request.email,
-                "password": user_request.password
-            },
-            provider=provider
+            email=user_request.email,
+            password=user_request.password
         )
         
         return ResponseFormatter.created({
@@ -184,7 +181,7 @@ async def login_user(login_request: LoginRequest):
     """
     try:
         print(f"DEBUG: Login request for {login_request.email}")
-        result = global_auth_service.login_user(login_request.model_dump())
+        result = await global_auth_service.login_user(login_request.model_dump())
         print(f"DEBUG: Login result: {result}")
         # Extract user info from nested structure to match LoginResponse expectations
         user_info = result.get("user", {})

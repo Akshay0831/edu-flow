@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _emailController,
                     labelText: 'Email',
                     hintText: 'Enter your email address',
-                    prefixIcon: Icons.email_outlined,
+                    prefixIcon: 'email',
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -166,16 +166,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     labelText: 'Password',
                     hintText: 'Enter your password',
-                    prefixIcon: Icons.lock_outlined,
+                    prefixIcon: 'lock',
                     obscureText: !_obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
+                    suffixIcon: 'visibility',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -195,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       : CustomButton(
                           text: 'Sign In',
                           onPressed: _handleLogin,
-                          icon: Icons.login_outlined,
+                          icon: 'login',
                         ),
                   
                   const SizedBox(height: 16),

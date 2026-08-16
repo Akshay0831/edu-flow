@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.284" timestamp="2026-08-14T12:07:17.764239+05:30" hostname="DESKTOP-SRID98L"><testcase classname="tests.performance.test_database_performance.TestDatabasePerformance" name="test_database_index_performance" time="0.157"><failure message="AttributeError: 'coroutine' object has no attribute 'create'">tests\performance\test_database_performance.py:56: in test_database_index_performance
-    student = await student_service.create(student_data)
-                    ^^^^^^^^^^^^^^^^^^^^^^
-E   AttributeError: 'coroutine' object has no attribute 'create'</failure></testcase></testsuite></testsuites>

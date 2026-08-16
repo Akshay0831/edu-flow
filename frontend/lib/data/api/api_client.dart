@@ -60,7 +60,7 @@ class ApiClient {
   }
   
   // Save authentication tokens to secure storage
-  Future<void> _saveAuthToken(String accessToken, {String? refreshToken}) async {
+  Future<void> saveAuthToken(String accessToken, {String? refreshToken}) async {
     try {
       await _secureStorage.write(key: _accessTokenKey, value: accessToken);
       if (refreshToken != null) {
@@ -72,7 +72,7 @@ class ApiClient {
   }
   
   // Save user role to secure storage
-  Future<void> _saveUserRole(String role) async {
+  Future<void> saveUserRole(String role) async {
     try {
       await _secureStorage.write(key: _userRoleKey, value: role);
     } catch (e) {
@@ -112,7 +112,7 @@ class ApiClient {
         final newRefreshToken = data['refresh_token'];
         
         if (newAccessToken != null) {
-          await _saveAuthToken(newAccessToken, refreshToken: newRefreshToken);
+          await saveAuthToken(newAccessToken, refreshToken: newRefreshToken);
           return newAccessToken;
         }
         
@@ -128,6 +128,18 @@ class ApiClient {
   }
   
   // Clear authentication tokens
+  Future<void> clearAuthTokens() async {
+    try {
+      await _secureStorage.delete(key: _accessTokenKey);
+      await _secureStorage.delete(key: _refreshTokenKey);
+      await _secureStorage.delete(key: _userRoleKey);
+      await _secureStorage.delete(key: _userIdKey);
+    } catch (e) {
+      throw ApiException(message: 'Failed to clear auth tokens: $e');
+    }
+  }
+  
+  // Private clear authentication tokens (for internal use)
   Future<void> _clearAuthTokens() async {
     try {
       await _secureStorage.delete(key: _accessTokenKey);
@@ -377,5 +389,18 @@ class ApiClient {
     } catch (e) {
       throw ApiException(message: 'Logout failed: $e');
     }
+  }
+  
+  // Public getters for token management (for auth state service)
+  Future<String> getAuthToken() async {
+    return await _getAuthToken();
+  }
+  
+  Future<String> getRefreshToken() async {
+    return await _getRefreshToken();
+  }
+  
+  Future<void> refreshAccessToken() async {
+    await _refreshAccessToken();
   }
 }

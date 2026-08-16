@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -21,114 +25,147 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
+# PyInstaller
+*.manifest
+*.spec
 
-# Testing
-.pytest_cache/
-.coverage
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
 
-# Logs
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
 *.log
-logs/
-*.log.*
+local_settings.py
+db.sqlite3
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
+# Flask stuff:
+instance/
+.webassets-cache
 
-# Data files
-data/
-data1.xlsx
-template.xlsx
-template1.xlsx
-uploads/
-exports/
+# Scrapy stuff:
+.scrapy
 
-# Temporary files
-*.tmp
-*.temp
-tmp/
-temp/
+# Sphinx documentation
+docs/_build/
 
-# Reports and statuses
-backend_status_report.json
-backend_test_report.json
-backend_validation_report.json
-test_report.json
-test_results/
-test_results.log
-
-# Development files
-*.docker-compose.yml
-backend.docker-compose.yml
-docker-compose.yml
-Dockerfile
-docker-entrypoint.sh
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-Thumbs.db
-ehthumbs.db
+# PyBuilder
+target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Environment variables
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
 .env
-.env.local
-.env.*.local
-
-# Node.js (if any frontend is included)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Temporary build artifacts
-*.pyc
-*.pyo
-*.pyd
-.Python
+.venv
 env/
 venv/
 ENV/
-.env.coverage
+env.bak/
+venv.bak/
 
-# Monitoring and monitoring
-monitoring/
+# Spyder project settings
+.spyderproject
+.spyproject
 
-# Reports
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Application specific
+*.db
+*.sqlite
+*.sqlite3
+database/
+logs/
+*.log
+temp/
+tmp/
+uploads/
+exports/
+data/
+*.xlsx
+*.xls
+coverage/
 reports/
+monitoring/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
 
-# Test validation files
-validate_backend_complete.py
-final_backend_status.py
-comprehensive_backend_test.py
-run_comprehensive_tests.py
-run_tests.py
-test_database_integration.py
-test_feedback_api.py
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
-# Model files (if any)
-*.model
-*.pkl
-*.joblib
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test files
+test_results/
+test_*.log
+*_test.py
+conftest.py
+pytest.ini
+
+# Backup files
+*.backup
+*.old
+*.orig
+
+# Cache directories
+__pycache__/
+.cache/
+.pytest_cache/
+
+test_results

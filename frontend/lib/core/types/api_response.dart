@@ -53,19 +53,13 @@ class ApiResponse<T> {
     return ApiResponse<T>(
       success: map['success'] ?? false,
       message: map['message'],
-      data: map['data'] != null ? _parseData(map['data']) : null,
+      data: map['data'] as T?,
       statusCode: map['status_code'],
       metadata: map['metadata'],
       timestamp: map['timestamp'] != null 
           ? DateTime.parse(map['timestamp'])
           : null,
     );
-  }
-
-  T? _parseData(dynamic data) {
-    // This would be more sophisticated in a real app
-    // For now, we'll just return the data as-is
-    return data as T?;
   }
 
   Map<String, dynamic> toMap() {

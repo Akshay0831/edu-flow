@@ -303,4 +303,40 @@ class CourseService {
       throw ApiException(message: 'Update course prerequisites failed: ${e.toString()}');
     }
   }
+  
+  // Get courses for a specific teacher
+  Future<List<Map<String, dynamic>>> getTeacherCourses() async {
+    try {
+      final response = await _apiClient.get(
+        '/courses/teacher',
+        isAuthRequired: true,
+      );
+      
+      if (response['data'] is List) {
+        return List<Map<String, dynamic>>.from(response['data']);
+      } else {
+        throw ApiException(message: 'Invalid response format for teacher courses');
+      }
+    } catch (e) {
+      throw ApiException(message: 'Get teacher courses failed: ${e.toString()}');
+    }
+  }
+  
+  // Get courses for a specific student
+  Future<List<Map<String, dynamic>>> getStudentCourses() async {
+    try {
+      final response = await _apiClient.get(
+        '/courses/student',
+        isAuthRequired: true,
+      );
+      
+      if (response['data'] is List) {
+        return List<Map<String, dynamic>>.from(response['data']);
+      } else {
+        throw ApiException(message: 'Invalid response format for student courses');
+      }
+    } catch (e) {
+      throw ApiException(message: 'Get student courses failed: ${e.toString()}');
+    }
+  }
 }

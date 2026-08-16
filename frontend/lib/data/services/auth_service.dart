@@ -31,8 +31,8 @@ class AuthService {
       
       if (user != null && response['access_token'] != null) {
         // Save authentication tokens and user info
-        await _apiClient._saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
-        await _apiClient._saveUserRole(user.role);
+        await _apiClient.saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
+        await _apiClient.saveUserRole(user.role);
       }
       
       return {
@@ -70,8 +70,8 @@ class AuthService {
       
       if (user != null && response['access_token'] != null) {
         // Save authentication tokens and user info
-        await _apiClient._saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
-        await _apiClient._saveUserRole(user.role);
+        await _apiClient.saveAuthToken(response['access_token'], refreshToken: response['refresh_token']);
+        await _apiClient.saveUserRole(user.role);
       }
       
       return {
@@ -211,7 +211,7 @@ class AuthService {
       );
       
       // Save new authentication token
-      _apiClient._saveAuthToken(response['access_token']);
+      _apiClient.saveAuthToken(response['access_token']);
       
       return {
         'success': response['success'] ?? true,
@@ -244,7 +244,7 @@ class AuthService {
       // Ignore errors if logout API call fails, just proceed with token cleanup
     } finally {
       // Always clear tokens
-      await _apiClient._clearAuthTokens();
+      await _apiClient.clearAuthTokens();
     }
   }
 }

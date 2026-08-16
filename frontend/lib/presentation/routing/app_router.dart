@@ -161,7 +161,7 @@ class MainWrapper extends StatelessWidget {
   }
   
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).location;
+    final location = GoRouterState.of(context).matchedLocation;
     
     if (location.contains('/dashboard')) return 0;
     if (location.contains('/courses')) return 1;

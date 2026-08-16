@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:edu_flow/core/services/service_factory.dart';
+import 'package:edu_flow/data/services/analytics_service.dart';
+import 'package:edu_flow/data/services/course_service.dart';
+import 'package:edu_flow/data/services/service_factory.dart';
 import 'package:edu_flow/presentation/widgets/common/loading_indicator.dart';
 
 class TeacherDashboard extends ConsumerStatefulWidget {
@@ -20,8 +22,8 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
   @override
   void initState() {
     super.initState();
-    _analyticsService = ref.read(analyticsService);
-    _courseService = ref.read(courseService);
+    _analyticsService = ref.read(analyticsServiceProvider);
+    _courseService = ref.read(courseServiceProvider);
     _loadDashboardData();
   }
 
@@ -218,9 +220,14 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     ),
                   ),
                 ),
-            else
-              const Text('No courses found'),
-          ],
+                if (_courses.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('No courses found'),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );

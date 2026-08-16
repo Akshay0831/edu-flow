@@ -20,22 +20,22 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
-from src.core.validation import validate_email
-from src.core.exceptions import ValidationError as CustomValidationError
-from src.core.auth_gateway import AuthProvider, auth_gateway
+from core.validation import validate_email
+from core.exceptions import ValidationError as CustomValidationError
+from core.auth_gateway import AuthProvider, auth_gateway
 
 try:
     import bcrypt
 except ImportError:
     bcrypt = None
 
-from src.core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
-from ..config.settings import settings
+from core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
+from core.config.settings import settings
 
 # Mock imports for models if not available
 try:
-    from src.models.user import User
-    from src.models.student import Student
+    from models.user import User
+    from models.student import Student
 except ImportError:
     User = None
     Student = None
@@ -57,10 +57,10 @@ class SecurityConfig:
     }
     
     # JWT configuration
-    SECRET_KEY = settings.secret_key
-    ALGORITHM = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes or 30
-    REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days or 7
+    SECRET_KEY = settings.security.secret_key
+    ALGORITHM = settings.security.algorithm
+    ACCESS_TOKEN_EXPIRE_MINUTES = settings.security.access_token_expire_minutes or 30
+    REFRESH_TOKEN_EXPIRE_DAYS = settings.security.refresh_token_expire_days or 7
 
 # Token data model
 class TokenData(BaseModel):
@@ -78,9 +78,9 @@ class AuthService:
         self.pwd_context = pwd_context
         self.user_service = user_service
         self.auth_gateway = auth_gateway
-        self.secret_key = settings.secret_key
-        self.algorithm = settings.algorithm
-        self.access_token_expire_minutes = settings.access_token_expire_minutes
+        self.secret_key = settings.security.secret_key
+        self.algorithm = settings.security.algorithm
+        self.access_token_expire_minutes = settings.security.access_token_expire_minutes
     
     def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""
@@ -91,6 +91,16 @@ class AuthService:
             expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
         
         to_encode.update({"exp": expire, "type": "access", "provider": AuthProvider.JWT})
+        encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+        return encoded_jwt
+    
+    def create_refresh_token(self, data: Dict[str, Any]) -> str:
+        """Create JWT refresh token"""
+        to_encode = data.copy()
+        # Refresh tokens typically last much longer
+        expire = datetime.now(timezone.utc) + timedelta(days=7)  # 7 days
+        
+        to_encode.update({"exp": expire, "type": "refresh", "provider": AuthProvider.JWT})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
         return encoded_jwt
     
@@ -223,7 +233,7 @@ class AuthService:
                 # If bcrypt is not available, use SHA-256
                 return hashlib.sha256(password.encode()).hexdigest()
     
-    def authenticate_user(self, email: str, password: str, user_service=None) -> Dict[str, Any]:
+    async def authenticate_user(self, email: str, password: str, user_service=None) -> Dict[str, Any]:
         """Authenticate user with email and password"""
         # Use provided user_service or fall back to attached user_service
         if user_service is None:
@@ -231,7 +241,7 @@ class AuthService:
             if user_service is None:
                 raise AuthenticationError("User service not available")
         
-        user = user_service.get_user_by_email(email)
+        user = await user_service.get_user_by_email(email)
         if not user:
             raise AuthenticationError("Invalid credentials")
         
@@ -266,19 +276,21 @@ class AuthService:
             }
         }
     
-    def login_user(self, login_data: Dict[str, str]) -> Dict[str, Any]:
+    async def login_user(self, login_data: Dict[str, str]) -> Dict[str, Any]:
         """Login user and return tokens"""
-        return self.authenticate_user(
+        return await self.authenticate_user(
             email=login_data["email"],
             password=login_data["password"],
             user_service=self.user_service
         )
     
-    def create_user(self, email: str, password: str, name: str, role: str, user_service=None) -> Dict[str, str]:
+    async def create_user(self, user_data: Dict[str, Any], provider: str = None, user_service=None) -> Dict[str, Any]:
         """Create a new user"""
         try:
-            # Hash the password
-            hashed_password = self.get_password_hash(password)
+            email = user_data.get("email")
+            password = user_data.get("password")
+            name = user_data.get("name")
+            role = user_data.get("role", "student")
             
             # Use provided user_service or the one in auth_service
             if user_service is None:
@@ -286,20 +298,22 @@ class AuthService:
                 if user_service is None:
                     raise AuthenticationError("User service not available")
             
-            # Create user using the service method
-            user_result = user_service.create_user(
+            # Create user using the service method (user service will handle password hashing)
+            user_result = await user_service.create_user(
                 email=email,
-                password=hashed_password,
+                password=password,  # Pass plain password to user service
                 name=name,
                 role=role
             )
             
             # Extract the actual user_id from the result
-            user_id = user_result["user_id"]
+            user_id = user_result.get("user_id", str(user_result.get("id", "default_user_id")))
             
             return {
                 "user_id": str(user_id),
-                "password_hash": hashed_password
+                "email": email,
+                "name": name,
+                "role": role
             }
         except CustomValidationError as e:
             raise e  # Re-raise ValidationError to be caught by API endpoint
@@ -799,6 +813,19 @@ class AuthService:
             checks.append(has_special)
         
         return all(checks)
+    
+    def validate_password(self, password: str) -> bool:
+        """Validate password meets basic requirements"""
+        if not password or len(password) < 8:
+            return False
+        
+        # Check for at least one uppercase, one lowercase, one digit, and one special character
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_special = any(c in '!@#$%^&*(),.?":{}|<>' for c in password)
+        
+        return has_upper and has_lower and has_digit and has_special
     
     def create_session_data(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create session data from user data"""

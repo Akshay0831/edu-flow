@@ -110,7 +110,7 @@ class AuthStateService extends StateNotifier<AuthState> {
   // Clear authentication state
   Future<void> clearAuthState() async {
     try {
-      await _apiClient._clearAuthTokens();
+      await _apiClient.clearAuthTokens();
     } catch (e) {
       // Ignore errors during clear
     }
@@ -156,16 +156,16 @@ class AuthStateService extends StateNotifier<AuthState> {
 
   // Get token (for API calls)
   Future<String?> getAuthToken() async {
-    return await _apiClient._getAuthToken();
+    return await _apiClient.getAuthToken();
   }
 
   // Refresh token
   Future<void> refreshToken() async {
     try {
-      await _apiClient._refreshAccessToken();
+      await _apiClient.refreshAccessToken();
       // Update state with new tokens (API client already saved them)
-      final newToken = await _apiClient._getAuthToken();
-      final newRefreshToken = await _apiClient._getRefreshToken();
+      final newToken = await _apiClient.getAuthToken();
+      final newRefreshToken = await _apiClient.getRefreshToken();
       final userRole = await _apiClient.getUserRole();
       
       state = state.copyWith(

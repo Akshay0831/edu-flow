@@ -27,8 +27,8 @@ try:
 except ImportError:
     bcrypt = None
 
-from src.core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
-from src.config.settings import settings
+from core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
+from core.config.settings import settings
 
 # Authentication providers enum
 class AuthProvider:
@@ -69,9 +69,9 @@ class JWTAuthProvider(AuthProviderInterface):
     """JWT-based authentication provider"""
     
     def __init__(self):
-        self.secret_key = settings.secret_key
-        self.algorithm = settings.algorithm
-        self.access_token_expire_minutes = settings.access_token_expire_minutes
+        self.secret_key = settings.security.secret_key
+        self.algorithm = settings.security.algorithm
+        self.access_token_expire_minutes = settings.security.access_token_expire_minutes
     
     def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""

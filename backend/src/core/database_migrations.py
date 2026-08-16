@@ -24,9 +24,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
 
-from src.core.database_abstraction import DatabaseInterface, DatabaseType, DatabaseConfig
-from src.core.exceptions import DatabaseError, MigrationError, ConfigurationError
-from src.core.logging import get_logger
+from core.database_abstraction import DatabaseInterface, DatabaseType, DatabaseConfig
+from core.exceptions import DatabaseError, MigrationError, ConfigurationError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 
