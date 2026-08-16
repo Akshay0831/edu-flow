@@ -428,43 +428,7 @@ async def rust_ai_stats():
     }
 
 
-def get_rust_ai_health_router():
-    """Create router for Rust AI services health endpoints"""
-    from fastapi import APIRouter
-    
-    router = APIRouter(prefix="/rust-ai", tags=["rust-ai-services"])
-    
-    @router.get("/health", summary="Check all Rust AI services health")
-    async def check_all_health():
-        """Check health of all Rust AI services"""
-        from src.services.rust_ai_services import get_container
-        container = get_container()
-        return await container.check_all_services_health()
-    
-    @router.get("/services/{service_name}", summary="Check specific service health")
-    async def check_service_health(service_name: str):
-        """Check health of a specific Rust AI service"""
-        from src.services.rust_ai_services import get_container
-        container = get_container()
-        return await container.get_service_health(service_name)
-    
-    @router.get("/stats", summary="Get Rust AI services statistics")
-    async def get_stats():
-        """Get statistics about Rust AI services"""
-        from src.services.rust_ai_services import get_container, ServiceContainerStats
-        container = get_container()
-        stats = await container.get_stats()
-        return {
-            "total_services": stats.total_services,
-            "enabled_services": stats.enabled_services,
-            "total_requests": stats.total_requests,
-            "total_errors": stats.total_errors,
-            "average_latency_ms": stats.average_latency_ms,
-            "cache_hit_rate": stats.cache_hit_rate,
-            "system_health": stats.system_health
-        }
-    
-    return router
+
 
 # Health check endpoint
 @app.get("/health")

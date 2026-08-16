@@ -138,11 +138,11 @@ class CustomSliverAppBar extends StatelessWidget {
       snap: snap,
       stretch: stretch,
       flexibleSpace: flexibleSpace,
-      background: background,
+      // background: background,  // This parameter doesn't exist in SliverAppBar
       titleSpacing: titleSpacing,
       centerTitle: centerTitle,
-      forceElevated: forceElevated,
-      collapsedElevation: collapsedElevation,
+      forceElevated: forceElevated ?? false,
+      // collapsedElevation: collapsedElevation,  // This parameter doesn't exist in SliverAppBar
       leading: leading ?? (automaticallyImplyLeading
           ? IconButton(
               icon: const Icon(Icons.arrow_back),

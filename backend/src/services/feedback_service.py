@@ -342,12 +342,11 @@ class FeedbackService(BaseService):
         # Common words to exclude
         stopwords = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "this", "that"}
         
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', all_text)  # Words with 3+ letters
-        words = [word for word in words if word not in stopwords]
+        words = [word for word in re.findall(r'\b[a-zA-Z]{3,}\b', all_text) if word not in stopwords]
         
-        word_counts = {}
-        for word in words:
-            word_counts[word] = word_counts.get(word, 0) + 1
+        # Optimize word counting using collections.Counter
+        from collections import Counter
+        word_counts = Counter(words)
         
         # Sort by frequency and return top keywords
         sorted_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)

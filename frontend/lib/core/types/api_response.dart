@@ -62,7 +62,7 @@ class ApiResponse<T> {
     );
   }
 
-  static T? _parseData(dynamic data) {
+  T? _parseData(dynamic data) {
     // This would be more sophisticated in a real app
     // For now, we'll just return the data as-is
     return data as T?;

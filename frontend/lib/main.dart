@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:go_router/go_router.dart';
 import 'package:edu_flow/core/theme/app_theme.dart';
 import 'package:edu_flow/config/app_config.dart';
 import 'package:edu_flow/presentation/routing/app_router.dart';
@@ -10,9 +9,6 @@ void main() async {
   
   // Load environment variables
   await dotenv.load(fileName: ".env");
-  
-  // Initialize app configuration
-  final config = AppConfig();
   
   runApp(const EduFlowApp());
 }

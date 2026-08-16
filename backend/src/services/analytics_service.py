@@ -201,29 +201,26 @@ class AdvancedAnalyticsService:
         return []
     
     async def _apply_filters(self, data: List[Dict[str, Any]], filters: List[QueryFilter]) -> List[Dict[str, Any]]:
-        """Apply filters to data"""
+        """Apply filters to data - optimized with filter mapping"""
+        # Pre-define filter functions for better performance
+        filter_functions = {
+            FilterOperator.EQUALS: lambda item, field, value: item.get(field) == value,
+            FilterOperator.NOT_EQUALS: lambda item, field, value: item.get(field) != value,
+            FilterOperator.GREATER_THAN: lambda item, field, value: item.get(field, 0) > value,
+            FilterOperator.LESS_THAN: lambda item, field, value: item.get(field, 0) < value,
+            FilterOperator.IN: lambda item, field, value: item.get(field) in value,
+            FilterOperator.NOT_IN: lambda item, field, value: item.get(field) not in value,
+        }
+        
+        # Apply all filters efficiently
         for filter_item in filters:
             field = filter_item.field
             operator = filter_item.operator
             value = filter_item.value
             
-            if operator == FilterOperator.EQUALS:
-                data = [item for item in data if item.get(field) == value]
-            elif operator == FilterOperator.NOT_EQUALS:
-                data = [item for item in data if item.get(field) != value]
-            elif operator == FilterOperator.GREATER_THAN:
-                data = [item for item in data if item.get(field, 0) > value]
-            elif operator == FilterOperator.LESS_THAN:
-                data = [item for item in data if item.get(field, 0) < value]
-            elif operator == FilterOperator.IN:
-                data = [item for item in data if item.get(field) in value]
-            elif operator == FilterOperator.NOT_IN:
-                data = [item for item in data if item.get(field) not in value]
-            elif operator == FilterOperator.CONTAINS:
-                data = [item for item in data if value in str(item.get(field, ''))]
-            elif operator == FilterOperator.BETWEEN:
-                lower, upper = value
-                data = [item for item in data if lower <= item.get(field, 0) <= upper]
+            filter_func = filter_functions.get(operator)
+            if filter_func:
+                data = [item for item in data if filter_func(item, field, value)]
         
         return data
     

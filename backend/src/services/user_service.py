@@ -374,39 +374,26 @@ class UserService:
         Returns:
             List of users matching the criteria
         """
-        # Filter users
-        filtered_users = []
-        
-        for user in self.users.values():
-            # Apply filters
-            if query:
-                query_lower = query.lower()
-                if not (query_lower in user['name'].lower() or query_lower in user['email'].lower()):
-                    continue
-            
-            if role and user['role'] != role:
-                continue
-            
-            if department and user.get('department') != department:
-                continue
-            
-            if is_active is not None and user['is_active'] != is_active:
-                continue
-            
-            filtered_users.append(user)
+        # Filter users using list comprehension for better performance
+        filtered_users = [
+            user for user in self.users.values()
+            if (not query or 
+                query.lower() in user['name'].lower() or 
+                query.lower() in user['email'].lower()) and
+               (not role or user['role'] == role) and
+               (not department or user.get('department') == department) and
+               (is_active is None or user['is_active'] == is_active)
+        ]
         
         # Apply pagination
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
-        
         paginated_users = filtered_users[start_idx:end_idx]
         
-        # Don't return password hash
-        result = []
-        for user in paginated_users:
-            user_data = user.copy()
-            user_data['password_hash'] = None
-            result.append(user_data)
+        # Don't return password hash using list comprehension
+        result = [
+            {**user, 'password_hash': None} for user in paginated_users
+        ]
         
         return result
     

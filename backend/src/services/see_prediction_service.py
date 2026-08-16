@@ -148,7 +148,7 @@ class SEEPredictionService(BaseService):
             logger.info(f"Model version created: {model_name} ({version_id})")
             return model_version
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Error creating model version: {str(e)}")
             raise DatabaseError(f"Failed to create model version: {str(e)}")
     
@@ -161,7 +161,7 @@ class SEEPredictionService(BaseService):
             
             return ModelVersion(**model_data)
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Error getting model version: {str(e)}")
             raise DatabaseError(f"Failed to get model version: {str(e)}")
     
@@ -175,7 +175,7 @@ class SEEPredictionService(BaseService):
             model_data = await self.find_many('model_versions', query)
             return [ModelVersion(**data) for data in model_data]
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Error getting active models: {str(e)}")
             raise DatabaseError(f"Failed to get active models: {str(e)}")
     
@@ -391,27 +391,23 @@ class SEEPredictionService(BaseService):
             tasks = [self.make_prediction(request) for request in requests]
             prediction_results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # Handle exceptions
-            results = []
-            for i, result in enumerate(prediction_results):
-                if isinstance(result, Exception):
-                    logger.error(f"Error in batch prediction {i}: {str(result)}")
-                    # Create error result
-                    error_result = PredictionResult(
-                        request_id=self._generate_request_id(),
-                        student_id=requests[i].student_id,
-                        course_id=requests[i].course_id,
-                        prediction_type=requests[i].prediction_type,
-                        predicted_value=None,
-                        confidence_score=0.0,
-                        timestamp=datetime.utcnow(),
-                        model_version="error",
-                        model_name="error",
-                        explanation=f"Prediction failed: {str(result)}"
-                    )
-                    results.append(error_result)
-                else:
-                    results.append(result)
+            # Handle exceptions with optimized list building
+            def _create_error_result(i, error):
+                logger.error(f"Error in batch prediction {i}: {str(error)}")
+                return PredictionResult(
+                    request_id=self._generate_request_id(),
+                    student_id=requests[i].student_id,
+                    course_id=requests[i].course_id,
+                    prediction_type=requests[i].prediction_type,
+                    predicted_value=None,
+                    confidence_score=0.0,
+                    timestamp=datetime.utcnow(),
+                    model_version="error",
+                    model_name="error",
+                    explanation=f"Prediction failed: {str(error)}"
+                )
+            
+            results = [_create_error_result(i, result) if isinstance(result, Exception) else result for i, result in enumerate(prediction_results)]
             
             return results
             

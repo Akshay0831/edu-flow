@@ -194,11 +194,14 @@ class AcademicRecordService:
             
             # For testing, just return the original record (which already has an id)
             return record
-        except Exception as e:
+        except (ValidationError, NotFoundError) as e:
             # Convert pydantic validation errors to our ValidationError
             if "validation error" in str(e).lower():
                 raise ValidationError(str(e))
             raise
+        except Exception as e:
+            # Handle unexpected errors
+            raise ValidationError(f"Unexpected error creating academic record: {str(e)}")
     
     async def get_academic_records_by_student(self, student_id: str) -> List[AcademicRecord]:
         """Get all academic records for a student"""
@@ -298,25 +301,17 @@ class AcademicRecordService:
         
         average_grade = total_grade / len(records) if records else 0.0
         
-        courses = []
-        for record in records:
-            if isinstance(record, dict):
-                course_data = {
-                    "course_id": record.get("course_id", ""),
-                    "grade": record.get("grade", 0),
-                    "credits": record.get("credits", 0),
-                    "semester": record.get("semester", ""),
-                    "academic_year": record.get("academic_year", "")
-                }
-            else:
-                course_data = {
-                    "course_id": record.course_id,
-                    "grade": record.grade,
-                    "credits": record.credits,
-                    "semester": record.semester,
-                    "academic_year": record.academic_year
-                }
-            courses.append(course_data)
+        # Build courses list using list comprehension for better performance
+        courses = [
+            {
+                "course_id": record.get("course_id", "") if isinstance(record, dict) else record.course_id,
+                "grade": record.get("grade", 0) if isinstance(record, dict) else record.grade,
+                "credits": record.get("credits", 0) if isinstance(record, dict) else record.credits,
+                "semester": record.get("semester", "") if isinstance(record, dict) else record.semester,
+                "academic_year": record.get("academic_year", "") if isinstance(record, dict) else record.academic_year
+            }
+            for record in records
+        ]
         
         return {
             "student_id": student_id,

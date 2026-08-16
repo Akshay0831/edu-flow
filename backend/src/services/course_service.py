@@ -147,36 +147,42 @@ class CourseService(BaseService):
     def search_courses(self, filters: Dict[str, Any]) -> List[Course]:
         """Search courses by various filters."""
         courses = self.get_all_courses()
-        results = courses
         
-        # Apply filters
+        # Apply all filters in a single pass for better performance
+        filter_functions = []
+        
         if 'title' in filters:
             search_term = filters['title'].lower()
-            results = [c for c in results if search_term in c.title.lower()]
+            filter_functions.append(lambda c: search_term in c.title.lower())
         
         if 'code' in filters:
             search_term = filters['code'].lower()
-            results = [c for c in results if search_term in c.code.lower()]
+            filter_functions.append(lambda c: search_term in c.code.lower())
         
         if 'department_id' in filters:
             dept_id = filters['department_id']
-            results = [c for c in results if c.department_id == dept_id]
+            filter_functions.append(lambda c: c.department_id == dept_id)
         
         if 'level' in filters:
             level = filters['level']
-            results = [c for c in results if c.level == level]
+            filter_functions.append(lambda c: c.level == level)
         
         if 'semester' in filters:
             semester = filters['semester']
-            results = [c for c in results if semester in c.typical_semesters]
+            filter_functions.append(lambda c: semester in c.typical_semesters)
         
         if 'min_credits' in filters:
             min_credits = filters['min_credits']
-            results = [c for c in results if c.credits >= min_credits]
+            filter_functions.append(lambda c: c.credits >= min_credits)
         
         if 'max_credits' in filters:
             max_credits = filters['max_credits']
-            results = [c for c in results if c.credits <= max_credits]
+            filter_functions.append(lambda c: c.credits <= max_credits)
+        
+        # Apply all filters in a single pass
+        results = courses
+        for filter_func in filter_functions:
+            results = [c for c in results if filter_func(c)]
         
         return results
 
@@ -545,13 +551,12 @@ class CourseService(BaseService):
             if p.prerequisite_course_id != prerequisite_course_id
         ]
         
-        course.updated_at = datetime.now(timezone)
+        course.updated_at = datetime.now(timezone.utc)
         
-        # Remove prerequisite
-        course.prerequisites = [
-            p for p in course.prerequisites 
-            if p.prerequisite_course_id != prerequisite_course_id
-        ]
+        # Save the course
+        self.update_course(course_id, CourseUpdate(**course.model_dump()), user_id)
+        
+        return f"Prerequisite removed successfully from course {course_id}"
         
         course.updated_at = datetime.now(timezone.utc)
         

@@ -197,23 +197,6 @@ class AuthService {
     }
   }
   
-  // Logout
-  Future<Map<String, dynamic>> logout() async {
-    try {
-      // Clear authentication token
-      _apiClient._saveAuthToken('');
-      
-      return {
-        'success': true,
-        'message': 'Logout successful',
-      };
-    } catch (e) {
-      // Even if logout fails, clear the token
-      await _apiClient._clearAuthTokens();
-      throw ApiException(message: 'Logout failed: ${e.toString()}');
-    }
-  }
-  
   // Refresh access token
   Future<Map<String, dynamic>> refreshToken({
     required String refreshToken,

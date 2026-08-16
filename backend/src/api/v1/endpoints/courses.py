@@ -129,10 +129,9 @@ async def get_all_courses(
         end_idx = start_idx + page_size
         paginated_courses = courses_data[start_idx:end_idx]
         
-        # Format courses
-        courses = []
-        for course in paginated_courses:
-            courses.append({
+        # Format courses using list comprehension for better performance
+        courses = [
+            {
                 "id": course.get("id"),
                 "name": course.get("name"),
                 "code": course.get("code"),
@@ -141,7 +140,9 @@ async def get_all_courses(
                 "department_id": course.get("department_id"),
                 "created_at": course.get("created_at"),
                 "updated_at": course.get("updated_at")
-            })
+            }
+            for course in paginated_courses
+        ]
         
         return {
             "courses": courses,

@@ -32,7 +32,7 @@ class AppTheme {
       error: errorColor,
     ),
     scaffoldBackgroundColor: backgroundColor,
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: cardColor,
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -125,8 +125,8 @@ class AppTheme {
       titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: textPrimary),
       titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
       bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: textPrimary),
-      bodyMedium: TextStyle(fontSize: 14, fontWeight: normal, color: textPrimary),
-      bodySmall: TextStyle(fontSize: 12, fontWeight: normal, color: textSecondary),
+      bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: textPrimary),
+      bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: textSecondary),
       labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
       labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textPrimary),
       labelSmall: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textSecondary),
@@ -146,7 +146,7 @@ class AppTheme {
       error: errorColor,
     ),
     scaffoldBackgroundColor: const Color(0xFF111827),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: const Color(0xFF1F2937),
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -238,9 +238,9 @@ class AppTheme {
       titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
       titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
       titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-      bodyLarge: TextStyle(fontSize: 16, fontWeight: normal, color: Colors.white),
-      bodyMedium: TextStyle(fontSize: 14, fontWeight: normal, color: Colors.white),
-      bodySmall: TextStyle(fontSize: 12, fontWeight: normal, color: textSecondary),
+      bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.normal, color: Colors.white),
+      bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.normal, color: Colors.white),
+      bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.normal, color: textSecondary),
       labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
       labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
       labelSmall: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textSecondary),

@@ -76,8 +76,12 @@ class StudentRepository(BaseRepository):
                 return 1
             
             async def find_many(self, collection, filter, limit=None, skip=None):
-                # Return mock data for testing
-                return [self._cache[k] for k in list(self._cache.keys())[:limit] or list(self._cache.keys())]
+                # Return mock data for testing - optimized list comprehension
+                cache_keys = list(self._cache.keys())
+                if limit:
+                    return [self._cache[k] for k in cache_keys[:limit]]
+                else:
+                    return [self._cache[k] for k in cache_keys]
         
         return MockDatabase()
     

@@ -152,7 +152,7 @@ class CustomButton extends StatelessWidget {
       case 'loading':
         return Icons.refresh;
       default:
-        return Icons.button;
+        return Icons.add;
     }
   }
 }

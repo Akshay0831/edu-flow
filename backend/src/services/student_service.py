@@ -442,11 +442,11 @@ class StudentService:
     
     def identify_at_risk_students(self) -> List[Dict[str, Any]]:
         """Identify students who are at risk academically"""
-        at_risk_students = []
         
-        for student in self.students.values():
+        def _assess_student_risk(student):
+            """Helper function to assess risk for a single student"""
             if not student.get("is_active", True):
-                continue
+                return None
             
             risk_factors = []
             risk_level = RiskLevel.LOW
@@ -486,16 +486,18 @@ class StudentService:
                 risk_factors.append("poor_academic_standing")
                 risk_level = RiskLevel.CRITICAL
             
-            if risk_factors:
-                at_risk_students.append({
-                    "student_id": student["student_id"],
-                    "name": student["name"],
-                    "risk_level": risk_level,
-                    "risk_factors": risk_factors,
-                    "gpa": gpa,
-                    "attendance_rate": attendance_rate,
-                    "academic_standing": academic_standing
-                })
+            return {
+                "student_id": student["student_id"],
+                "name": student["name"],
+                "risk_level": risk_level,
+                "risk_factors": risk_factors,
+                "gpa": gpa,
+                "attendance_rate": attendance_rate,
+                "academic_standing": academic_standing
+            } if risk_factors else None
+        
+        # Use list comprehension for better performance
+        at_risk_students = [risk for risk in (_assess_student_risk(student) for student in self.students.values()) if risk is not None]
         
         return at_risk_students
     

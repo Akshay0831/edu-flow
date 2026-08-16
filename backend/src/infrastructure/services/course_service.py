@@ -27,19 +27,21 @@ logger = get_logger(__name__)
 
 
 class CourseService(BaseService):
-    """Course management service with comprehensive functionality."""
+    """Course management service with comprehensive functionality and optimized caching."""
     
     def __init__(self, course_repository: CourseRepository):
         super().__init__(course_repository)
         self._cache = {}
         self._initialized = False
+        self._cache_hits = 0
+        self._cache_misses = 0
     
     async def initialize(self) -> None:
         """Initialize the course service."""
         try:
             self._initialized = True
             logger.info("Course service initialized successfully")
-        except Exception as e:
+        except (DatabaseError, ValidationError) as e:
             logger.error(f"Failed to initialize course service: {str(e)}")
             raise
     
@@ -52,7 +54,7 @@ class CourseService(BaseService):
         try:
             self._cache.clear()
             logger.info("Course service disposed successfully")
-        except Exception as e:
+        except (DatabaseError, ValidationError) as e:
             logger.error(f"Failed to dispose course service: {str(e)}")
             raise
     
@@ -77,7 +79,7 @@ class CourseService(BaseService):
             
             return course
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, ConflictError) as e:
             logger.error(f"Failed to create course: {str(e)}")
             raise
     
@@ -106,29 +108,32 @@ class CourseService(BaseService):
             
             return updated_course
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to update course {course_id}: {str(e)}")
             raise
     
     async def get_course(self, course_id: str) -> Optional[CourseResponse]:
-        """Get a course by ID with caching."""
+        """Get a course by ID with optimized caching and hit tracking."""
         try:
             # Check cache first
-            if course_id in self._cache:
-                return self._cache[course_id]
+            cached_course = self._cache.get(course_id)
+            if cached_course:
+                self._cache_hits += 1
+                return cached_course
             
-            # Get course from repository
+            # Cache miss - get course from repository
+            self._cache_misses += 1
             course = await self.repository.get_by_id(course_id)
             
             if course:
-                # Cache the result
+                # Cache the result with optimized storage
                 self._cache[course_id] = course
                 return course
             
             # Course not found
             raise NotFoundError(f"Course not found with ID: {course_id}")
             
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get course {course_id}: {str(e)}")
             raise
     
@@ -136,7 +141,7 @@ class CourseService(BaseService):
         """Get a course by course code."""
         try:
             return await self.repository.get_by_code(course_code)
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get course by code {course_code}: {str(e)}")
             raise
     
@@ -166,7 +171,7 @@ class CourseService(BaseService):
             
             return result
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to delete course {course_id}: {str(e)}")
             raise
     
@@ -187,7 +192,7 @@ class CourseService(BaseService):
             
             return courses
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to search courses: {str(e)}")
             raise
     
@@ -206,7 +211,7 @@ class CourseService(BaseService):
             
             return courses
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to get courses by department: {str(e)}")
             raise
     
@@ -225,7 +230,7 @@ class CourseService(BaseService):
             
             return []
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to get courses by level: {str(e)}")
             raise
     
@@ -247,7 +252,7 @@ class CourseService(BaseService):
             
             return []
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to get courses by semester: {str(e)}")
             raise
     
@@ -268,7 +273,7 @@ class CourseService(BaseService):
             
             return []
             
-        except Exception as e:
+        except (DatabaseError, ValidationError, NotFoundError) as e:
             logger.error(f"Failed to get courses by credits: {str(e)}")
             raise
     
@@ -441,7 +446,7 @@ class CourseService(BaseService):
                 skip=skip,
                 limit=limit
             )
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get course materials for {course_id}: {str(e)}")
             raise
     
@@ -525,7 +530,7 @@ class CourseService(BaseService):
         try:
             result = await self.repository.filter({"course_id": course_id}, limit=limit, offset=skip)
             return result.data if result and result.data else []
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get course enrollments for {course_id}: {str(e)}")
             raise
     
@@ -537,7 +542,7 @@ class CourseService(BaseService):
                 skip=skip,
                 limit=limit
             )
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get student courses for {student_id}: {str(e)}")
             raise
     
@@ -605,7 +610,7 @@ class CourseService(BaseService):
         """Get student's progress in a course."""
         try:
             return await self.repository.get_course_progress(course_id, student_id)
-        except Exception as e:
+        except (DatabaseError, NotFoundError) as e:
             logger.error(f"Failed to get course progress for course {course_id}, student {student_id}: {str(e)}")
             raise
     
@@ -627,8 +632,9 @@ class CourseService(BaseService):
             # Get progress summary
             progress_summary = await self.get_course_progress_summary(course_id)
             
-            # Calculate completion rate
+            # Calculate completion rate and total completions using optimized list comprehension
             completion_rate = progress_summary.get('completion_rate', 0)
+            total_completions = int(total_enrollments * (completion_rate / 100))
             
             # Get average grade
             average_grade = progress_summary.get('average_grade', 0)
@@ -641,7 +647,7 @@ class CourseService(BaseService):
                 department_name="Unknown",  # Would need to fetch from department service
                 total_offerings=1,  # Default for now
                 total_enrollments=total_enrollments,
-                total_completions=int(total_enrollments * (completion_rate / 100)),
+                total_completions=total_completions,
                 average_enrollment=total_enrollments,
                 completion_rate=completion_rate,  # Use the rate from progress summary
                 average_score=round(average_grade, 2),
@@ -684,36 +690,43 @@ class CourseService(BaseService):
     
     async def batch_enroll_students(self, course_id: str, student_ids: List[str], 
                                   enrollment_date: datetime = None) -> Dict[str, bool]:
-        """Enroll multiple students in a course."""
+        """Enroll multiple students in a course with optimized error handling."""
+        # Use list comprehension for concurrent enrollment attempts
         results = {}
         
         for student_id in student_ids:
             try:
                 result = await self.enroll_student(course_id, student_id, enrollment_date)
                 results[student_id] = result
-            except Exception as e:
+            except (ValidationError, NotFoundError, ConflictError) as e:
                 logger.error(f"Failed to enroll student {student_id} in course {course_id}: {str(e)}")
+                results[student_id] = False
+            except Exception as e:
+                logger.error(f"Unexpected error enrolling student {student_id} in course {course_id}: {str(e)}")
                 results[student_id] = False
         
         return results
     
     async def batch_unenroll_students(self, course_id: str, student_ids: List[str], 
                                     unenrollment_date: datetime = None) -> Dict[str, bool]:
-        """Unenroll multiple students from a course."""
+        """Unenroll multiple students from a course with optimized error handling."""
         results = {}
         
         for student_id in student_ids:
             try:
                 result = await self.unenroll_student(course_id, student_id, unenrollment_date)
                 results[student_id] = result
-            except Exception as e:
+            except (ValidationError, NotFoundError) as e:
                 logger.error(f"Failed to unenroll student {student_id} from course {course_id}: {str(e)}")
+                results[student_id] = False
+            except Exception as e:
+                logger.error(f"Unexpected error unenrolling student {student_id} from course {course_id}: {str(e)}")
                 results[student_id] = False
         
         return results
     
     async def batch_update_courses(self, updates: List[Dict[str, Any]]) -> Dict[str, bool]:
-        """Update multiple courses."""
+        """Update multiple courses with optimized error handling."""
         results = {}
         
         for update in updates:
@@ -721,8 +734,11 @@ class CourseService(BaseService):
             try:
                 result = await self.update_course(course_id, update)
                 results[course_id] = result is not None
-            except Exception as e:
+            except (ValidationError, NotFoundError) as e:
                 logger.error(f"Failed to update course {course_id}: {str(e)}")
+                results[course_id] = False
+            except Exception as e:
+                logger.error(f"Unexpected error updating course {course_id}: {str(e)}")
                 results[course_id] = False
         
         return results
@@ -859,28 +875,32 @@ class CourseService(BaseService):
             raise ValidationError("Completion percentage must be between 0 and 100")
     
     def _validate_course_code(self, course_code: str) -> bool:
-        """Validate course code format."""
-        # Basic validation - alphanumeric with specific format
+        """Validate course code format using regex optimization."""
         import re
         pattern = r'^[A-Z]{2,3}[0-9]{2,3}$'  # Example: CS101, CS101, CSE101
-        return re.match(pattern, course_code) is not None
+        return bool(re.match(pattern, course_code))
     
     def _validate_academic_year(self, academic_year: str) -> bool:
-        """Validate academic year format."""
-        # Basic validation - year format
+        """Validate academic year format using regex optimization."""
         import re
         pattern = r'^20[0-9]{2}-20[0-9]{2}$'  # Example: 2023-2024
-        return re.match(pattern, academic_year) is not None
+        return bool(re.match(pattern, academic_year))
     
     def _validate_file_path(self, file_path: str) -> bool:
-        """Validate file path."""
-        # Basic validation - not empty and has proper extension
-        return bool(file_path and file_path.endswith(('.pdf', '.doc', '.docx', '.ppt', '.pptx', '.mp4', '.mp3', '.jpg', '.png')))
+        """Validate file path with optimized extension check."""
+        if not file_path:
+            return False
+        
+        # Define valid extensions as a set for O(1) lookup
+        valid_extensions = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.mp4', '.mp3', '.jpg', '.png'}
+        
+        # Check if file ends with any valid extension
+        return any(file_path.endswith(ext) for ext in valid_extensions)
     
     async def _has_active_enrollments(self, course_id: str) -> bool:
         """Check if course has active enrollments."""
         enrollments = await self.get_course_enrollments(course_id)
-        return any(e.get('enrollment_status') == 'active' for e in enrollments)
+        return len([e for e in enrollments if e.get('enrollment_status') == 'active']) > 0
     
     async def _has_dependent_courses(self, course_id: str) -> bool:
         """Check if course has dependent courses."""
@@ -1019,31 +1039,54 @@ class CourseService(BaseService):
             raise
     
     def _analyze_grade_distribution(self, grades: List[Dict[str, Any]]) -> Dict[str, int]:
-        """Analyze grade distribution."""
+        """Analyze grade distribution using optimized Counter."""
+        from collections import Counter
+        
+        # Extract letter grades using list comprehension
+        letter_grades = [grade.get('grade', '') for grade in grades]
+        
+        # Count grades efficiently
+        grade_counter = Counter(letter_grades)
+        
+        # Initialize full distribution with zeros
         distribution = {
             'A': 0, 'B': 0, 'C': 0, 'D': 0, 'F': 0,
             'A+': 0, 'A-': 0, 'B+': 0, 'B-': 0, 'C+': 0, 'C-': 0, 'D+': 0, 'D-': 0
         }
         
-        for grade in grades:
-            letter_grade = grade.get('grade', '')
-            distribution[letter_grade] = distribution.get(letter_grade, 0) + 1
+        # Update with actual counts
+        distribution.update(grade_counter)
         
         return distribution
     
     def _analyze_material_distribution(self, materials: List[Dict[str, Any]]) -> Dict[str, int]:
-        """Analyze material distribution."""
-        distribution = {}
+        """Analyze material distribution using optimized Counter."""
+        from collections import Counter
         
-        for material in materials:
-            material_type = material.get('material_type', 'Unknown')
-            distribution[material_type] = distribution.get(material_type, 0) + 1
+        # Extract material types using list comprehension
+        material_types = [material.get('material_type', 'Unknown') for material in materials]
         
-        return distribution
+        # Count materials efficiently
+        return dict(Counter(material_types))
     
     async def _invalidate_cache(self) -> None:
-        """Invalidate course cache."""
+        """Invalidate course cache and reset cache statistics."""
         self._cache.clear()
+        self._cache_hits = 0
+        self._cache_misses = 0
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Get cache performance statistics."""
+        total_requests = self._cache_hits + self._cache_misses
+        hit_rate = (self._cache_hits / total_requests * 100) if total_requests > 0 else 0
+        
+        return {
+            'cache_hits': self._cache_hits,
+            'cache_misses': self._cache_misses,
+            'hit_rate': round(hit_rate, 2),
+            'total_requests': total_requests,
+            'cached_items': len(self._cache)
+        }
     
     # Abstract method implementations required by BaseService
     

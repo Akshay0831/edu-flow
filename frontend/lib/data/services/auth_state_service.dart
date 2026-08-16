@@ -56,6 +56,11 @@ class AuthState {
       userEmail: null,
     );
   }
+
+  // Role-based access control getters
+  bool get isAdmin => userRole?.toLowerCase() == 'admin';
+  bool get isTeacher => userRole?.toLowerCase() == 'teacher';
+  bool get isStudent => userRole?.toLowerCase() == 'student';
 }
 
 class AuthStateService extends StateNotifier<AuthState> {
