@@ -250,10 +250,10 @@ void main() {
       expect(find.byIcon(Icons.home), findsOneWidget);
     });
 
-    testWidgets('CustomNavigationBar with no items throws assertion error', () {
+    test('CustomNavigationBar with no items throws assertion error', () {
       expect(
         () => CustomNavigationBar(
-          items: [],
+          items: const [],
           currentIndex: 0,
           onTap: (index) {},
         ),
@@ -261,7 +261,7 @@ void main() {
       );
     });
 
-    testWidgets('CustomNavigationBar throws assertion error for out of bounds index', () {
+    test('CustomNavigationBar throws assertion error for out of bounds index', () {
       const items = [
         CustomBottomNavBarItem(
           icon: Icons.home,

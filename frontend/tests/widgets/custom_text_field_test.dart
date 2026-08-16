@@ -249,7 +249,7 @@ void main() {
       // Field should show phone keyboard when focused
     });
 
-    testWidgets('CustomTextField throws assertion error for empty label', () {
+    test('CustomTextField throws assertion error for empty label', () {
       expect(
         () => CustomTextField(
           controller: TextEditingController(),
@@ -259,7 +259,7 @@ void main() {
       );
     });
 
-    testWidgets('CustomTextField throws assertion error for null controller', () {
+    test('CustomTextField throws assertion error for null controller', () {
       expect(
         () => CustomTextField(
           label: 'Test',

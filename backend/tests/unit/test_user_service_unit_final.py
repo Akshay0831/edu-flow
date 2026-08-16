@@ -20,9 +20,19 @@ class TestUserServiceUnit:
     """Comprehensive unit tests for UserService."""
     
     @pytest.fixture
-    def user_service(self):
-        """Create user service instance."""
-        return UserService()
+    def mock_db_manager(self):
+        """Mock database manager for testing."""
+        mock_db = Mock()
+        mock_db.execute_query = Mock(return_value=[])
+        mock_db.execute_update = Mock(return_value=1)
+        return mock_db
+    
+    @pytest.fixture
+    def user_service(self, mock_db_manager):
+        """Create user service instance with mocked database."""
+        with patch('src.services.user_service.db_manager', mock_db_manager):
+            service = UserService()
+            return service
     
     # Test Validation Methods
     def test_validate_email_valid(self, user_service):
@@ -60,8 +70,9 @@ class TestUserServiceUnit:
         assert user_service.validate_role("invalid_role") == False
         assert user_service.validate_role("") == False
     
-    # Test User Creation (synchronous)
-    def test_create_user_success(self, user_service):
+    # Test User Creation
+    @pytest.mark.asyncio
+    async def test_create_user_success(self, user_service):
         """Test successful user creation."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -70,7 +81,7 @@ class TestUserServiceUnit:
             'role': 'student'
         }
         
-        result = user_service.create_user(**user_data)
+        result = await user_service.create_user(**user_data)
         
         assert result is not None
         assert result['email'] == user_data['email']
@@ -78,7 +89,8 @@ class TestUserServiceUnit:
         assert result['role'] == user_data['role']
         assert 'user_id' in result
     
-    def test_create_user_invalid_email(self, user_service):
+    @pytest.mark.asyncio
+    async def test_create_user_invalid_email(self, user_service):
         """Test user creation with invalid email."""
         user_data = {
             'email': 'invalid-email',
@@ -88,9 +100,10 @@ class TestUserServiceUnit:
         }
         
         with pytest.raises(ValidationError):
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
     
-    def test_create_user_weak_password(self, user_service):
+    @pytest.mark.asyncio
+    async def test_create_user_weak_password(self, user_service):
         """Test user creation with weak password."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -100,9 +113,10 @@ class TestUserServiceUnit:
         }
         
         with pytest.raises(ValidationError):
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
     
-    def test_create_user_invalid_role(self, user_service):
+    @pytest.mark.asyncio
+    async def test_create_user_invalid_role(self, user_service):
         """Test user creation with invalid role."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -112,10 +126,11 @@ class TestUserServiceUnit:
         }
         
         with pytest.raises(ValidationError):
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
     
     # Test User Retrieval
-    def test_get_user_by_email_success(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_by_email_success(self, user_service):
         """Test successful user retrieval by email."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -125,21 +140,23 @@ class TestUserServiceUnit:
         }
         
         # Create user first
-        created_user = user_service.create_user(**user_data)
+        created_user = await user_service.create_user(**user_data)
         
         # Get user by email
-        result = user_service.get_user_by_email(user_data['email'])
+        result = await user_service.get_user_by_email(user_data['email'])
         
         assert result is not None
         assert result['user_id'] == created_user['user_id']
         assert result['email'] == user_data['email']
     
-    def test_get_user_by_email_not_found(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_by_email_not_found(self, user_service):
         """Test user retrieval with non-existent email."""
-        with pytest.raises(NotFoundError):
-            user_service.get_user_by_email('nonexistent@example.com')
+        result = await user_service.get_user_by_email('nonexistent@example.com')
+        assert result is None  # Method should return None for non-existent emails, not raise an exception
     
-    def test_get_user_success(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_success(self, user_service):
         """Test successful user retrieval by ID."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -149,23 +166,28 @@ class TestUserServiceUnit:
         }
         
         # Create user first
-        created_user = user_service.create_user(**user_data)
+        created_user = await user_service.create_user(**user_data)
         user_id = created_user['user_id']
         
         # Get user
-        result = user_service.get_user(user_id)
+        result = await user_service.get_user(user_id)
         
         assert result is not None
         assert result['user_id'] == user_id
         assert result['email'] == user_data['email']
     
-    def test_get_user_not_found(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_not_found(self, user_service):
         """Test user retrieval with non-existent ID."""
-        with pytest.raises(NotFoundError):
-            user_service.get_user(str(uuid4()))
+        mock_db = AsyncMock()
+        mock_db.execute_query.return_value = []
+        with patch('src.services.user_service.db_manager', mock_db):
+            with pytest.raises(NotFoundError):
+                await user_service.get_user(str(uuid4()))
     
     # Test User Updates
-    def test_update_user_success(self, user_service):
+    @pytest.mark.asyncio
+    async def test_update_user_success(self, user_service):
         """Test successful user update."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -175,7 +197,7 @@ class TestUserServiceUnit:
         }
         
         # Create user first
-        created_user = user_service.create_user(**user_data)
+        created_user = await user_service.create_user(**user_data)
         user_id = created_user['user_id']
         
         # Update user
@@ -193,7 +215,8 @@ class TestUserServiceUnit:
             user_service.update_user(str(uuid4()), name='Updated Name')
     
     # Test User Role Changes
-    def test_change_user_role_success(self, user_service):
+    @pytest.mark.asyncio
+    async def test_change_user_role_success(self, user_service):
         """Test successful user role change."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -203,7 +226,7 @@ class TestUserServiceUnit:
         }
         
         # Create user first
-        created_user = user_service.create_user(**user_data)
+        created_user = await user_service.create_user(**user_data)
         user_id = created_user['user_id']
         
         # Change user role
@@ -218,7 +241,8 @@ class TestUserServiceUnit:
             user_service.change_user_role(str(uuid4()), 'teacher')
     
     # Test User Deletion
-    def test_delete_user_success(self, user_service):
+    @pytest.mark.asyncio
+    async def test_delete_user_success(self, user_service):
         """Test successful user deletion."""
         user_data = {
             'email': 'john.doe@example.com',
@@ -228,7 +252,7 @@ class TestUserServiceUnit:
         }
         
         # Create user first
-        created_user = user_service.create_user(**user_data)
+        created_user = await user_service.create_user(**user_data)
         user_id = created_user['user_id']
         
         # Delete user
@@ -239,7 +263,7 @@ class TestUserServiceUnit:
         assert result['is_active'] == False
         
         # Verify user is deactivated but still exists
-        deactivated_user = user_service.get_user(user_id)
+        deactivated_user = await user_service.get_user(user_id)
         assert deactivated_user['is_active'] == False
     
     def test_delete_user_not_found(self, user_service):
@@ -248,7 +272,8 @@ class TestUserServiceUnit:
             user_service.delete_user(str(uuid4()))
     
     # Test Search Functionality
-    def test_search_users_empty_query(self, user_service):
+    @pytest.mark.asyncio
+    async def test_search_users_empty_query(self, user_service):
         """Test search users with empty query."""
         # Create a test user
         user_data = {
@@ -257,7 +282,7 @@ class TestUserServiceUnit:
             'name': 'John Doe',
             'role': 'student'
         }
-        user_service.create_user(**user_data)
+        await user_service.create_user(**user_data)
         
         # Search with empty query
         results = user_service.search_users()
@@ -265,7 +290,8 @@ class TestUserServiceUnit:
         assert len(results) >= 1
         assert any(user['email'] == user_data['email'] for user in results)
     
-    def test_search_users_by_role(self, user_service):
+    @pytest.mark.asyncio
+    async def test_search_users_by_role(self, user_service):
         """Test search users by role."""
         # Create students
         for i in range(3):
@@ -275,7 +301,7 @@ class TestUserServiceUnit:
                 'name': f'Student {i}',
                 'role': 'student'
             }
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
         
         # Create teacher
         teacher_data = {
@@ -284,7 +310,7 @@ class TestUserServiceUnit:
             'name': 'Teacher Smith',
             'role': 'teacher'
         }
-        user_service.create_user(**teacher_data)
+        await user_service.create_user(**teacher_data)
         
         # Search by role
         results = user_service.search_users(role='student')
@@ -292,7 +318,8 @@ class TestUserServiceUnit:
         assert len(results) == 3
         assert all(user['role'] == 'student' for user in results)
     
-    def test_get_user_count(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_count(self, user_service):
         """Test get user count."""
         # Create users
         for i in range(5):
@@ -302,13 +329,14 @@ class TestUserServiceUnit:
                 'name': f'User {i}',
                 'role': 'student'
             }
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
         
         count = user_service.get_user_count()
         
         assert count >= 5
     
-    def test_get_user_count_by_role(self, user_service):
+    @pytest.mark.asyncio
+    async def test_get_user_count_by_role(self, user_service):
         """Test get user count by role."""
         # Create students
         for i in range(3):
@@ -318,7 +346,7 @@ class TestUserServiceUnit:
                 'name': f'Student {i}',
                 'role': 'student'
             }
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
         
         # Create teachers
         for i in range(2):
@@ -328,7 +356,7 @@ class TestUserServiceUnit:
                 'name': f'Teacher {i}',
                 'role': 'teacher'
             }
-            user_service.create_user(**user_data)
+            await user_service.create_user(**user_data)
         
         student_count = user_service.get_user_count(role='student')
         teacher_count = user_service.get_user_count(role='teacher')

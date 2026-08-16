@@ -20,9 +20,9 @@ from logging import getLogger
 from datetime import datetime
 import json
 
-from core.security import SecurityConfig
-from core.exceptions import BaseError, AuthenticationError, DatabaseError
-from config.settings import settings
+from ...core.security import SecurityConfig
+from ...core.exceptions import BaseError, AuthenticationError, DatabaseError
+from ...core.config.settings import settings
 from .users.routes import router as users_router
 from .students.routes import router as students_router
 from .courses.routes import router as courses_router

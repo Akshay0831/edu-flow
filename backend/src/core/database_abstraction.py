@@ -18,8 +18,8 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from core.exceptions import DatabaseError, NotFoundError, ConfigurationError
-from core.logging import get_logger
+from .exceptions import DatabaseError, NotFoundError, ConfigurationError
+from .logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -131,10 +131,15 @@ class DatabaseConnectionPool:
         """Create MongoDB connection pool."""
         from motor.motor_asyncio import AsyncIOMotorClient
         
-        connection_string = (
-            f"mongodb://{self.config.username}:{self.config.password}@"
-            f"{self.config.host}:{self.config.port}/{self.config.database}"
-        )
+        # Handle empty username/password for local development
+        if self.config.username and self.config.password:
+            connection_string = (
+                f"mongodb://{self.config.username}:{self.config.password}@"
+                f"{self.config.host}:{self.config.port}/{self.config.database}"
+            )
+        else:
+            # No authentication needed for local development
+            connection_string = f"mongodb://{self.config.host}:{self.config.port}/{self.config.database}"
         
         self._pool = AsyncIOMotorClient(
             connection_string,

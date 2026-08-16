@@ -20,17 +20,17 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
-from core.validation import validate_email
-from core.exceptions import ValidationError as CustomValidationError
-from core.auth_gateway import AuthProvider, auth_gateway
+from ..core.validation import validate_email
+from .exceptions import ValidationError as CustomValidationError
+from .auth_gateway import AuthProvider, auth_gateway
 
 try:
     import bcrypt
 except ImportError:
     bcrypt = None
 
-from core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
-from core.config.settings import settings
+from .exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
+from .config.settings import settings
 
 # Mock imports for models if not available
 try:

@@ -93,8 +93,7 @@ class TestErrorHandler:
         """Test handling of server errors."""
         
         error = ServerError(
-            message="Server error",
-            error_code="SERVER_ERROR"
+            message="Server error"
         )
         
         result = self.error_handler.handle_exception(error)
@@ -130,7 +129,7 @@ class TestErrorHandler:
         assert category == 'system'
         
         # Security error
-        security_error = AuthException("Test", auth_type="token")
+        security_error = AuthException("Test")
         category = self.error_handler._categorize_error(security_error)
         assert category == 'security'
         
@@ -172,7 +171,8 @@ class TestErrorHandler:
         assert mock_recovery.called
         assert 'recovery' in result
         
-    def test_circuit_breaker(self):
+    @pytest.mark.asyncio
+    async def test_circuit_breaker(self):
         """Test circuit breaker functionality."""
         
         # Create circuit breaker
@@ -466,7 +466,7 @@ class TestErrorHandlingDecorators:
             }
             
             result = asyncio.run(test_function(error=True))
-            assert result.code == 500  # FastAPI Response has a code attribute
+            assert result.status_code == 500  # FastAPI Response has a status_code attribute
             
     def test_error_context_manager(self):
         """Test the error_context manager."""
@@ -543,7 +543,7 @@ class TestIntegration:
         """Test error recovery flow."""
         
         # Create error handler with recovery
-        error_handler = ErrorHandler(enable_error_recovery=True)
+        error_handler = ErrorHandler({'enable_error_recovery': True})
         
         # Create recovery handler
         def recovery_handler(error, context):

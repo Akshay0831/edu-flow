@@ -329,10 +329,10 @@ void main() {
       expect(find.byType(LineChartWidget), findsOneWidget);
     });
 
-    testWidgets('LineChart throws assertion error for empty data', () {
+    test('LineChart throws assertion error for empty data', () {
       expect(
         () => LineChartWidget(
-          data: [],
+          data: const [],
           xAxisLabel: 'Time',
           yAxisLabel: 'Value',
           // Empty data without error state
@@ -341,10 +341,10 @@ void main() {
       );
     });
 
-    testWidgets('LineChart throws assertion error for empty labels', () {
+    test('LineChart throws assertion error for empty labels', () {
       expect(
         () => LineChartWidget(
-          data: [{'x': 1, 'y': 10}],
+          data: const [{'x': 1, 'y': 10}],
           xAxisLabel: '', // Empty label
           yAxisLabel: 'Value',
         ),

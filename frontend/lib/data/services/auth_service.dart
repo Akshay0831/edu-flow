@@ -247,4 +247,72 @@ class AuthService {
       await _apiClient.clearAuthTokens();
     }
   }
+
+  // MFA operations
+  Future<bool> checkMfaStatus() async {
+    try {
+      final response = await _apiClient.get('/auth/mfa/status', isAuthRequired: true);
+      return response['data']?['enabled'] ?? response['enabled'] ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> enableMfa({String? method, String? code}) async {
+    try {
+      return await _apiClient.post(
+        '/auth/mfa/enable',
+        data: {'method': method ?? 'authenticator', if (code != null) 'code': code},
+        isAuthRequired: true,
+      );
+    } catch (e) {
+      throw ApiException(message: 'Enable MFA failed: ${e.toString()}');
+    }
+  }
+
+  Future<Map<String, dynamic>> disableMfa({String? password, String? code}) async {
+    try {
+      return await _apiClient.post(
+        '/auth/mfa/disable',
+        data: {if (password != null) 'password': password, if (code != null) 'code': code},
+        isAuthRequired: true,
+      );
+    } catch (e) {
+      throw ApiException(message: 'Disable MFA failed: ${e.toString()}');
+    }
+  }
+
+  Future<dynamic> generateBackupCodes() async {
+    try {
+      return await _apiClient.post('/auth/mfa/backup-codes', data: {}, isAuthRequired: true);
+    } catch (e) {
+      return {'codes': <String>[]};
+    }
+  }
+
+  Future<dynamic> verifyRecoveryCode(String code) async {
+    try {
+      return await _apiClient.post(
+        '/auth/mfa/verify-recovery',
+        data: {'code': code},
+        isAuthRequired: true,
+      );
+    } catch (e) {
+      return {'valid': false, 'success': false};
+    }
+  }
+
+  Future<dynamic> verifyMfaCode(String code) async {
+    try {
+      return await _apiClient.post(
+        '/auth/mfa/verify',
+        data: {'code': code},
+        isAuthRequired: true,
+      );
+    } catch (e) {
+      return {'valid': false, 'success': false};
+    }
+  }
+
+  Future<dynamic> verifyMfaToken(String token) async => verifyMfaCode(token);
 }

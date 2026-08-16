@@ -210,11 +210,11 @@ void main() {
       expect(find.text('Elevated Card'), findsOneWidget);
     });
 
-    testWidgets('CustomCard throws assertion error for null child', () {
+    test('CustomCard throws assertion error for null child', () {
       expect(
         () => CustomCard(
           title: 'Test Card',
-          // No child provided
+          child: null,
         ),
         throwsAssertionError,
       );

@@ -11,3 +11,5 @@ export 'offline_support.dart';
 export 'performance_monitor.dart';
 export 'multi_factor_auth.dart';
 export 'password_manager.dart';
+export 'custom_navigation_bar.dart';
+export 'custom_icon_button.dart';

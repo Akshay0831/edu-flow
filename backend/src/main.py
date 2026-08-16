@@ -28,22 +28,20 @@ from contextlib import asynccontextmanager
 import asyncio
 import logging
 
-from core.exceptions import (
+from src.core.exceptions import (
     BaseError, ValidationError, NotFoundError, AuthenticationError,
     AuthorizationError, ForbiddenError, ConflictError, DatabaseError,
     ExternalServiceError, RateLimitError, ConfigurationError
 )
-from core.security import auth_service
-from core.response_handler import ResponseFormatter
-from core.error_handling import setup_error_handling
-from core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
-from core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
-from core.service_container import initialize_service_container, configure_services, get_service_container
-from core.api_service import initialize_api_client
-# Commented out - base service not available
-# from services.base_service import ServiceFactory, CourseService, StudentService, TeacherService, AssessmentService
-# Commented out - user service not available yet
-# from services.user_service import UserService
+from src.core.security import auth_service
+from src.core.response_handler import ResponseFormatter
+from src.core.error_handling import setup_error_handling
+from src.core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
+from src.core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
+from src.core.service_container import initialize_service_container, configure_services, get_service_container
+from src.core.api_service import initialize_api_client
+from src.services.base_service import ServiceFactory, CourseService, StudentService, TeacherService, AssessmentService
+from src.services.user_service import UserService
 # Commented out - Rust AI services not available yet
 # from services.rust_ai_services import (
 #     initialize_container,
@@ -51,16 +49,16 @@ from core.api_service import initialize_api_client
 #     get_container,
 #     ServiceContainer,
 # )
-from api.v1.endpoints.auth import router as auth_router
-from api.v1.endpoints.auth_enhanced import router as auth_enhanced_router
-from api.v1.endpoints.users import router as users_router
-from api.v1.endpoints.courses import router as courses_router
-from api.v1.endpoints.students import router as students_router
-from api.v1.endpoints.teachers_simple import router as teachers_router
-from api.v1.endpoints.assessments_simple import router as assessments_router
-from api.v1.endpoints.analytics_simple import router as analytics_router
-from api.v1.endpoints.see_prediction import router as see_prediction_router
-from api.v1.endpoints.analytics_advanced import router as analytics_advanced_router
+from src.api.v1.endpoints.auth import router as auth_router
+from src.api.v1.endpoints.auth_enhanced import router as auth_enhanced_router
+from src.api.v1.endpoints.users import router as users_router
+from src.api.v1.endpoints.courses import router as courses_router
+from src.api.v1.endpoints.students import router as students_router
+from src.api.v1.endpoints.teachers_simple import router as teachers_router
+from src.api.v1.endpoints.assessments_simple import router as assessments_router
+from src.api.v1.endpoints.analytics_simple import router as analytics_router
+from src.api.v1.endpoints.see_prediction import router as see_prediction_router
+from src.api.v1.endpoints.analytics_advanced import router as analytics_advanced_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -169,12 +167,8 @@ async def lifespan(app: FastAPI):
         await user_service.initialize()
         auth_service.user_service = user_service
         
-        # Initialize Rust AI Services container
-        logger.info("🤖 Initializing Rust AI Services...")
-        await initialize_container()
-        rust_container = get_container()
-        stats = await rust_container.get_stats()
-        logger.info(f"🤖 Rust AI Services initialized: {stats.total_services} services enabled")
+        # Initialize Rust AI Services container (placeholder for future implementation)
+        logger.info("🤖 Rust AI Services initialization skipped - placeholder for future implementation")
         logger.info("📊 Health check available at /health")
         logger.info("📚 API documentation available at /docs")
         
@@ -190,9 +184,8 @@ async def lifespan(app: FastAPI):
         logger.info("🛑 Shutting down Edu-Flow application...")
         
         try:
-            # Clean up Rust AI services
-            await shutdown_container()
-            logger.info("🤖 Rust AI Services shutdown completed")
+            # Clean up Rust AI services (placeholder for future implementation)
+            logger.info("🤖 Rust AI Services cleanup completed (placeholder)")
             
             # Clean up services
             if 'user_service' in locals():

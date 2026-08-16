@@ -5,9 +5,11 @@ import 'package:edu_flow/config/app_config.dart';
 import 'package:edu_flow/core/exceptions/api_exceptions.dart';
 
 class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
+  static ApiClient _instance = ApiClient._internal();
   static ApiClient get instance => _instance;
+  static set instance(ApiClient newInstance) => _instance = newInstance;
   
+  ApiClient();
   ApiClient._internal();
   
   final AppConfig _config = AppConfig.instance;
@@ -156,25 +158,29 @@ class ApiClient {
     String endpoint, {
     bool isAuthRequired = true,
     Map<String, String>? queryParams,
+    Map<String, dynamic>? params,
   }) async {
+    final effectiveParams = queryParams ??
+        params?.map((key, value) => MapEntry(key, value.toString()));
     return _makeRequest(
       'GET',
       endpoint,
       isAuthRequired: isAuthRequired,
-      queryParams: queryParams,
+      queryParams: effectiveParams,
     );
   }
   
   // Generic POST request with automatic token refresh
   Future<Map<String, dynamic>> post(
     String endpoint, {
-    required Map<String, dynamic> data,
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? body,
     bool isAuthRequired = true,
   }) async {
     return _makeRequest(
       'POST',
       endpoint,
-      data: data,
+      data: data ?? body ?? const {},
       isAuthRequired: isAuthRequired,
     );
   }
@@ -182,13 +188,14 @@ class ApiClient {
   // Generic PUT request with automatic token refresh
   Future<Map<String, dynamic>> put(
     String endpoint, {
-    required Map<String, dynamic> data,
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? body,
     bool isAuthRequired = true,
   }) async {
     return _makeRequest(
       'PUT',
       endpoint,
-      data: data,
+      data: data ?? body ?? const {},
       isAuthRequired: isAuthRequired,
     );
   }
@@ -197,6 +204,7 @@ class ApiClient {
   Future<Map<String, dynamic>> delete(
     String endpoint, {
     bool isAuthRequired = true,
+    Map<String, dynamic>? params,
   }) async {
     return _makeRequest(
       'DELETE',

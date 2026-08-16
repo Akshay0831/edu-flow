@@ -128,3 +128,11 @@ class LoggerMixin:
     def structured_logger(self):
         """Get a structured logger instance for this class."""
         return setup_structured_logger(self.__class__.__name__)
+
+
+class PerformanceMonitor:
+    """Performance monitor for logging metrics."""
+    def record(self, event_name: str, metadata: Optional[dict] = None):
+        pass
+
+performance_monitor = PerformanceMonitor()

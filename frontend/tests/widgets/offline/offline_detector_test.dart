@@ -310,7 +310,7 @@ void main() {
       expect(find.text('Connection Error'), findsOneWidget);
     });
 
-    testWidgets('OfflineDetector throws assertion error for null child', () {
+    testWidgets('OfflineDetector throws assertion error for null child', (WidgetTester tester) async {
       expect(
         () => OfflineDetector(
           isOnline: false,

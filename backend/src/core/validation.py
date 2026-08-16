@@ -8,7 +8,7 @@ These functions are designed to work with the existing test suite and security r
 import re
 from typing import Optional, Union, List, Dict, Any, Tuple
 from datetime import datetime, date
-from core.exceptions import ValidationError as CustomValidationError
+from .exceptions import ValidationError as CustomValidationError
 
 
 def validate_email(email: Optional[str]) -> str:

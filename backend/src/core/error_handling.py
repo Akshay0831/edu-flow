@@ -24,12 +24,12 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
-from core.exceptions import (
+from .exceptions import (
     BaseError, ValidationError, NotFoundError, AuthenticationError,
     AuthorizationError, ForbiddenError, ConflictError, DatabaseError,
     ExternalServiceError, RateLimitError, ConfigurationError
 )
-from core.logging import get_logger
+from .logging import get_logger
 
 logger = get_logger(__name__)
 

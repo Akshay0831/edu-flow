@@ -15,7 +15,7 @@ void main() {
 
     setUp(() {
       mockApiClient = MockApiClient();
-      assessmentService = AssessmentService._internal(mockApiClient);
+      assessmentService = AssessmentService(mockApiClient);
     });
 
     group('getAllAssessments', () {

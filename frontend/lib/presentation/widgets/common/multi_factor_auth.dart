@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'auth_wrapper.dart';
+import 'custom_app_bar.dart';
+import 'custom_text_field.dart';
 import 'custom_snackbar.dart';
-import 'custom_alert_dialog.dart';
 
 class MultiFactorAuthScreen extends ConsumerStatefulWidget {
   final String email;
@@ -49,8 +45,8 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
     },
     {
       'id': 3,
-      'title': 'Google Authenticator',
-      'subtitle': 'Use Google Authenticator app',
+      'title': 'Authenticator App',
+      'subtitle': 'Use Authenticator app code',
       'icon': Icons.phone_android,
       'color': Colors.red,
     },
@@ -94,12 +90,12 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: method['color'].withOpacity(0.1),
+                            color: (method['color'] as Color).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
-                            method['icon'],
-                            color: method['color'],
+                            method['icon'] as IconData,
+                            color: method['color'] as Color,
                           ),
                         ),
                         title: Text(method['title']),
@@ -109,7 +105,7 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
                             : null,
                         onTap: () {
                           setState(() {
-                            _selectedMethod = method['id'];
+                            _selectedMethod = method['id'] as int;
                           });
                         },
                       ),
@@ -134,7 +130,6 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
                 hintText: 'Enter 6-digit code',
                 controller: _codeController,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
                 onChanged: (value) {
                   _verificationCode = value;
                 },
@@ -177,25 +172,30 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
     });
 
     try {
-      // Simulate sending verification code
       await Future.delayed(const Duration(seconds: 2));
-      
-      CustomSnackBar.showSuccess(
-        context: context,
-        message: 'Verification code sent successfully',
-      );
+
+      if (mounted) {
+        CustomSnackBar.showSuccess(
+          context: context,
+          message: 'Verification code sent successfully',
+        );
+      }
     } catch (e) {
-      setState(() {
-        _isCodeSent = false;
-      });
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Failed to send verification code: ${e.toString()}',
-      );
+      if (mounted) {
+        setState(() {
+          _isCodeSent = false;
+        });
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Failed to send verification code: ${e.toString()}',
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -213,30 +213,32 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
     });
 
     try {
-      // Simulate code verification
       await Future.delayed(const Duration(seconds: 2));
-      
+
       if (_verificationCode == '123456') {
-        // Code is valid, continue with registration/login
-        CustomSnackBar.showSuccess(
-          context: context,
-          message: 'Verification successful',
-        );
-        
-        // Navigate to main app
-        context.go('/dashboard');
+        if (mounted) {
+          CustomSnackBar.showSuccess(
+            context: context,
+            message: 'Verification successful',
+          );
+          context.go('/dashboard');
+        }
       } else {
         throw Exception('Invalid verification code');
       }
     } catch (e) {
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Verification failed: ${e.toString()}',
-      );
+      if (mounted) {
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Verification failed: ${e.toString()}',
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -249,19 +251,25 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
 
     try {
       await Future.delayed(const Duration(seconds: 1));
-      CustomSnackBar.showSuccess(
-        context: context,
-        message: 'Verification code resent',
-      );
+      if (mounted) {
+        CustomSnackBar.showSuccess(
+          context: context,
+          message: 'Verification code resent',
+        );
+      }
     } catch (e) {
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Failed to resend code: ${e.toString()}',
-      );
+      if (mounted) {
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Failed to resend code: ${e.toString()}',
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 }
@@ -295,7 +303,7 @@ class SocialAuthButtons extends ConsumerWidget {
           children: [
             Expanded(
               child: _buildSocialButton(
-                icon: Icons.g_translate,
+                icon: Icons.g_mobiledata,
                 label: 'Google',
                 color: Colors.red,
                 onTap: onGoogleSignIn,
@@ -316,7 +324,7 @@ class SocialAuthButtons extends ConsumerWidget {
           const SizedBox(height: 12),
           Expanded(
             child: _buildSocialButton(
-              icon: Icons.microsoft,
+              icon: Icons.computer,
               label: 'Microsoft',
               color: Colors.blue,
               onTap: onMicrosoftSignIn,
@@ -366,33 +374,17 @@ class BiometricAuthButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final canUseBiometrics = _canUseBiometrics();
-        
-        if (!canUseBiometrics) {
-          return const SizedBox.shrink();
-        }
-
-        return Card(
-          child: ListTile(
-            leading: const Icon(
-              Icons.fingerprint,
-              color: Colors.blue,
-            ),
-            title: const Text('Use Biometric Authentication'),
-            subtitle: const Text('Quick access with fingerprint or face'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: onAuthenticate,
-          ),
-        );
-      },
+    return Card(
+      child: ListTile(
+        leading: const Icon(
+          Icons.fingerprint,
+          color: Colors.blue,
+        ),
+        title: const Text('Use Biometric Authentication'),
+        subtitle: const Text('Quick access with fingerprint or face'),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: onAuthenticate,
+      ),
     );
-  }
-
-  bool _canUseBiometrics() {
-    // This is a placeholder implementation
-    // In a real app, you would check if biometrics are available and enabled
-    return true;
   }
 }

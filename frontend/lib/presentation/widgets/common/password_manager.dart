@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'custom_app_bar.dart';
 import 'custom_snackbar.dart';
 import 'custom_text_field.dart';
 
@@ -22,7 +23,7 @@ class PasswordStrengthIndicator extends StatefulWidget {
   State<PasswordStrengthIndicator> createState() => _PasswordStrengthIndicatorState();
 }
 
-class _PasswordStrengthIndicator> extends State<PasswordStrengthIndicator> {
+class _PasswordStrengthIndicatorState extends State<PasswordStrengthIndicator> {
   late double _strength;
   late Color _strengthColor;
   late String _strengthText;
@@ -153,24 +154,26 @@ class _PasswordStrengthIndicator> extends State<PasswordStrengthIndicator> {
       required String text,
       required IconData icon,
     }) {
-      requirements Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isMet ? Colors.green : Colors.grey,
-              size: 16,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: TextStyle(
+      requirements.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: [
+              Icon(
+                icon,
                 color: isMet ? Colors.green : Colors.grey,
-                fontSize: 12,
+                size: 16,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                text,
+                style: TextStyle(
+                  color: isMet ? Colors.green : Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

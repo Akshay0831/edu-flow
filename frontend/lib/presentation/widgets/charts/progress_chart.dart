@@ -22,7 +22,7 @@ class ProgressChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final effectiveColor = color ?? _getProgressColor(progress);
-    
+
     return Card(
       elevation: 4,
       child: Container(
@@ -44,12 +44,12 @@ class ProgressChart extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                    '${progress.toStringAsFixed(1)}%',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: effectiveColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+                  '${progress.toStringAsFixed(1)}%',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: effectiveColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ],
             ),
             if (subtitle != null) ...[
@@ -96,8 +96,8 @@ class ProgressChart extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildLegendItem('Completed', effectiveColor),
-                      _buildLegendItem('Remaining', Colors.grey[300]!),
+                      _buildLegendItem(context, 'Completed', effectiveColor),
+                      _buildLegendItem(context, 'Remaining', Colors.grey[300]!),
                     ],
                   ),
                 ],
@@ -109,7 +109,7 @@ class ProgressChart extends ConsumerWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(BuildContext context, String label, Color color) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

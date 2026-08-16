@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'index.dart';
-import '../widgets/charts/analytics_dashboard.dart';
+import '../charts/analytics_dashboard.dart';
 
 class ComponentsDemoScreen extends ConsumerStatefulWidget {
   const ComponentsDemoScreen({super.key});

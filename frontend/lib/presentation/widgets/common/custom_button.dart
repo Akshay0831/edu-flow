@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  final String? icon;
+  final dynamic icon;
   final Color? backgroundColor;
   final Color? textColor;
   final double? width;
@@ -28,7 +28,7 @@ class CustomButton extends StatelessWidget {
     this.isDisabled = false,
     this.borderRadius,
     this.fontWeight,
-  });
+  }) : assert(text.length > 0, 'text cannot be empty');
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +58,17 @@ class CustomButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(effectiveBorderRadius),
           onTap: isDisabled || isLoading ? null : onPressed,
-          child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ? const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     ),
                   )
                 : Row(
@@ -75,11 +78,7 @@ class CustomButton extends StatelessWidget {
                       if (icon != null)
                         Padding(
                           padding: const EdgeInsets.only(right: 8.0),
-                          child: Icon(
-                            _getIconData(icon!),
-                            color: effectiveTextColor,
-                            size: 20,
-                          ),
+                          child: _buildIcon(icon, effectiveTextColor),
                         ),
                       Text(
                         text,
@@ -95,6 +94,17 @@ class CustomButton extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildIcon(dynamic icon, Color effectiveColor) {
+    if (icon is Widget) return icon;
+    if (icon is IconData) {
+      return Icon(icon, color: effectiveColor, size: 20);
+    }
+    if (icon is String) {
+      return Icon(_getIconData(icon), color: effectiveColor, size: 20);
+    }
+    return const SizedBox.shrink();
   }
 
   IconData _getIconData(String icon) {

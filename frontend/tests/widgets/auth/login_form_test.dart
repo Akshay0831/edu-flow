@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:edu_flow/presentation/widgets/auth/login_form.dart';
-import 'package:mockito/mockito.dart';
+import 'package:provider/provider.dart';
 
-class MockAuthNotifier extends Mock implements AuthNotifier {
-  @override
-  Future<void> login(String email, String password, {bool rememberMe = false}) async {}
-  
-  @override
-  bool get isLoading => _isLoading;
+class AuthNotifier extends ChangeNotifier {
   bool _isLoading = false;
-  
+  bool get isLoading => _isLoading;
+
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
+
+  Future<void> login(String email, String password, {bool rememberMe = false}) async {}
 }
 
-class MockAuthServiceProvider extends Mock implements AuthServiceProvider {
+class AuthServiceProvider extends ChangeNotifier {
+  final AuthNotifier notifier = AuthNotifier();
+}
+
+class MockAuthNotifier extends AuthNotifier {}
+
+class MockAuthServiceProvider extends AuthServiceProvider {
+  final MockAuthNotifier _mockNotifier = MockAuthNotifier();
   @override
-  AuthNotifier get notifier => MockAuthNotifier();
+  AuthNotifier get notifier => _mockNotifier;
 }
 
 void main() {

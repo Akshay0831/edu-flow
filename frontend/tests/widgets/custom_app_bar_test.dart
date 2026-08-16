@@ -252,7 +252,7 @@ void main() {
       expect(find.text('Bottom Content'), findsOneWidget);
     });
 
-    testWidgets('CustomAppBar throws assertion error for empty title', () {
+    test('CustomAppBar throws assertion error for empty title', () {
       expect(
         () => CustomAppBar(
           title: '', // Empty title

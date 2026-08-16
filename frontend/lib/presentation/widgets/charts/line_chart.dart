@@ -1,29 +1,36 @@
-import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'package:flutter/material.dart' hide PointMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LineChart extends ConsumerWidget {
   final String title;
   final List<Map<String, dynamic>> data;
-  final String xAxisLabel;
-  final String yAxisLabel;
+  final String? xAxisLabel;
+  final String? yAxisLabel;
   final Color? lineColor;
   final double height;
   final double width;
+  final bool showGrid;
+  final bool showPoints;
 
   const LineChart({
     super.key,
-    required this.title,
+    this.title = '',
     required this.data,
-    required this.xAxisLabel,
-    required this.yAxisLabel,
+    this.xAxisLabel,
+    this.yAxisLabel,
     this.lineColor,
     this.height = 200,
     this.width = double.infinity,
-  });
+    this.showGrid = true,
+    this.showPoints = true,
+  })  : assert(data.isNotEmpty, 'data cannot be empty'),
+        assert(xAxisLabel == null || xAxisLabel.length > 0, 'xAxisLabel cannot be empty'),
+        assert(yAxisLabel == null || yAxisLabel.length > 0, 'yAxisLabel cannot be empty');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (data.isEmpty || data.length < 2) {
+    if (data.isEmpty) {
       return Card(
         elevation: 4,
         child: Container(
@@ -37,9 +44,21 @@ class LineChart extends ConsumerWidget {
       );
     }
 
-    final maxValue = data.fold(0, (max, item) => (item['value'] as num).compareTo(max) > 0 ? (item['value'] as num) : max);
-    final minValue = data.fold(double.infinity, (min, item) => (item['value'] as num).compareTo(min) < 0 ? (item['value'] as num) : min);
-    final valueRange = maxValue - minValue;
+    final double maxValue = data.fold<double>(
+      double.negativeInfinity,
+      (max, item) {
+        final val = ((item['value'] ?? item['y'] ?? 0) as num).toDouble();
+        return val > max ? val : max;
+      },
+    );
+    final double minValue = data.fold<double>(
+      double.infinity,
+      (min, item) {
+        final val = ((item['value'] ?? item['y'] ?? 0) as num).toDouble();
+        return val < min ? val : min;
+      },
+    );
+    final double valueRange = (maxValue - minValue) == 0 ? 1.0 : (maxValue - minValue);
     final effectiveLineColor = lineColor ?? Theme.of(context).primaryColor;
 
     return Card(
@@ -51,45 +70,47 @@ class LineChart extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
+            if (title.isNotEmpty)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            if (title.isNotEmpty) const SizedBox(height: 16),
+            if (yAxisLabel != null && yAxisLabel!.isNotEmpty)
+              Text(
+                yAxisLabel!,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+              ),
+            const SizedBox(height: 8),
             Expanded(
               child: CustomPaint(
+                size: Size.infinite,
                 painter: _LineChartPainter(
                   data: data,
                   minValue: minValue,
                   valueRange: valueRange,
                   lineColor: effectiveLineColor,
-                ),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      left: BorderSide(color: Colors.grey),
-                      bottom: BorderSide(color: Colors.grey),
-                    ),
-                  ),
+                  showGrid: showGrid,
+                  showPoints: showPoints,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  xAxisLabel,
-                  style: Theme.of(context).textTheme.bodySmall,
+            if (xAxisLabel != null && xAxisLabel!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Center(
+                  child: Text(
+                    xAxisLabel!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
                 ),
-                Text(
-                  yAxisLabel,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -102,90 +123,61 @@ class _LineChartPainter extends CustomPainter {
   final double minValue;
   final double valueRange;
   final Color lineColor;
+  final bool showGrid;
+  final bool showPoints;
 
   _LineChartPainter({
     required this.data,
     required this.minValue,
     required this.valueRange,
     required this.lineColor,
+    required this.showGrid,
+    required this.showPoints,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (data.length < 2) return;
+    if (data.isEmpty) return;
 
-    final padding = 20.0;
-    final chartWidth = size.width - 2 * padding;
-    final chartHeight = size.height - 2 * padding;
-
-    // Draw grid lines
-    final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..style = PaintingStyle.stroke;
-
-    for (int i = 0; i <= 5; i++) {
-      final y = padding + (chartHeight * i / 5);
-      canvas.drawLine(
-        Offset(padding, y),
-        Offset(size.width - padding, y),
-        gridPaint,
-      );
-    }
-
-    // Draw data line
-    final linePaint = Paint()
+    final paint = Paint()
       ..color = lineColor
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
+      ..strokeCap = StrokeCap.round;
 
     final points = <Offset>[];
+    final double stepX = data.length > 1 ? size.width / (data.length - 1) : size.width;
 
     for (int i = 0; i < data.length; i++) {
-      final value = data[i]['value'] as num;
-      final x = padding + (chartWidth * i / (data.length - 1));
-      final y = padding + chartHeight - ((value - minValue) / valueRange * chartHeight);
-      points.add(Offset(x, y));
+      final val = ((data[i]['value'] ?? data[i]['y'] ?? 0) as num).toDouble();
+      final x = i * stepX;
+      final y = size.height - ((val - minValue) / valueRange) * size.height;
+      points.add(Offset(x, y.clamp(0.0, size.height)));
     }
 
-    canvas.drawPoints(
-      PointMode.polygon,
-      points,
-      linePaint,
-    );
-
-    // Draw data points
-    final pointPaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < points.length; i++) {
-      canvas.drawCircle(points[i], 5, pointPaint);
+    if (points.length > 1) {
+      final path = Path();
+      path.moveTo(points[0].dx, points[0].dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+      canvas.drawPath(path, paint);
+    } else if (points.length == 1) {
+      canvas.drawCircle(points[0], 4, paint);
     }
 
-    // Draw labels
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    // X-axis labels
-    for (int i = 0; i < data.length; i++) {
-      final label = data[i]['label'] as String;
-      textPainter.text = TextSpan(
-        text: label,
-        style: TextStyle(color: Colors.grey[700], fontSize: 10),
-      );
-      textPainter.layout();
-      
-      final x = padding + (chartWidth * i / (data.length - 1));
-      textPainter.paint(
-        canvas,
-        Offset(x - textPainter.width / 2, size.height - 5),
-      );
+    if (showPoints) {
+      final pointPaint = Paint()
+        ..color = lineColor
+        ..style = PaintingStyle.fill;
+      for (final pt in points) {
+        canvas.drawCircle(pt, 3.5, pointPaint);
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) => true;
 }
+
+typedef LineChartWidget = LineChart;

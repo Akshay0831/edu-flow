@@ -105,7 +105,7 @@ class _LoadingButtonState extends State<LoadingButton> {
     setState(() => _isLoading = true);
     
     try {
-      await widget.onPressed();
+      widget.onPressed();
     } catch (e) {
       // Handle error if needed
     } finally {

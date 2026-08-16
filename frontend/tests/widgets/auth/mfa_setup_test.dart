@@ -1,389 +1,397 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:edu_flow/presentation/widgets/auth/mfa_setup.dart';
 import 'package:mockito/mockito.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:edu_flow/data/services/auth_service.dart';
+import 'package:edu_flow/presentation/widgets/auth/mfa_setup.dart';
+import 'package:edu_flow/data/models/user_model.dart';
 
-class MockAuthNotifier extends Mock implements AuthNotifier {
-  @override
-  bool get isMfaEnabled => _isMfaEnabled;
-  bool _isMfaEnabled = false;
-  
-  @override
-  Future<void> enableMfa(String code) async {}
-  @override
-  Future<void> disableMfa(String password) async {}
-  
-  void setMfaEnabled(bool enabled) {
-    _isMfaEnabled = enabled;
-    notifyListeners();
-  }
-}
+// Mock classes
+class MockAuthService extends Mock with ChangeNotifier implements AuthService {}
 
-class MockAuthServiceProvider extends Mock implements AuthServiceProvider {
-  @override
-  AuthNotifier get notifier => MockAuthNotifier();
-}
+class MockUser extends Mock implements UserModel {}
 
 void main() {
   group('MfaSetup Widget Tests', () {
-    late MockAuthNotifier mockAuthNotifier;
-    late MockAuthServiceProvider mockServiceProvider;
-    
+    late MockAuthService mockAuthService;
+    late MockUser mockUser;
+
     setUp(() {
-      mockAuthNotifier = MockAuthNotifier();
-      mockServiceProvider = MockAuthServiceProvider();
+      mockAuthService = MockAuthService();
+      mockUser = MockUser();
     });
 
-    testWidgets('MfaSetup shows setup screen when MFA is disabled', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+    group('Widget Initialization', () {
+      testWidgets('MfaSetup widget should display correctly when MFA is disabled', (WidgetTester tester) async {
+        // Mock initial state - MFA disabled
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      expect(find.text('Enable Two-Factor Authentication'), findsOneWidget);
-      expect(find.text('Scan QR Code'), findsOneWidget);
-      expect(find.text('Setup with Code'), findsOneWidget);
+        );
+
+        await tester.pumpAndSettle();
+
+        // Verify widget displays correctly when MFA is disabled
+        expect(find.text('Two-Factor Authentication (MFA)'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Enable MFA'), findsOneWidget);
+      });
+
+      testWidgets('MfaSetup widget should display correctly when MFA is enabled', (WidgetTester tester) async {
+        // Mock initial state - MFA enabled
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => true);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Verify widget displays correctly when MFA is enabled
+        expect(find.text('Two-Factor Authentication (MFA)'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Disable MFA'), findsOneWidget);
+      });
+
+      testWidgets('MfaSetup widget should show loading state during initialization', (WidgetTester tester) async {
+        // Mock loading state
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async {
+          await Future.delayed(const Duration(milliseconds: 100));
+          return false;
+        });
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        // Verify loading state is shown
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        
+        await tester.pumpAndSettle();
+        
+        // Verify loading state is replaced with actual content
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+      });
     });
 
-    testWidgets('MfaSetup shows disable screen when MFA is enabled', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+    group('MFA Enable Flow', () {
+      testWidgets('Enable MFA flow should show QR code setup option', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.enableMfa()).thenAnswer((_) async => {
+          'success': true,
+          'qr_code_url': 'otpauth://totp/Test:test?secret=ABC123',
+          'backup_codes': ['code1', 'code2', 'code3']
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      expect(find.text('Disable Two-Factor Authentication'), findsOneWidget);
-      expect(find.text('Confirm with Password'), findsOneWidget);
+        );
+
+        await tester.pumpAndSettle();
+
+        // Click Enable MFA button
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify setup options are shown
+        expect(find.text('Choose Setup Method'), findsOneWidget);
+        expect(find.text('QR Code Setup'), findsOneWidget);
+        expect(find.text('Manual Setup'), findsOneWidget);
+      });
+
+      testWidgets('QR Code setup should show QR code and verification', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.enableMfa()).thenAnswer((_) async => {
+          'success': true,
+          'qr_code_url': 'otpauth://totp/Test:test?secret=ABC123',
+          'backup_codes': ['code1', 'code2', 'code3']
+        });
+        when(mockAuthService.verifyMfaToken('123456')).thenAnswer((_) async => {
+          'success': true,
+          'message': 'MFA verification successful'
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Navigate to QR Code setup
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('QR Code Setup'));
+        await tester.pumpAndSettle();
+
+        // Verify QR code setup screen
+        expect(find.text('QR Code Setup'), findsOneWidget);
+        expect(find.text('Scan this QR code with your authenticator app'), findsOneWidget);
+        expect(find.byType(TextFormField), findsOneWidget);
+        expect(find.text('Enter verification code'), findsOneWidget);
+        expect(find.text('Verify & Save'), findsOneWidget);
+
+        // Enter verification code
+        await tester.enterText(find.byType(TextFormField), '123456');
+        await tester.tap(find.text('Verify & Save'));
+        await tester.pumpAndSettle();
+
+        // Verify success message
+        expect(find.text('MFA Enabled Successfully'), findsOneWidget);
+        expect(find.text('Backup Codes'), findsOneWidget);
+        expect(find.text('Save these codes somewhere safe'), findsOneWidget);
+      });
+
+      testWidgets('Manual setup should show secret key and verification', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.enableMfa()).thenAnswer((_) async => {
+          'success': true,
+          'qr_code_url': 'otpauth://totp/Test:test?secret=ABC123',
+          'backup_codes': ['code1', 'code2', 'code3']
+        });
+        when(mockAuthService.verifyMfaToken('123456')).thenAnswer((_) async => {
+          'success': true,
+          'message': 'MFA verification successful'
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Navigate to Manual setup
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Manual Setup'));
+        await tester.pumpAndSettle();
+
+        // Verify manual setup screen
+        expect(find.text('Manual Setup'), findsOneWidget);
+        expect(find.text('Enter this secret key in your authenticator app'), findsOneWidget);
+        expect(find.byType(TextFormField), findsOneWidget);
+        expect(find.text('Enter verification code'), findsOneWidget);
+        expect(find.text('Verify & Save'), findsOneWidget);
+      });
     });
 
-    testWidgets('MfaSetup responds to QR code setup selection', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+    group('MFA Disable Flow', () {
+      testWidgets('Disable MFA should show confirmation dialog', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => true);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.disableMfa()).thenAnswer((_) async => {
+          'success': true,
+          'message': 'MFA disabled successfully'
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      await tester.tap(find.text('Scan QR Code'));
-      await tester.pump();
-      
-      expect(find.text('QR Code Setup'), findsOneWidget);
-      expect(find.text('Setup with Code'), findsNothing);
+        );
+
+        await tester.pumpAndSettle();
+
+        // Click Disable MFA button
+        await tester.tap(find.text('Disable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify confirmation dialog
+        expect(find.text('Disable MFA?'), findsOneWidget);
+        expect(find.text('Are you sure you want to disable two-factor authentication?'), findsOneWidget);
+        expect(find.text('Cancel'), findsOneWidget);
+        expect(find.text('Disable MFA'), findsOneWidget);
+      });
+
+      testWidgets('Disable MFA should complete successfully when confirmed', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => true);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.disableMfa()).thenAnswer((_) async => {
+          'success': true,
+          'message': 'MFA disabled successfully'
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Start disable process
+        await tester.tap(find.text('Disable MFA'));
+        await tester.pumpAndSettle();
+
+        // Confirm disable
+        await tester.tap(find.text('Disable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify success message
+        expect(find.text('MFA Disabled Successfully'), findsOneWidget);
+        expect(find.text('Two-factor authentication has been disabled'), findsOneWidget);
+      });
     });
 
-    testWidgets('MfaSetup responds to code setup selection', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+    group('Recovery Code Flow', () {
+      testWidgets('Recovery code flow should work correctly', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => true);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.generateBackupCodes()).thenAnswer((_) async => {
+          'success': true,
+          'backup_codes': ['new1', 'new2', 'new3', 'new4', 'new5', 'new6', 'new7', 'new8', 'new9', 'new10']
+        });
+        when(mockAuthService.verifyRecoveryCode('new1')).thenAnswer((_) async => {
+          'success': true,
+          'message': 'Recovery code verified successfully'
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      await tester.tap(find.text('Setup with Code'));
-      await tester.pump();
-      
-      expect(find.text('Setup with Code'), findsOneWidget);
-      expect(find.text('QR Code Setup'), findsNothing);
+        );
+
+        await tester.pumpAndSettle();
+
+        // Access recovery codes
+        await tester.tap(find.byIcon(Icons.key));
+        await tester.pumpAndSettle();
+
+        // Verify recovery codes screen
+        expect(find.text('Recovery Codes'), findsOneWidget);
+        expect(find.text('Save these codes somewhere safe'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Generate New Recovery Codes'), findsOneWidget);
+
+        // Test verification flow
+        await tester.enterText(find.byType(TextFormField), 'new1');
+        await tester.tap(find.text('Verify'));
+        await tester.pumpAndSettle();
+
+        // Verify success message
+        expect(find.text('Recovery code verified successfully'), findsOneWidget);
+      });
     });
 
-    testWidgets('MfaSetup validates MFA code format', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+    group('Error Handling', () {
+      testWidgets('Should handle API errors gracefully', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.enableMfa()).thenThrow(Exception('Failed to enable MFA'));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      // Switch to code setup for testing
-      await tester.tap(find.text('Setup with Code'));
-      await tester.pump();
-      
-      await tester.enterText(find.byType(TextFormField), '12345'); // Invalid format
-      await tester.pump();
-      
-      await tester.tap(find.text('Enable MFA'));
-      await tester.pump();
-      
-      // Should show error for invalid code format
-      expect(find.text('Please enter a valid MFA code'), findsOneWidget);
+        );
+
+        await tester.pumpAndSettle();
+
+        // Attempt to enable MFA
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify error message is shown
+        expect(find.text('Failed to enable MFA'), findsOneWidget);
+      });
+
+      testWidgets('Should handle network errors gracefully', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
+        when(mockAuthService.enableMfa()).thenThrow(Exception('Network error'));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Attempt to enable MFA
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify error message is shown
+        expect(find.text('Network error'), findsOneWidget);
+      });
     });
 
-    testWidgets('MfaSetup validates MFA code length', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      // Switch to code setup for testing
-      await tester.tap(find.text('Setup with Code'));
-      await tester.pump();
-      
-      await tester.enterText(find.byType(TextFormField), '123'); // Too short
-      await tester.pump();
-      
-      await tester.tap(find.text('Enable MFA'));
-      await tester.pump();
-      
-      // Should show error for code too short
-      expect(find.text('MFA code must be 6 digits'), findsOneWidget);
-    });
+    group('Accessibility', () {
+      testWidgets('All interactive elements should be accessible', (WidgetTester tester) async {
+        when(mockAuthService.checkMfaStatus()).thenAnswer((_) async => false);
+        when(mockAuthService.getUserRole()).thenAnswer((_) async => 'student');
 
-    testWidgets('MfaSetup shows loading state during setup', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider.value(
+              value: mockAuthService,
+              child: const MfaSetup(),
+            ),
           ),
-        ),
-      );
-      
-      // Switch to code setup for testing
-      await tester.tap(find.text('Setup with Code'));
-      await tester.pump();
-      
-      await tester.enterText(find.byType(TextFormField), '123456');
-      
-      // Simulate loading state
-      await tester.tap(find.text('Enable MFA'));
-      await tester.pump();
-      
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Enable MFA'), findsNothing);
-    });
+        );
 
-    testWidgets('MfaSetup shows success message on successful setup', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      // Switch to code setup for testing
-      await tester.tap(find.text('Setup with Code'));
-      await tester.pump();
-      
-      await tester.enterText(find.byType(TextFormField), '123456');
-      
-      // Simulate successful setup
-      await tester.tap(find.text('Enable MFA'));
-      await tester.pump();
-      
-      // Should show success message
-      expect(find.text('MFA enabled successfully'), findsOneWidget);
-    });
+        await tester.pumpAndSettle();
 
-    testWidgets('MfaSetup validates password for disabling', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      await tester.enterText(find.byType(TextFormField), 'wrong-password');
-      await tester.pump();
-      
-      await tester.tap(find.text('Disable MFA'));
-      await tester.pump();
-      
-      // Should show error for wrong password
-      expect(find.text('Incorrect password'), findsOneWidget);
-    });
-
-    testWidgets('MfaSetup shows loading state during disabling', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      await tester.enterText(find.byType(TextFormField), 'correct-password');
-      
-      // Simulate loading state
-      await tester.tap(find.text('Disable MFA'));
-      await tester.pump();
-      
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Disable MFA'), findsNothing);
-    });
-
-    testWidgets('MfaSetup shows success message on successful disabling', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      await tester.enterText(find.byType(TextFormField), 'correct-password');
-      
-      // Simulate successful disabling
-      await tester.tap(find.text('Disable MFA'));
-      await tester.pump();
-      
-      // Should show success message
-      expect(find.text('MFA disabled successfully'), findsOneWidget);
-    });
-
-    testWidgets('MfaSetup shows backup codes when MFA is enabled', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(showBackupCodes: true),
-          ),
-        ),
-      );
-      
-      expect(find.text('Backup Codes'), findsOneWidget);
-      expect(find.text('Save these codes'), findsOneWidget);
-    });
-
-    testWidgets('MfaSetup allows copying backup codes', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(true);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(showBackupCodes: true),
-          ),
-        ),
-      );
-      
-      await tester.tap(find.text('Copy Codes'));
-      await tester.pump();
-      
-      // Should copy codes to clipboard
-      // This would depend on your clipboard implementation
-    });
-
-    testWidgets('MfaSetup shows recovery options when needed', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(showRecoveryOptions: true),
-          ),
-        ),
-      );
-      
-      expect(find.text('Lost Authenticator?'), findsOneWidget);
-      expect(find.text('Use Backup Codes'), findsOneWidget);
-    });
-
-    testWidgets('MfaSetup handles recovery code input', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(showRecoveryOptions: true),
-          ),
-        ),
-      );
-      
-      await tester.tap(find.text('Use Backup Codes'));
-      await tester.pump();
-      
-      await tester.enterText(find.byType(TextFormField), 'backup123');
-      await tester.pump();
-      
-      await tester.tap(find.text('Verify'));
-      await tester.pump();
-      
-      // Should handle recovery code verification
-      // This would depend on your recovery code implementation
-    });
-
-    testWidgets('MfaSetup shows help information', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      expect(find.text('What is 2FA?'), findsOneWidget);
-      expect(find.text('How to set up'), findsOneWidget);
-    });
-
-    testWidgets('MfaSetup responds to help taps', (WidgetTester tester) async {
-      mockAuthNotifier.setMfaEnabled(false);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<AuthServiceProvider>(
-            create: (_) => mockServiceProvider,
-            child: const MfaSetup(),
-          ),
-        ),
-      );
-      
-      await tester.tap(find.text('What is 2FA?'));
-      await tester.pump();
-      
-      // Should show help information
-      // This would depend on your help implementation
+        // Verify all interactive elements have proper semantics
+        expect(tester.getSemantics(find.byType(ElevatedButton)), isNotNull);
+        expect(tester.getSemantics(find.byType(TextFormField)), isNotNull);
+        expect(tester.getSemantics(find.text('Enable MFA')), isNotNull);
+        expect(tester.getSemantics(find.text('Two-Factor Authentication (MFA)')), isNotNull);
+      });
     });
   });
 }

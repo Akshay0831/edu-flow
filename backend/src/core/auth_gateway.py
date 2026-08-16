@@ -27,8 +27,8 @@ try:
 except ImportError:
     bcrypt = None
 
-from core.exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
-from core.config.settings import settings
+from .exceptions import AuthenticationError, AuthorizationError, ValidationError, NotFoundError
+from .config.settings import settings
 
 # Authentication providers enum
 class AuthProvider:

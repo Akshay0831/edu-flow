@@ -24,11 +24,11 @@ import aiohttp
 from aiohttp import ClientSession, ClientTimeout, ClientError
 import async_timeout
 
-from core.exceptions import ExternalServiceError, RateLimitError, ConfigurationError
-from core.cache_abstraction import CacheManager, CacheConfig, CacheBackend
-from core.error_handling import retry_handler, handle_external_service_errors
-from core.service_container import get_service_container
-from core.logging import get_logger
+from .exceptions import ExternalServiceError, RateLimitError, ConfigurationError
+from .cache_abstraction import CacheManager, CacheConfig, CacheBackend
+from .error_handling import retry_handler, handle_external_service_errors
+from .service_container import get_service_container
+from .logging import get_logger
 
 logger = get_logger(__name__)
 

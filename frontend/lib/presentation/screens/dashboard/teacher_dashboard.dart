@@ -220,14 +220,13 @@ class _TeacherDashboardState extends ConsumerState<TeacherDashboard> {
                     ),
                   ),
                 ),
-                if (_courses.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('No courses found'),
-                  ),
-              ],
-            ),
-          ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No courses found'),
+              ),
+          ],
         ),
       ),
     );

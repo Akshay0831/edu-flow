@@ -5,11 +5,8 @@ import 'package:edu_flow/data/models/assessment_model.dart';
 class AssessmentService {
   final ApiClient _apiClient;
   
-  AssessmentService._internal(this._apiClient);
-  
-  factory AssessmentService() {
-    return AssessmentService._internal(ApiClient.instance);
-  }
+  AssessmentService([ApiClient? apiClient]) : _apiClient = apiClient ?? ApiClient.instance;
+  AssessmentService.internal(this._apiClient);
   
   // Get all assessments
   Future<List<AssessmentModel>> getAllAssessments({String? courseId, String? teacherId}) async {

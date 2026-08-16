@@ -52,7 +52,7 @@ class CustomListTile extends StatelessWidget {
         ),
         subtitle: subtitle != null
             ? Text(
-                subtitle,
+                subtitle!,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

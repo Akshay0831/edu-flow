@@ -20,14 +20,14 @@ from typing import Dict, List, Optional, Any, Union, AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 
-from core.database_abstraction import (
+from src.core.database_abstraction import (
     DatabaseInterface, DatabaseType, DatabaseConfig, 
     DatabaseConnectionPool, SQLiteDatabase, MongoDBDatabase
 )
-from core.database_migrations import MigrationManager, MigrationStatus
-from core.exceptions import DatabaseError, MigrationError, ConfigurationError
-from core.logging import get_logger
-from config.settings import settings
+from src.core.database_migrations import MigrationManager, MigrationStatus
+from src.core.exceptions import DatabaseError, MigrationError, ConfigurationError
+from src.core.logging import get_logger
+from src.config.settings import settings
 
 logger = get_logger(__name__)
 

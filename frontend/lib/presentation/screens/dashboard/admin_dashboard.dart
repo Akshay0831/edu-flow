@@ -150,37 +150,38 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               ],
             ),
             const SizedBox(height: 16),
-            if (_dashboardData['recent_activity'] != null)
-              ...(_dashboardData['recent_activity'] as List).map((activity) => 
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.circle, size: 8, color: Colors.grey[400]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          activity['description'] ?? 'Activity',
-                          style: Theme.of(context).textTheme.bodyMedium,
+            if (_dashboardData['recent_activity'] != null && (_dashboardData['recent_activity'] as List).isNotEmpty)
+              Column(
+                children: (_dashboardData['recent_activity'] as List).map((activity) => 
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.circle, size: 8, color: Colors.grey[400]),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            activity['description'] ?? 'Activity',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ),
-                      ),
-                      Text(
-                        activity['time'] ?? '',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                    ],
+                        Text(
+                          activity['time'] ?? '',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                if (_dashboardData['recent_activities'] == null)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('No recent activity'),
-                  ),
-              ],
-            ),
-          ),
+                ).toList(),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No recent activity'),
+              ),
+          ],
         ),
       ),
     );

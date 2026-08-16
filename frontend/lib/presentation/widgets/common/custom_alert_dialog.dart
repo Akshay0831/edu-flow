@@ -95,7 +95,7 @@ class CustomAlertDialog extends StatelessWidget {
       ),
       content: content != null
           ? Text(
-              content,
+              content!,
               style: Theme.of(context).textTheme.bodyMedium,
             )
           : null,

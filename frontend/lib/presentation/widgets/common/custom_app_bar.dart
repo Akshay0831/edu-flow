@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final Widget? titleWidget;
-  final List<Widget>? actions;
-  final Widget? leading;
+  final List<dynamic>? actions;
+  final dynamic leading;
   final bool automaticallyImplyLeading;
   final VoidCallback? onLeadingPressed;
   final Color? backgroundColor;
@@ -15,6 +15,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool hasBackButton;
   final String? backTooltip;
   final bool? showShadow;
+  final String? semanticLabel;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final Color? titleColor;
+  final Color? iconColor;
 
   const CustomAppBar({
     super.key,
@@ -32,38 +37,81 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.hasBackButton = true,
     this.backTooltip,
     this.showShadow = false,
-  }) : assert(title != null || titleWidget != null,
-          'Either title or titleWidget must be provided');
+    this.semanticLabel,
+    this.fontSize,
+    this.fontWeight,
+    this.titleColor,
+    this.iconColor,
+  }) : assert(titleWidget != null || (title != null && title.length > 0),
+          'Either non-empty title or titleWidget must be provided');
 
   @override
   Widget build(BuildContext context) {
     final effectiveBackgroundColor = backgroundColor ?? Theme.of(context).primaryColor;
     final effectiveForegroundColor = foregroundColor ?? Theme.of(context).primaryColorLight;
+    final effectiveTitleColor = titleColor ?? effectiveForegroundColor;
     final effectiveElevation = elevation ?? (showShadow! ? 4.0 : 0.0);
 
-    return AppBar(
-      title: titleWidget ?? Text(
-        title!,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: effectiveForegroundColor,
-        ),
-      ),
+    Widget? effectiveLeading;
+    if (leading != null) {
+      if (leading is Widget) {
+        effectiveLeading = leading as Widget;
+      } else if (leading is IconData) {
+        effectiveLeading = IconButton(
+          icon: Icon(leading as IconData, color: iconColor ?? effectiveForegroundColor),
+          onPressed: onLeadingPressed,
+        );
+      }
+    } else if (hasBackButton) {
+      effectiveLeading = IconButton(
+        icon: Icon(Icons.arrow_back, color: iconColor ?? effectiveForegroundColor),
+        onPressed: onLeadingPressed ?? () => Navigator.of(context).pop(),
+        tooltip: backTooltip ?? 'Back',
+      );
+    }
+
+    List<Widget>? effectiveActions;
+    if (actions != null) {
+      effectiveActions = actions!.map<Widget>((action) {
+        if (action is Widget) return action;
+        if (action is IconData) {
+          return IconButton(
+            icon: Icon(action, color: iconColor ?? effectiveForegroundColor),
+            onPressed: () {},
+          );
+        }
+        return const SizedBox.shrink();
+      }).toList();
+    }
+
+    Widget appBarWidget = AppBar(
+      title: titleWidget ??
+          Text(
+            title ?? '',
+            style: TextStyle(
+              fontSize: fontSize ?? 20,
+              fontWeight: fontWeight ?? FontWeight.w600,
+              color: effectiveTitleColor,
+            ),
+          ),
       backgroundColor: effectiveBackgroundColor,
       foregroundColor: effectiveForegroundColor,
       elevation: effectiveElevation,
       centerTitle: centerTitle,
       automaticallyImplyLeading: automaticallyImplyLeading,
-      leading: leading ?? (hasBackButton
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: onLeadingPressed ?? () => Navigator.of(context).pop(),
-              tooltip: backTooltip ?? 'Back',
-            )
-          : null),
-      actions: actions,
+      leading: effectiveLeading,
+      actions: effectiveActions,
       bottom: bottom,
     );
+
+    if (semanticLabel != null) {
+      return Semantics(
+        label: semanticLabel,
+        child: appBarWidget,
+      );
+    }
+
+    return appBarWidget;
   }
 
   @override
@@ -122,13 +170,16 @@ class CustomSliverAppBar extends StatelessWidget {
     final effectiveForegroundColor = foregroundColor ?? Theme.of(context).primaryColorLight;
 
     return SliverAppBar(
-      title: titleWidget ?? Text(
-        title!,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: effectiveForegroundColor,
-        ),
-      ),
+      title: titleWidget ??
+          (title != null
+              ? Text(
+                  title!,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: effectiveForegroundColor,
+                  ),
+                )
+              : null),
       backgroundColor: effectiveBackgroundColor,
       foregroundColor: effectiveForegroundColor,
       expandedHeight: expandedHeight,
@@ -138,19 +189,17 @@ class CustomSliverAppBar extends StatelessWidget {
       snap: snap,
       stretch: stretch,
       flexibleSpace: flexibleSpace,
-      // background: background,  // This parameter doesn't exist in SliverAppBar
-      titleSpacing: titleSpacing,
-      centerTitle: centerTitle,
-      forceElevated: forceElevated ?? false,
-      // collapsedElevation: collapsedElevation,  // This parameter doesn't exist in SliverAppBar
-      leading: leading ?? (automaticallyImplyLeading
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: onLeadingPressed ?? () => Navigator.of(context).pop(),
-              tooltip: 'Back',
-            )
-          : null),
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      leading: leading ??
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onLeadingPressed ?? () => Navigator.of(context).pop(),
+          ),
       actions: actions,
+      centerTitle: centerTitle,
+      titleSpacing: titleSpacing,
+      forceElevated: forceElevated ?? false,
+      elevation: collapsedElevation,
     );
   }
 }

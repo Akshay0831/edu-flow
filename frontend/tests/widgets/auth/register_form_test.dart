@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:edu_flow/presentation/widgets/auth/register_form.dart';
-import 'package:mockito/mockito.dart';
+import 'package:provider/provider.dart';
 
-class MockAuthNotifier extends Mock implements AuthNotifier {
-  @override
-  Future<void> register(String email, String password, String name, String? role) async {}
-  
-  @override
-  bool get isLoading => _isLoading;
+class AuthNotifier extends ChangeNotifier {
   bool _isLoading = false;
-  
+  bool get isLoading => _isLoading;
+
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
+
+  Future<void> register(String email, String password, String name, String? role) async {}
 }
 
-class MockAuthServiceProvider extends Mock implements AuthServiceProvider {
+class AuthServiceProvider extends ChangeNotifier {
+  final AuthNotifier notifier = AuthNotifier();
+}
+
+class MockAuthNotifier extends AuthNotifier {}
+
+class MockAuthServiceProvider extends AuthServiceProvider {
+  final MockAuthNotifier _mockNotifier = MockAuthNotifier();
   @override
-  AuthNotifier get notifier => MockAuthNotifier();
+  AuthNotifier get notifier => _mockNotifier;
 }
 
 void main() {
@@ -60,16 +65,16 @@ void main() {
         ),
       );
       
-      await tester.enterText(find.text('Name').first, 'John Doe');
+      await tester.enterText(find.byType(TextFormField).at(0), 'John Doe');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[3], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'password123');
       await tester.pump();
       
       expect(find.text('John Doe'), findsOneWidget);
@@ -108,7 +113,7 @@ void main() {
       );
       
       await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'invalid-email');
+      await tester.enterText(find.byType(TextFormField).at(1), 'invalid-email');
       await tester.pump();
       
       await tester.tap(find.text('Sign Up'));
@@ -129,8 +134,8 @@ void main() {
       );
       
       await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
-      await tester.enterText(find.byType(TextFormField)[2], '123'); // Too short
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(2), '123'); // Too short
       await tester.pump();
       
       await tester.tap(find.text('Sign Up'));
@@ -151,9 +156,9 @@ void main() {
       );
       
       await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
-      await tester.enterText(find.byType(TextFormField)[3], 'differentpassword');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'differentpassword');
       await tester.pump();
       
       await tester.tap(find.text('Sign Up'));
@@ -212,9 +217,9 @@ void main() {
       );
       
       await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
-      await tester.enterText(find.byType(TextFormField)[3], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'password123');
       await tester.pump();
       
       // Simulate registration error
@@ -251,10 +256,10 @@ void main() {
         ),
       );
       
-      await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
-      await tester.enterText(find.byType(TextFormField)[3], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(0), 'John Doe');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'password123');
       await tester.pump();
       
       await tester.tap(find.text('Sign Up'));
@@ -288,10 +293,10 @@ void main() {
         ),
       );
       
-      await tester.enterText(find.text('Name').first, 'John Doe');
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
-      await tester.enterText(find.byType(TextFormField)[3], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(0), 'John Doe');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'password123');
       await tester.pump();
       
       await tester.tap(find.text('Sign Up'));

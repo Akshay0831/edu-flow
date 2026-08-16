@@ -200,9 +200,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                             children: [
                               Expanded(
                                 child: LinearProgressIndicator(
-                                  value: course['progress'] / 100,
+                                  value: (course['progress'] as num) / 100,
                                   backgroundColor: Colors.grey[300],
-                                  color: _getProgressColor(course['progress']),
+                                  color: _getProgressColor((course['progress'] as num).toDouble()),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -224,14 +224,13 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                     ),
                   ),
                 ),
-                if (_courses.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('No courses found'),
-                  ),
-              ],
-            ),
-          ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No courses found'),
+              ),
+          ],
         ),
       ),
     );
@@ -245,34 +244,38 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           border: Border.all(color: Colors.grey),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          grade ?? 'N/A',
-          style: Theme.of(context).textTheme.bodySmall,
+        child: const Text(
+          'N/A',
+          style: TextStyle(fontSize: 12, color: Colors.grey),
         ),
       );
     }
     
-    Color color = Colors.grey;
-    if (grade.startsWith('A')) color = Colors.green;
-    else if (grade.startsWith('B')) color = Colors.blue;
-    else if (grade.startsWith('C')) color = Colors.orange;
-    else if (grade.startsWith('D')) color = Colors.red;
-    
+    final color = _getGradeColor(grade);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.1),
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         grade,
         style: TextStyle(
+          fontSize: 12,
           color: color,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
+  }
+
+  Color _getGradeColor(String grade) {
+    if (grade.startsWith('A')) return Colors.green;
+    if (grade.startsWith('B')) return Colors.blue;
+    if (grade.startsWith('C')) return Colors.orange;
+    if (grade.startsWith('D')) return Colors.red;
+    return Colors.grey;
   }
 
   Widget _buildDeadlinesList() {
@@ -294,7 +297,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               ],
             ),
             const SizedBox(height: 16),
-            if (_dashboardData['deadlines'] != null)
+            if (_dashboardData['deadlines'] != null && (_dashboardData['deadlines'] as List).isNotEmpty)
               ...(_dashboardData['deadlines'] as List).map((deadline) => 
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -303,7 +306,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -333,14 +336,13 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                     ],
                   ),
                 ),
-                if (true)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('No upcoming deadlines'),
-                  ),
-              ],
-            ),
-          ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('No upcoming deadlines'),
+              ),
+          ],
         ),
       ),
     );

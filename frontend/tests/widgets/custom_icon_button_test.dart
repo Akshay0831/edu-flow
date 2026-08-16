@@ -225,7 +225,7 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('CustomIconButton throws assertion error for null icon', () {
+    test('CustomIconButton throws assertion error for null icon', () {
       expect(
         () => CustomIconButton(
           onPressed: () {},
@@ -235,7 +235,7 @@ void main() {
       );
     });
 
-    testWidgets('CustomIconButton throws assertion error for null onPressed', () {
+    test('CustomIconButton throws assertion error for null onPressed', () {
       expect(
         () => CustomIconButton(
           icon: Icons.add,

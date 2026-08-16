@@ -32,6 +32,22 @@ class LoggingService {
     }
   }
   
+  /// Internal log method
+  void _log(String message, String level) {
+    final timestamp = DateTime.now().toIso8601String();
+    final logEntry = {
+      'timestamp': timestamp,
+      'level': level,
+      'message': message,
+    };
+    
+    // Log based on platform and configuration
+    _logToAppropriateDestination(
+      logEntry: logEntry,
+      formattedMessage: message,
+    );
+  }
+  
   /// General logging method
   void log(String message, {
     String level = INFO,
@@ -357,27 +373,10 @@ class LoggingService {
   
   /// Web-specific logging
   void _logToWeb(Map<String, dynamic> logEntry) {
-    // Use browser console for web platform
+    // Use standard debugPrint for web platform
     final level = logEntry['level'];
     final message = logEntry['message'];
-    
-    switch (level) {
-      case DEBUG:
-        console.debug(message, logEntry);
-        break;
-      case INFO:
-        console.info(message, logEntry);
-        break;
-      case WARNING:
-        console.warn(message, logEntry);
-        break;
-      case ERROR:
-        console.error(message, logEntry);
-        break;
-      case CRITICAL:
-        console.error('CRITICAL: $message', logEntry);
-        break;
-    }
+    debugPrint('[$level] $message - $logEntry');
   }
   
   /// Native platform logging (iOS, Android, Desktop)

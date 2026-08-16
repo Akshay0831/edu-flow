@@ -329,10 +329,10 @@ void main() {
       expect(find.byType(BarChartWidget), findsOneWidget);
     });
 
-    testWidgets('BarChart throws assertion error for empty data', () {
+    test('BarChart throws assertion error for empty data', () {
       expect(
         () => BarChartWidget(
-          data: [],
+          data: const [],
           xAxisLabel: 'Month',
           yAxisLabel: 'Value',
           // Empty data without error state
@@ -341,10 +341,10 @@ void main() {
       );
     });
 
-    testWidgets('BarChart throws assertion error for empty labels', () {
+    test('BarChart throws assertion error for empty labels', () {
       expect(
         () => BarChartWidget(
-          data: [{'label': 'Jan', 'value': 10}],
+          data: const [{'label': 'Jan', 'value': 10}],
           xAxisLabel: '', // Empty label
           yAxisLabel: 'Value',
         ),

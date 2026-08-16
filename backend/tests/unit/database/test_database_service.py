@@ -142,15 +142,16 @@ class TestDatabaseService:
         # Mock collection find and to_list
         mock_cursor = Mock()
         mock_cursor.to_list = AsyncMock(return_value=[{"_id": "123", "name": "Test"}])
+        mock_cursor.limit = Mock(return_value=mock_cursor)
         mock_collection.find.return_value = mock_cursor
-        mock_collection.find.return_value.limit.return_value = mock_cursor
         
-        results = await db_service.find_many("test_collection", {})
-        
-        assert len(results) == 1
-        assert results[0]["name"] == "Test"
-        mock_collection.find.assert_called_once_with({})
-        mock_cursor.to_list.assert_called_once_with(length=100)
+        with patch.object(db_service, 'get_collection', return_value=mock_collection):
+            results = await db_service.find_many("test_collection", {})
+            
+            assert len(results) == 1
+            assert results[0]["name"] == "Test"
+            mock_collection.find.assert_called_once_with({})
+            mock_cursor.to_list.assert_called_once_with(length=100)
     
     @pytest.mark.asyncio
     async def test_find_many_with_limit(self, setup_database_service):
@@ -245,11 +246,12 @@ class TestDatabaseService:
         mock_result.inserted_id = "123"
         mock_collection.insert_one = AsyncMock(return_value=mock_result)
         
-        document = {"name": "Test", "value": 123}
-        result_id = await db_service.insert_one("test_collection", document)
-        
-        assert result_id == "123"
-        mock_collection.insert_one.assert_called_once_with(document)
+        with patch.object(db_service, 'get_collection', return_value=mock_collection):
+            document = {"name": "Test", "value": 123}
+            result_id = await db_service.insert_one("test_collection", document)
+            
+            assert result_id == "123"
+            mock_collection.insert_one.assert_called_once_with(document)
     
     @pytest.mark.asyncio
     async def test_insert_one_failure(self, setup_database_service):
@@ -278,8 +280,8 @@ class TestDatabaseService:
         mock_cursor.to_list = AsyncMock(return_value=[
             {"_id": "123", "name": "Test", "age": 25, "active": True}
         ])
+        mock_cursor.limit = Mock(return_value=mock_cursor)
         mock_collection.find.return_value = mock_cursor
-        mock_collection.find.return_value.limit.return_value = mock_cursor
         
         # Connect to the database first
         await db_service.connect()
@@ -290,10 +292,11 @@ class TestDatabaseService:
             "active": True
         }
         
-        results = await db_service.find_many("test_collection", complex_query)
-        
-        mock_collection.find.assert_called_once_with(complex_query)
-        mock_collection.find.return_value.limit.assert_called_once_with(100)
+        with patch.object(db_service, 'get_collection', return_value=mock_collection):
+            results = await db_service.find_many("test_collection", complex_query)
+            
+            mock_collection.find.assert_called_once_with(complex_query)
+            mock_cursor.limit.assert_called_once_with(100)
     
     @pytest.mark.asyncio
     async def test_find_many_invalid_collection_name(self, setup_database_service):

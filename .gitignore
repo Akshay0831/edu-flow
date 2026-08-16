@@ -198,6 +198,21 @@ pubspec.lock
 # OS generated files
 .DS_Store
 .DS_Store?
+
+# Rust/Cargo specific files
+target/
+Cargo.lock
+
+# Services/Rust AI services specific
+services/target/
+services/Cargo.lock
+
+# Ignore build artifacts while keeping source code
+services/target/
+!services/src/
+!services/Cargo.toml
+!services/Dockerfile
+!services/src/*.rs
 ._*
 .Spotlight-V100
 .Trashes

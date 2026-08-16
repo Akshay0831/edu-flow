@@ -22,8 +22,8 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from functools import wraps
 
-from core.exceptions import ExternalServiceError, ConfigurationError
-from core.logging import get_logger
+from .exceptions import ExternalServiceError, ConfigurationError
+from .logging import get_logger
 
 logger = get_logger(__name__)
 

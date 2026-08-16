@@ -46,7 +46,7 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
     
     if (duration > 0) {
       setState(() {
-        _fps = (_frameCount / (duration / 1000)).toStringAsFixed(1);
+        _fps = _frameCount / (duration / 1000.0);
       });
     }
 

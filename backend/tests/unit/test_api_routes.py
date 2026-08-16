@@ -75,8 +75,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 # Create tables
 def setup_test_db():
     # Import all models to create tables
-    from ...src.models import user, student, course, teacher, department, enrollment
-    from ...src.core.database import Base
+    from src.database.sqlite import Base, User, Student, Teacher, Course, Subject, Class, Marks, Feedback, Department
     Base.metadata.create_all(bind=engine)
     
     # Create test user
@@ -84,8 +83,10 @@ def setup_test_db():
     try:
         test_user = User(
             email="test@example.com",
-            name="Test User",
-            role=UserRole.ADMIN,
+            first_name="Test",
+            last_name="User",
+            hashed_password="hashed_password_here",
+            role="admin",
             is_active=True
         )
         db.add(test_user)

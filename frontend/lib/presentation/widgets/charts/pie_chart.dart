@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,7 +34,10 @@ class PieChart extends ConsumerWidget {
       );
     }
 
-    final total = data.fold(0, (sum, item) => (item['value'] as num) + sum);
+    final double total = data.fold<double>(
+      0.0,
+      (sum, item) => sum + (item['value'] as num).toDouble(),
+    );
     final effectiveColors = colors ?? _getDefaultColors(data.length);
     final double size = width < 200 ? width : 200;
 
@@ -55,7 +59,7 @@ class PieChart extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Container(
+                SizedBox(
                   width: size,
                   height: size,
                   child: CustomPaint(
@@ -73,7 +77,7 @@ class PieChart extends ConsumerWidget {
                     children: data.map((item) {
                       final label = item['label'] as String;
                       final value = item['value'] as num;
-                      final percentage = total > 0 ? (value / total) * 100 : 0;
+                      final percentage = total > 0 ? (value.toDouble() / total) * 100 : 0;
                       final color = effectiveColors[data.indexOf(item) % effectiveColors.length];
 
                       return Padding(
@@ -92,12 +96,10 @@ class PieChart extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    label,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                Text(
+                                  label,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -132,20 +134,17 @@ class PieChart extends ConsumerWidget {
       Colors.amber,
       Colors.pink,
     ];
-    
+
     if (count <= defaultColors.length) {
       return defaultColors.sublist(0, count);
     }
-    
-    // Generate more colors if needed
+
     final colors = List<Color>.from(defaultColors);
-    final random = <Color>[];
-    
     for (int i = defaultColors.length; i < count; i++) {
-      final hue = (360 / count) * i;
-      colors.add(HSLAColor.fromAHSL(1, hue, 0.7, 0.5).toColor());
+      final hue = (360.0 / count) * i;
+      colors.add(HSLColor.fromAHSL(1.0, hue, 0.7, 0.5).toColor());
     }
-    
+
     return colors;
   }
 }
@@ -167,16 +166,15 @@ class _PieChartPainter extends CustomPainter {
     final radius = size.width / 2 - 10;
 
     if (total == 0) {
-      // Draw empty circle
       canvas.drawCircle(center, radius, Paint()..color = Colors.grey[300]!);
       return;
     }
 
-    double startAngle = -90 * (3.14159 / 180); // Start from top
+    double startAngle = -90 * (pi / 180);
 
     for (int i = 0; i < data.length; i++) {
-      final value = data[i]['value'] as num;
-      final sweepAngle = (value / total) * 2 * 3.14159;
+      final value = (data[i]['value'] as num).toDouble();
+      final sweepAngle = (value / total) * 2 * pi;
 
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -188,8 +186,7 @@ class _PieChartPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
 
-      // Draw percentage text on larger segments
-      if (value / total > 0.05) { // Only show text if segment is > 5%
+      if (value / total > 0.05) {
         final percentageAngle = startAngle + sweepAngle / 2;
         final textRadius = radius * 0.7;
         final textX = center.dx + textRadius * cos(percentageAngle);
@@ -198,7 +195,7 @@ class _PieChartPainter extends CustomPainter {
         final textPainter = TextPainter(
           text: TextSpan(
             text: '${((value / total) * 100).toStringAsFixed(0)}%',
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -208,7 +205,10 @@ class _PieChartPainter extends CustomPainter {
         );
 
         textPainter.layout();
-        textPainter.paint(canvas, Offset(textX - textPainter.width / 2, textY - textPainter.height / 2));
+        textPainter.paint(
+          canvas,
+          Offset(textX - textPainter.width / 2, textY - textPainter.height / 2),
+        );
       }
 
       startAngle += sweepAngle;

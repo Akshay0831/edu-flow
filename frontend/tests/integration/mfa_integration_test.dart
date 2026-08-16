@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'package:edu_flow/data/services/auth_service.dart';
 import 'package:edu_flow/presentation/widgets/auth/mfa_setup.dart';
-import 'package:edu_flow/test/integration/mocks.mocks.dart';
+import 'mocks.mockito.dart';
 
 void main() {
   group('MFA Integration Tests', () {

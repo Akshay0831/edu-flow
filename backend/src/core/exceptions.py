@@ -30,6 +30,7 @@ class ValidationError(BaseError):
     
     def __init__(self, message: str, field: str = None, details: Dict = None):
         self.field = field
+        self.status_code = 400
         super().__init__(
             message=message,
             error_code='VALIDATION_ERROR',
@@ -43,6 +44,7 @@ class NotFoundError(BaseError):
     def __init__(self, resource: str, id: str = None, details: Dict = None):
         self.resource = resource
         self.id = id
+        self.status_code = 404
         message = f"{resource} not found"
         if id:
             message += f" with ID: {id}"
@@ -57,11 +59,14 @@ class AuthenticationError(BaseError):
     """Exception raised for authentication errors."""
     
     def __init__(self, message: str = "Authentication failed", details: Dict = None):
+        self.status_code = 401
         super().__init__(
             message=message,
             error_code='AUTHENTICATION_ERROR',
             details=details or {}
         )
+
+AuthException = AuthenticationError
 
 
 class AuthorizationError(BaseError):
@@ -69,6 +74,7 @@ class AuthorizationError(BaseError):
     
     def __init__(self, message: str = "Access denied", required_permission: str = None, details: Dict = None):
         self.required_permission = required_permission
+        self.status_code = 403
         super().__init__(
             message=message,
             error_code='AUTHORIZATION_ERROR',
@@ -80,6 +86,7 @@ class ForbiddenError(BaseError):
     """Exception raised for forbidden access."""
     
     def __init__(self, message: str = "Access forbidden", details: Dict = None):
+        self.status_code = 403
         super().__init__(
             message=message,
             error_code='FORBIDDEN',
@@ -93,6 +100,7 @@ class ConflictError(BaseError):
     def __init__(self, message: str, conflict_field: str = None, conflict_value: str = None, details: Dict = None):
         self.conflict_field = conflict_field
         self.conflict_value = conflict_value
+        self.status_code = 409
         super().__init__(
             message=message,
             error_code='CONFLICT',
@@ -109,6 +117,7 @@ class DatabaseError(BaseError):
     
     def __init__(self, message: str, operation: str = None, details: Dict = None):
         self.operation = operation
+        self.status_code = 500
         super().__init__(
             message=message,
             error_code='DATABASE_ERROR',
@@ -311,11 +320,24 @@ class ConflictError(HTTPException):
         super().__init__(status_code=status_code, detail=detail)
 
 
-class InternalServerError(HTTPException):
+class ServerError(BaseError):
+    """Exception raised for server errors."""
+    
+    def __init__(self, message: str = "Internal server error", details: Dict = None):
+        self.status_code = 500
+        super().__init__(
+            message=message,
+            error_code='SERVER_ERROR',
+            details=details or {}
+        )
+
+
+class InternalServerError(ServerError):
     """Custom internal server error"""
     
     def __init__(self, detail: str, status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR):
-        super().__init__(status_code=status_code, detail=detail)
+        self.status_code = status_code
+        super().__init__(message=detail, details={'detail': detail})
 
 
 class DatabaseError(Exception):

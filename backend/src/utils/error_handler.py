@@ -73,14 +73,14 @@ class ErrorHandler:
         error_category = self._categorize_error(error)
         
         # Handle different error types
-        if isinstance(error, BaseError):
-            return self._handle_base_error(error, error_context)
-        elif isinstance(error, ValidationError):
+        if isinstance(error, ValidationError):
             return self._handle_validation_error(error, error_context)
         elif isinstance(error, NotFoundError):
             return self._handle_not_found_error(error, error_context)
         elif isinstance(error, ServerError):
             return self._handle_server_error(error, error_context)
+        elif isinstance(error, BaseError):
+            return self._handle_base_error(error, error_context)
         else:
             return self._handle_unexpected_error(error, error_context)
     
@@ -493,7 +493,7 @@ def error_context(context: Dict[str, Any] = None):
         # Add context to error
         error_context = context.copy()
         error_context['error'] = str(e)
-        error_context['error_type'] = type(e).__name__)
+        error_context['error_type'] = type(e).__name__
         
         # Log error
         logger.error(f"Error in context: {str(e)}", extra=error_context)
@@ -562,12 +562,13 @@ def monitor_performance(func: Callable) -> Callable:
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Log performance
+            func_name = getattr(func, '__name__', str(func))
             performance_monitor.record(
-                func.__name__,
+                func_name,
                 duration=duration,
                 success=True,
                 metadata={
-                    'function': func.__name__,
+                    'function': func_name,
                     'duration_ms': duration * 1000,
                 }
             )

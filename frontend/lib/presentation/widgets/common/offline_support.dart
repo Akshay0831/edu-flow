@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'custom_snackbar.dart';
 
 class OfflineSupportManager extends StateNotifier<OfflineSupportState> {
   OfflineSupportManager() : super(const OfflineSupportState()) {
@@ -9,26 +9,19 @@ class OfflineSupportManager extends StateNotifier<OfflineSupportState> {
   }
 
   Future<void> _initialize() async {
-    await _checkConnectivity();
     await _loadOfflineData();
-    _startConnectivityMonitoring();
   }
 
-  Future<void> _checkConnectivity() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    final isConnected = connectivityResult != ConnectivityResult.none;
-    
+  void setConnected(bool isConnected) {
     state = state.copyWith(isConnected: isConnected);
-    
     if (!isConnected) {
-      await _saveOfflineData();
+      _saveOfflineData();
     }
   }
 
   Future<void> _loadOfflineData() async {
     final prefs = await SharedPreferences.getInstance();
     final hasOfflineData = prefs.getBool('hasOfflineData') ?? false;
-    
     state = state.copyWith(hasOfflineData: hasOfflineData);
   }
 
@@ -41,14 +34,15 @@ class OfflineSupportManager extends StateNotifier<OfflineSupportState> {
   Future<void> clearOfflineData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('hasOfflineData');
-    state = state.copyWith(hasOfflineData: false);
+    state = state.copyWith(hasOfflineData: false, pendingOperations: 0);
   }
 
-  void _startConnectivityMonitoring() {
-    Connectivity().onConnectivityChanged.listen((result) {
-      final isConnected = result != ConnectivityResult.none;
-      state = state.copyWith(isConnected: isConnected);
-    });
+  void addPendingOperation() {
+    state = state.copyWith(
+      pendingOperations: (state.pendingOperations ?? 0) + 1,
+      hasOfflineData: true,
+    );
+    _saveOfflineData();
   }
 }
 
@@ -100,7 +94,7 @@ class OfflineSupportIndicator extends ConsumerWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
-            color: Colors.orange.withOpacity(0.1),
+            color: Colors.orange.withValues(alpha: 0.1),
             child: Row(
               children: [
                 const Icon(Icons.wifi_off, color: Colors.orange),
@@ -139,10 +133,10 @@ class SyncButton extends ConsumerWidget {
     final offlineState = ref.watch(offlineSupportProvider);
 
     return ElevatedButton.icon(
-      onPressed: () async {
+      onPressed: () {
         try {
           if (onSync != null) {
-            await onSync!();
+            onSync!();
           }
           CustomSnackBar.showSuccess(
             context: context,
@@ -158,13 +152,13 @@ class SyncButton extends ConsumerWidget {
       },
       icon: const Icon(Icons.sync),
       label: Text(
-        offlineState.hasOfflineData 
+        offlineState.hasOfflineData
             ? 'Sync (${offlineState.pendingOperations ?? 0} pending)'
             : 'Sync Now',
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: offlineState.hasOfflineData 
-            ? Colors.orange 
+        backgroundColor: offlineState.hasOfflineData
+            ? Colors.orange
             : Theme.of(context).primaryColor,
       ),
     );
@@ -174,22 +168,3 @@ class SyncButton extends ConsumerWidget {
 final offlineSupportProvider = StateNotifierProvider<OfflineSupportManager, OfflineSupportState>(
   (ref) => OfflineSupportManager(),
 );
-
-extension on OfflineSupportManager {
-  Future<void> addPendingOperation() async {
-    state = state.copyWith(
-      pendingOperations: (state.pendingOperations ?? 0) + 1,
-    );
-  }
-
-  Future<void> removePendingOperation() async {
-    final newPending = (state.pendingOperations ?? 0) - 1;
-    state = state.copyWith(
-      pendingOperations: newPending > 0 ? newPending : null,
-    );
-  }
-
-  Future<void> updateLastSyncTime() async {
-    state = state.copyWith(lastSyncTime: DateTime.now());
-  }
-}

@@ -7,11 +7,19 @@ import 'package:edu_flow/presentation/widgets/auth/register_form.dart';
 import 'package:edu_flow/presentation/widgets/common/custom_app_bar.dart';
 import 'package:edu_flow/presentation/widgets/common/custom_navigation_bar.dart';
 
-// Mock classes for testing
-class MockAuthNotifier extends Mock implements AuthNotifier {
-  @override
-  User? get currentUser => _currentUser;
+class User {
+  final String id;
+  final String email;
+  User({this.id = '1', this.email = 'test@example.com'});
+}
+
+class AuthNotifier extends ChangeNotifier {
   User? _currentUser;
+  bool _isLoading = false;
+  String? error;
+
+  User? get currentUser => _currentUser;
+  bool get isLoading => _isLoading;
 
   void setUser(User? user) {
     _currentUser = user;
@@ -22,17 +30,20 @@ class MockAuthNotifier extends Mock implements AuthNotifier {
     _isLoading = loading;
     notifyListeners();
   }
-
-  bool _isLoading = false;
-  @override
-  bool get isLoading => _isLoading;
 }
 
-class MockUser extends Mock implements User {}
+class MockUser extends User {}
 
-class MockAuthServiceProvider extends Mock implements AuthServiceProvider {
+class AuthServiceProvider extends ChangeNotifier {
+  final AuthNotifier notifier = AuthNotifier();
+}
+
+class MockAuthNotifier extends AuthNotifier {}
+
+class MockAuthServiceProvider extends AuthServiceProvider {
+  final MockAuthNotifier _mockNotifier = MockAuthNotifier();
   @override
-  AuthNotifier get notifier => MockAuthNotifier();
+  AuthNotifier get notifier => _mockNotifier;
 }
 
 void main() {
@@ -133,16 +144,16 @@ void main() {
       expect(find.text('Create Account'), findsOneWidget);
       
       // Fill registration form
-      await tester.enterText(find.text('Name').first, 'John Doe');
+      await tester.enterText(find.byType(TextFormField).at(0), 'John Doe');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[1], 'john@example.com');
+      await tester.enterText(find.byType(TextFormField).at(1), 'john@example.com');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[2], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(2), 'password123');
       await tester.pump();
       
-      await tester.enterText(find.byType(TextFormField)[3], 'password123');
+      await tester.enterText(find.byType(TextFormField).at(3), 'password123');
       await tester.pump();
       
       // Submit registration
@@ -184,9 +195,9 @@ void main() {
             child: Scaffold(
               appBar: CustomAppBar(
                 title: 'Dashboard',
-                leading: Icons.menu,
+                leading: const Icon(Icons.menu),
                 actions: [
-                  IconButton(icon: Icons.logout, onPressed: () {}),
+                  IconButton(icon: const Icon(Icons.logout), onPressed: () {}),
                 ],
               ),
               body: const Text('Protected Content'),
@@ -251,7 +262,7 @@ void main() {
               appBar: CustomAppBar(
                 title: 'Dashboard',
                 actions: [
-                  IconButton(icon: Icons.logout, onPressed: () {
+                  IconButton(icon: const Icon(Icons.logout), onPressed: () {
                     mockAuthNotifier.setUser(null);
                   }),
                 ],
@@ -421,14 +432,4 @@ void main() {
       expect(find.text('Protected Content'), findsOneWidget);
     });
   });
-}
-
-// Extension to mock auth status
-extension MockAuthNotifier on MockAuthNotifier {
-  String? get error => null;
-  
-  void set error(String? error) {
-    // This is a workaround for testing purposes
-    throw UnimplementedError();
-  }
 }

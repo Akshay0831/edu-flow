@@ -20,9 +20,9 @@ import hashlib
 import hmac
 from uuid import uuid4
 
-from core.security import AuthService
-from core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from services.database_manager import db_manager
+from src.core.security import AuthService
+from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from src.services.database_manager import db_manager
 
 
 class UserService:
