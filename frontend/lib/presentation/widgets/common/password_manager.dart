@@ -354,7 +354,6 @@ class PasswordPolicyScreen extends ConsumerStatefulWidget {
 }
 
 class _PasswordPolicyScreenState extends ConsumerState<PasswordPolicyScreen> {
-  bool _showPolicyDetails = false;
 
   @override
   Widget build(BuildContext context) {
@@ -398,11 +397,6 @@ class _PasswordPolicyScreenState extends ConsumerState<PasswordPolicyScreen> {
                   const SizedBox(height: 16),
                   ExpansionTile(
                     title: const Text('View Detailed Requirements'),
-                    onExpansionChanged: (expanded) {
-                      setState(() {
-                        _showPolicyDetails = expanded;
-                      });
-                    },
                     children: [
                       _buildPolicyDetails(policy),
                     ],

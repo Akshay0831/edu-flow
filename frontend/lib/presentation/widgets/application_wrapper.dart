@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'common/index.dart';
-import '../screens/dashboard/dashboard_screen.dart';
 
-class ApplicationWrapper extends ConsumerWidget {
+class ApplicationWrapper extends StatelessWidget {
   final Widget child;
 
   const ApplicationWrapper({
@@ -13,7 +11,7 @@ class ApplicationWrapper extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'EduFlow',
@@ -183,7 +181,7 @@ class ApplicationWrapper extends ConsumerWidget {
   }
 }
 
-class DashboardScreenWrapper extends ConsumerWidget {
+class DashboardScreenWrapper extends StatelessWidget {
   final Widget child;
 
   const DashboardScreenWrapper({
@@ -192,7 +190,7 @@ class DashboardScreenWrapper extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Dashboard',

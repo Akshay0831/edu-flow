@@ -235,6 +235,9 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return const Center(child: Text('An error occurred'));
+    }
     return widget.child;
   }
   

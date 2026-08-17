@@ -18,7 +18,7 @@ import os
 import json
 from typing import Dict, List, Optional, Any
 from pathlib import Path
-from pydantic import BaseModel, Field, validator, HttpUrl
+from pydantic import BaseModel, Field, field_validator, HttpUrl
 from functools import lru_cache
 
 
@@ -101,7 +101,8 @@ class RustAIServicesConfig(BaseModel):
         env_file = ".env"
         env_file_encoding = "utf-8"
     
-    @validator('models', 'services', pre=True)
+    @field_validator('models', 'services', mode='before')
+    @classmethod
     def validate_models_and_services(cls, v):
         if not v:
             return {}

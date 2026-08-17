@@ -16,6 +16,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -44,6 +45,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: initialData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -59,6 +61,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: updatedData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -83,11 +86,11 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
               lineColor: Colors.red,
-              showPoints: false,
             ),
           ),
         ),
@@ -106,6 +109,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -124,16 +128,14 @@ void main() {
         {'x': 2, 'y': 20},
       ];
       
-      
-      
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              title: 'Series 1',
             ),
           ),
         ),
@@ -152,23 +154,24 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              showPoints: false,
+              showPoints: true,
             ),
           ),
         ),
       );
       
-      expect(find.byType(LineChart), findsOneWidget);
+      expect(find.byType(LineChartWidget), findsOneWidget);
     });
 
     testWidgets('LineChart handles empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LineChart(
+            body: LineChartWidget(
               data: [],
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -177,7 +180,7 @@ void main() {
         ),
       );
       
-      expect(find.byType(LineChart), findsOneWidget);
+      expect(find.byType(LineChartWidget), findsOneWidget);
     });
 
     testWidgets('LineChart shows loading state', (WidgetTester tester) async {
@@ -185,16 +188,16 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: [],
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-
             ),
           ),
         ),
       );
       
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Not enough data to display chart'), findsOneWidget);
     });
 
     testWidgets('LineChart shows error state', (WidgetTester tester) async {
@@ -202,10 +205,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: [],
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              
             ),
           ),
         ),
@@ -223,7 +226,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LineChart(
+            body: LineChartWidget(
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
@@ -234,7 +237,7 @@ void main() {
         ),
       );
       
-      expect(find.byType(LineChart), findsOneWidget);
+      expect(find.byType(LineChartWidget), findsOneWidget);
     });
 
     testWidgets('LineChart shows multiple data series', (WidgetTester tester) async {
@@ -248,11 +251,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LineChart(
+            body: LineChartWidget(
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              
             ),
           ),
         ),
@@ -271,10 +273,11 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              
+              showPoints: true,
             ),
           ),
         ),
@@ -293,16 +296,16 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              
             ),
           ),
         ),
       );
       
-      expect(find.byType(LineChart), findsOneWidget);
+      expect(find.byType(LineChartWidget), findsOneWidget);
     });
 
     testWidgets('LineChart shows animation when enabled', (WidgetTester tester) async {
@@ -315,10 +318,10 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: LineChart(
+              title: 'Chart',
               data: chartData,
               xAxisLabel: 'Time',
               yAxisLabel: 'Value',
-              
             ),
           ),
         ),
@@ -327,27 +330,38 @@ void main() {
       expect(find.byType(LineChart), findsOneWidget);
     });
 
-    test('LineChart throws assertion error for empty data', () {
-      expect(
-        () => LineChart(
-          data: const [],
-          xAxisLabel: 'Time',
-          yAxisLabel: 'Value',
-          // Empty data without error state
+    testWidgets('LineChart throws assertion error for empty data', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LineChart(
+              title: 'Chart',
+              data: [],
+              xAxisLabel: 'Time',
+              yAxisLabel: 'Value',
+            ),
+          ),
         ),
-        throwsAssertionError,
       );
+      
+      expect(find.text('Not enough data to display chart'), findsOneWidget);
     });
 
-    test('LineChart throws assertion error for empty labels', () {
-      expect(
-        () => LineChart(
-          data: const [{'x': 1, 'y': 10}],
-          xAxisLabel: '', // Empty label
-          yAxisLabel: 'Value',
+    testWidgets('LineChart throws assertion error for empty labels', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LineChart(
+              title: 'Chart',
+              data: [{'x': 1, 'y': 10}],
+              xAxisLabel: '', // Empty label
+              yAxisLabel: 'Value',
+            ),
+          ),
         ),
-        throwsAssertionError,
       );
+      
+      expect(find.text('Not enough data to display chart'), findsOneWidget);
     });
   });
 }

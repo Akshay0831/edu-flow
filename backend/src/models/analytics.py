@@ -17,7 +17,7 @@ Author: Edu-Flow Team
 from datetime import datetime, date, timedelta
 from typing import Dict, List, Optional, Any, Union, Tuple
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import relationship
 import numpy as np
@@ -136,7 +136,7 @@ class AnalyticsFilter(BaseModel):
     value: Union[str, int, float, List[Any]]
     optional: bool = False
     
-    @validator('operator')
+    @field_validator('operator')
     def validate_operator(cls, v):
         if not FilterOperator(v):
             raise ValidationError(f"Invalid filter operator: {v}")
@@ -157,7 +157,7 @@ class MetricDefinition(BaseModel):
     category: str = "general"
     tags: List[str] = []
     
-    @validator('calculation_formula')
+    @field_validator('calculation_formula')
     def validate_formula(cls, v):
         # Basic validation for formula syntax
         if not v or len(v.strip()) == 0:
@@ -171,13 +171,14 @@ class TimeRange(BaseModel):
     end_date: datetime
     timeframe: Timeframe
     
-    @validator('start_date')
+    @field_validator('start_date')
+    @classmethod
     def validate_start_date(cls, v, values):
         if 'end_date' in values and v > values['end_date']:
             raise ValidationError("Start date must be before end date")
         return v
     
-    @validator('end_date')
+    @field_validator('end_date')
     def validate_end_date(cls, v, values):
         if 'start_date' in values and v < values['start_date']:
             raise ValidationError("End date must be after start date")
@@ -190,7 +191,7 @@ class Aggregation(BaseModel):
     type: AggregationType
     alias: Optional[str] = None
     
-    @validator('type')
+    @field_validator('type')
     def validate_aggregation_type(cls, v):
         if not AggregationType(v):
             raise ValidationError(f"Invalid aggregation type: {v}")
@@ -203,7 +204,7 @@ class QueryFilter(BaseModel):
     operator: FilterOperator
     value: Union[str, int, float, List[Any], Tuple[Any, Any]]
     
-    @validator('operator')
+    @field_validator('operator')
     def validate_operator(cls, v):
         if not FilterOperator(v):
             raise ValidationError(f"Invalid filter operator: {v}")
@@ -225,13 +226,13 @@ class AnalyticsQuery(BaseModel):
     limit: int = 1000
     offset: int = 0
     
-    @validator('limit')
+    @field_validator('limit')
     def validate_limit(cls, v):
         if v < 1 or v > 100000:
             raise ValidationError("Limit must be between 1 and 100000")
         return v
     
-    @validator('offset')
+    @field_validator('offset')
     def validate_offset(cls, v):
         if v < 0:
             raise ValidationError("Offset must be non-negative")
@@ -249,7 +250,7 @@ class AnalyticsResult(BaseModel):
     summary_stats: Dict[str, Any]
     metadata: Dict[str, Any]
     
-    @validator('execution_time')
+    @field_validator('execution_time')
     def validate_execution_time(cls, v):
         if v < 0:
             raise ValidationError("Execution time must be non-negative")
@@ -274,7 +275,7 @@ class CorrelationMatrix(BaseModel):
     p_values: List[List[float]] = []
     significance_level: float = 0.05
     
-    @validator('correlation_matrix')
+    @field_validator('correlation_matrix')
     def validate_correlation_matrix(cls, v):
         if not v or len(v) == 0:
             raise ValidationError("Correlation matrix cannot be empty")
@@ -302,13 +303,13 @@ class StudentPerformanceMetrics(BaseModel):
     strengths: List[str]
     risk_level: str  # "low", "medium", "high"
     
-    @validator('current_gpa')
+    @field_validator('current_gpa')
     def validate_gpa(cls, v):
         if not 0.0 <= v <= 4.0:
             raise ValidationError("GPA must be between 0.0 and 4.0")
         return v
     
-    @validator('completion_rate')
+    @field_validator('completion_rate')
     def validate_completion_rate(cls, v):
         if not 0.0 <= v <= 100.0:
             raise ValidationError("Completion rate must be between 0.0 and 100.0")
@@ -335,7 +336,7 @@ class CourseAnalytics(BaseModel):
     performance_trend: List[Tuple[str, float]]
     feedback_summary: Dict[str, Any]
     
-    @validator('completion_rate')
+    @field_validator('completion_rate')
     def validate_completion_rate(cls, v):
         if not 0.0 <= v <= 100.0:
             raise ValidationError("Completion rate must be between 0.0 and 100.0")
@@ -362,7 +363,7 @@ class FacultyPerformanceMetrics(BaseModel):
     professional_development_hours: float
     performance_trend: List[Tuple[str, float]]
     
-    @validator('average_student_rating')
+    @field_validator('average_student_rating')
     def validate_rating(cls, v):
         if not 1.0 <= v <= 5.0:
             raise ValidationError("Average rating must be between 1.0 and 5.0")
@@ -389,13 +390,13 @@ class DepartmentAnalytics(BaseModel):
     budget_utilization: float
     facilities_rating: float
     
-    @validator('student_faculty_ratio')
+    @field_validator('student_faculty_ratio')
     def validate_ratio(cls, v):
         if v < 0:
             raise ValidationError("Student-faculty ratio must be non-negative")
         return v
     
-    @validator('average_gpa')
+    @field_validator('average_gpa')
     def validate_gpa(cls, v):
         if not 0.0 <= v <= 4.0:
             raise ValidationError("Average GPA must be between 0.0 and 4.0")
@@ -419,7 +420,7 @@ class EngagementMetrics(BaseModel):
     risk_factors: List[str]
     improvement_suggestions: List[str]
     
-    @validator('engagement_score')
+    @field_validator('engagement_score')
     def validate_engagement_score(cls, v):
         if not 0.0 <= v <= 100.0:
             raise ValidationError("Engagement score must be between 0.0 and 100.0")
@@ -440,7 +441,7 @@ class PredictiveInsight(BaseModel):
     data_sources: List[str]
     validation_status: str  # "validated", "pending", "rejected"
     
-    @validator('confidence_score')
+    @field_validator('confidence_score')
     def validate_confidence_score(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError("Confidence score must be between 0.0 and 1.0")
@@ -463,7 +464,7 @@ class AnalyticsDashboard(BaseModel):
     refresh_frequency: str = "daily"  # real_time, hourly, daily, weekly, monthly
     auto_refresh: bool = True
     
-    @validator('refresh_frequency')
+    @field_validator('refresh_frequency')
     def validate_refresh_frequency(cls, v):
         valid_frequencies = ["real_time", "hourly", "daily", "weekly", "monthly"]
         if v not in valid_frequencies:
@@ -488,7 +489,7 @@ class ReportTemplate(BaseModel):
     created_at: datetime
     updated_at: datetime
     
-    @validator('output_format')
+    @field_validator('output_format')
     def validate_output_format(cls, v):
         valid_formats = ["pdf", "excel", "csv", "json", "html"]
         if v not in valid_formats:
@@ -512,7 +513,7 @@ class AlertConfig(BaseModel):
     last_triggered: Optional[datetime] = None
     trigger_count: int = 0
     
-    @validator('severity')
+    @field_validator('severity')
     def validate_severity(cls, v):
         valid_severities = ["low", "medium", "high", "critical"]
         if v not in valid_severities:
@@ -537,7 +538,7 @@ class KpiMetric(BaseModel):
     status: str  # "on_track", "at_risk", "behind"
     last_updated: datetime
     
-    @validator('variance_percentage')
+    @field_validator('variance_percentage')
     def validate_variance_percentage(cls, v):
         if v < -100 or v > 100:
             raise ValidationError("Variance percentage must be between -100 and 100")
@@ -563,7 +564,7 @@ class LearningAnalytics(BaseModel):
     interaction_patterns: Dict[str, int]
     learning_outcomes: List[Dict[str, Any]]
     
-    @validator('learning_efficiency')
+    @field_validator('learning_efficiency')
     def validate_learning_efficiency(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError("Learning efficiency must be between 0.0 and 1.0")
@@ -586,7 +587,7 @@ class RiskAssessment(BaseModel):
     interventions_applied: List[str]
     intervention_effectiveness: Optional[float] = None
     
-    @validator('risk_score')
+    @field_validator('risk_score')
     def validate_risk_score(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError("Risk score must be between 0.0 and 1.0")

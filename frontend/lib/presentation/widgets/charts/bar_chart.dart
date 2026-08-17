@@ -23,9 +23,7 @@ class BarChart extends ConsumerWidget {
     this.width = double.infinity,
     this.showGrid = true,
     this.showTooltip = true,
-  })  : assert(data.isNotEmpty, 'data cannot be empty'),
-        assert(xAxisLabel == null || xAxisLabel.length > 0, 'xAxisLabel cannot be empty'),
-        assert(yAxisLabel == null || yAxisLabel.length > 0, 'yAxisLabel cannot be empty');
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

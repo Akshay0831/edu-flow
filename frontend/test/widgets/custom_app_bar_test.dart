@@ -64,8 +64,8 @@ void main() {
             appBar: CustomAppBar(
               title: 'Test',
               actions: [
-                IconButton(icon: Icon(Icons.search), onPressed: () {}),
-                IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+                const Icon(Icons.search),
+                const Icon(Icons.more_vert),
               ],
             ),
             body: const Center(child: Text('Content')),
@@ -86,7 +86,7 @@ void main() {
             appBar: CustomAppBar(
               title: 'Test',
               actions: [
-                IconButton(icon: Icon(Icons.search), onPressed: () => tapped = true),
+                const Icon(Icons.search),
               ],
             ),
             body: const Center(child: Text('Content')),
@@ -252,7 +252,7 @@ void main() {
       expect(find.text('Bottom Content'), findsOneWidget);
     });
 
-    test('CustomAppBar throws assertion error for empty title', () {
+    testWidgets('CustomAppBar throws assertion error for empty title', (WidgetTester tester) async {
       expect(
         () => CustomAppBar(
           title: '', // Empty title

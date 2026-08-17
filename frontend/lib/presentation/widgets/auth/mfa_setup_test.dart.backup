@@ -1,0 +1,261 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+
+// Mock service class
+class MockAuthService extends ChangeNotifier {
+  bool _checkMfaStatusValue = false;
+  String _getUserRoleValue = 'student';
+
+  bool get checkMfaStatus => _checkMfaStatusValue;
+  String get getUserRole => _getUserRoleValue;
+
+  void setCheckMfaStatus(bool value) {
+    _checkMfaStatusValue = value;
+    notifyListeners();
+  }
+
+  void setUserRole(String value) {
+    _getUserRoleValue = value;
+    notifyListeners();
+  }
+}
+
+void main() {
+  group('MfaSetup Widget Tests', () {
+    late MockAuthService mockAuthService;
+
+    setUp(() {
+      mockAuthService = MockAuthService();
+    });
+
+    group('Widget Initialization', () {
+      testWidgets('MockAuthService should work correctly when MFA is disabled', (WidgetTester tester) async {
+        // Mock initial state - MFA disabled
+        mockAuthService.setCheckMfaStatus(false);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Text('Two-Factor Authentication (MFA)'),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Verify widget displays correctly when MFA is disabled
+        expect(find.text('Two-Factor Authentication (MFA)'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Enable MFA'), findsOneWidget);
+      });
+
+      testWidgets('MockAuthService should work correctly when MFA is enabled', (WidgetTester tester) async {
+        // Mock initial state - MFA enabled
+        mockAuthService.setCheckMfaStatus(true);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Text('Two-Factor Authentication (MFA)'),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Verify widget displays correctly when MFA is enabled
+        expect(find.text('Two-Factor Authentication (MFA)'), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsOneWidget);
+        expect(find.text('Disable MFA'), findsOneWidget);
+      });
+
+      testWidgets('MockAuthService should show loading state during initialization', (WidgetTester tester) async {
+        // Mock loading state
+        mockAuthService.setCheckMfaStatus(false);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Column(
+                  children: [
+                    CircularProgressIndicator(),
+                    Text('Loading...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Verify loading state
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.text('Loading...'), findsOneWidget);
+      });
+    });
+
+    group('MFA Enable/Disable Flow', () {
+      testWidgets('Enable MFA should show QR code setup', (WidgetTester tester) async {
+        // Setup initial state
+        mockAuthService.setCheckMfaStatus(false);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Column(
+                  children: [
+                    Text('Two-Factor Authentication (MFA)'),
+                    ElevatedButton(
+                      onPressed: null,
+                      child: Text('Enable MFA'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Click Enable MFA button
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify QR code setup is shown (this would be implemented based on actual widget)
+        expect(find.text('Setup QR Code'), findsOneWidget);
+      });
+
+      testWidgets('Disable MFA should show confirmation dialog', (WidgetTester tester) async {
+        // Setup initial state
+        mockAuthService.setCheckMfaStatus(true);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Column(
+                  children: [
+                    Text('Two-Factor Authentication (MFA)'),
+                    ElevatedButton(
+                      onPressed: null,
+                      child: Text('Disable MFA'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Click Disable MFA button
+        await tester.tap(find.text('Disable MFA'));
+        await tester.pumpAndSettle();
+
+        // Verify confirmation dialog is shown
+        expect(find.text('Disable Two-Factor Authentication?'), findsOneWidget);
+        expect(find.text('Are you sure you want to disable MFA?'), findsOneWidget);
+      });
+    });
+
+    group('MFA Verification Flow', () {
+      testWidgets('Successful MFA verification should update status', (WidgetTester tester) async {
+        // Setup initial state
+        mockAuthService.setCheckMfaStatus(false);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Column(
+                  children: [
+                    Text('Two-Factor Authentication (MFA)'),
+                    ElevatedButton(
+                      onPressed: null,
+                      child: Text('Enable MFA'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Enable MFA
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Enter verification code
+        await tester.enterText(find.byType(TextFormField), '123456');
+        await tester.tap(find.text('Verify'));
+        await tester.pumpAndSettle();
+
+        // Verify MFA status is updated
+        expect(mockAuthService.checkMfaStatus, true);
+      });
+
+      testWidgets('Invalid verification code should show error', (WidgetTester tester) async {
+        // Setup initial state
+        mockAuthService.setCheckMfaStatus(false);
+        mockAuthService.setUserRole('student');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChangeNotifierProvider<MockAuthService>.value(
+              value: mockAuthService,
+              child: Scaffold(
+                body: Column(
+                  children: [
+                    Text('Two-Factor Authentication (MFA)'),
+                    ElevatedButton(
+                      onPressed: null,
+                      child: Text('Enable MFA'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Enable MFA
+        await tester.tap(find.text('Enable MFA'));
+        await tester.pumpAndSettle();
+
+        // Enter invalid verification code
+        await tester.enterText(find.byType(TextFormField), 'invalid');
+        await tester.tap(find.text('Verify'));
+        await tester.pumpAndSettle();
+
+        // Verify error message is shown
+        expect(find.text('Invalid verification code. Please try again.'), findsOneWidget);
+      });
+    });
+  }
+}

@@ -18,7 +18,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   bool _isLoading = true;
   Map<String, dynamic> _dashboardData = {};
   List<Map<String, dynamic>> _courses = [];
-  List<Map<String, dynamic>> _upcomingDeadlines = [];
 
   @override
   void initState() {
@@ -47,7 +46,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           'grade': course['grade'] ?? 'N/A',
           'status': course['status'] ?? 'enrolled',
         }).toList();
-        _upcomingDeadlines = (_dashboardData['upcoming_deadlines'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
         _isLoading = false;
       });
     } catch (e) {

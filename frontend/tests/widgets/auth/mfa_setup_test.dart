@@ -14,11 +14,9 @@ class MockUser extends Mock implements UserModel {}
 void main() {
   group('MfaSetup Widget Tests', () {
     late MockAuthService mockAuthService;
-    late MockUser mockUser;
 
     setUp(() {
       mockAuthService = MockAuthService();
-      mockUser = MockUser();
     });
 
     group('Widget Initialization', () {

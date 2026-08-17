@@ -11,6 +11,7 @@ class AuthState {
   final String? userName;
   final String? userEmail;
   final DateTime? lastUpdated;
+  final bool isLoading;
 
   const AuthState({
     this.isAuthenticated = false,
@@ -21,6 +22,7 @@ class AuthState {
     this.userName,
     this.userEmail,
     this.lastUpdated,
+    this.isLoading = false,
   });
 
   AuthState copyWith({
@@ -32,6 +34,7 @@ class AuthState {
     String? userName,
     String? userEmail,
     DateTime? lastUpdated,
+    bool? isLoading,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -42,6 +45,7 @@ class AuthState {
       userName: userName ?? this.userName,
       userEmail: userEmail ?? this.userEmail,
       lastUpdated: lastUpdated ?? DateTime.now(),
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 

@@ -14,7 +14,7 @@ Author: Edu-Flow Team
 from datetime import datetime, date
 from typing import Dict, List, Optional, Any, Union, Tuple
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import numpy as np
 import pandas as pd
 
@@ -72,7 +72,7 @@ class FeatureImportance(BaseModel):
     description: Optional[str] = None
     category: str = "academic"
     
-    @validator('importance_score')
+    @field_validator('importance_score')
     def validate_importance_score(cls, v):
         if not -1.0 <= v <= 1.0:
             raise ValidationError('Importance score must be between -1.0 and 1.0')
@@ -88,7 +88,7 @@ class PredictionFeature(BaseModel):
     is_required: bool = True
     category: str = "academic"
     
-    @validator('value')
+    @field_validator('value')
     def validate_value(cls, v, values):
         feature_type = values.get('type', 'numerical')
         
@@ -115,13 +115,13 @@ class PredictionRequest(BaseModel):
     features: List[PredictionFeature] = Field(..., description="Features for prediction")
     prediction_horizon: Optional[int] = Field(None, ge=1, le=4, description="Number of semesters ahead to predict")
     
-    @validator('semester')
+    @field_validator('semester')
     def validate_semester(cls, v):
         if v not in [1, 2]:
             raise ValidationError('Semester must be 1 or 2')
         return v
     
-    @validator('features')
+    @field_validator('features')
     def validate_features(cls, v):
         if not v:
             raise ValidationError('At least one feature is required')
@@ -152,7 +152,7 @@ class PredictionResult(BaseModel):
     explanation: Optional[str] = None
     feature_importances: Optional[List[FeatureImportance]] = None
     
-    @validator('confidence_score')
+    @field_validator('confidence_score')
     def validate_confidence_score(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError('Confidence score must be between 0.0 and 1.0')
@@ -173,7 +173,7 @@ class ModelTrainingConfig(BaseModel):
     outlier_removal: bool = True
     missing_values_handling: str = Field("median", pattern=r"^(median|mean|mode|forward_fill|drop)$")
     
-    @validator('hyperparameters')
+    @field_validator('hyperparameters')
     def validate_hyperparameters(cls, v):
         # Basic validation for common hyperparameters
         if v.get('learning_rate', 1.0) <= 0:
@@ -197,7 +197,7 @@ class ModelEvaluation(BaseModel):
     test_size: int
     evaluation_timestamp: datetime
     
-    @validator('evaluation_metrics')
+    @field_validator('evaluation_metrics')
     def validate_metrics(cls, v):
         # Check if metrics are valid values
         for metric_name, value in v.items():
@@ -230,7 +230,7 @@ class ModelVersion(BaseModel):
     deployment_notes: Optional[str] = None
     created_by: Optional[str] = None
     
-    @validator('version_number')
+    @field_validator('version_number')
     def validate_version_number(cls, v):
         # Basic semantic version validation (e.g., "1.0.0")
         if not all(part.isdigit() for part in v.split('.')):
@@ -251,7 +251,7 @@ class StudentProfile(BaseModel):
     total_credits_required: float
     academic_standing: str  # "excellent", "good", "average", "needs_improvement", "poor"
     
-    @validator('cumulative_gpa')
+    @field_validator('cumulative_gpa')
     def validate_gpa(cls, v):
         if not 0.0 <= v <= 4.0:
             raise ValidationError('GPA must be between 0.0 and 4.0')
@@ -276,7 +276,7 @@ class CoursePerformance(BaseModel):
     study_hours_per_week: float
     feedback_rating: Optional[float] = None
     
-    @validator('percentage')
+    @field_validator('percentage')
     def validate_percentage(cls, v):
         if not 0.0 <= v <= 100.0:
             raise ValidationError('Percentage must be between 0.0 and 100.0')
@@ -295,7 +295,7 @@ class LearningPattern(BaseModel):
     preferred_learning_style: str  # visual, auditory, kinesthetic, reading
     learning_rate: float  # How quickly student learns new concepts
     
-    @validator('learning_rate')
+    @field_validator('learning_rate')
     def validate_learning_rate(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError('Learning rate must be between 0.0 and 1.0')
@@ -327,7 +327,7 @@ class PredictionHistory(BaseModel):
     successful_predictions: int
     failed_predictions: int
     
-    @validator('prediction_accuracy')
+    @field_validator('prediction_accuracy')
     def validate_accuracy(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError('Prediction accuracy must be between 0.0 and 1.0')
@@ -347,7 +347,7 @@ class ModelRegistry(BaseModel):
     domain: str = "education"
     problem_type: str = "regression"  # regression, classification, clustering
     
-    @validator('models')
+    @field_validator('models')
     def validate_models(cls, v):
         if len(v) < 1:
             raise ValidationError('At least one model is required in registry')
@@ -368,7 +368,7 @@ class DatasetInfo(BaseModel):
     data_quality_score: float
     creation_date: datetime
     
-    @validator('data_quality_score')
+    @field_validator('data_quality_score')
     def validate_quality_score(cls, v):
         if not 0.0 <= v <= 1.0:
             raise ValidationError('Data quality score must be between 0.0 and 1.0')
@@ -388,7 +388,7 @@ class TrainingSession(BaseModel):
     logs: List[str] = []
     resources_used: Dict[str, Any] = {}
     
-    @validator('progress')
+    @field_validator('progress')
     def validate_progress(cls, v):
         if not 0.0 <= v <= 100.0:
             raise ValidationError('Progress must be between 0.0 and 100.0')
@@ -407,7 +407,7 @@ class FeatureEngineeringConfig(BaseModel):
     reduction_method: Optional[str] = None
     feature_extraction: Dict[str, Any] = {}
     
-    @validator('feature_selection_method')
+    @field_validator('feature_selection_method')
     def validate_selection_method(cls, v):
         valid_methods = ["correlation", "mutual_info", "feature_importance", "rfe", "variance_threshold"]
         if v not in valid_methods:
@@ -427,7 +427,7 @@ class ModelPerformance(BaseModel):
     performance_degradation: Optional[float] = None
     last_updated: datetime
     
-    @validator('performance_degradation')
+    @field_validator('performance_degradation')
     def validate_degradation(cls, v):
         if v is not None and (v < -1.0 or v > 1.0):
             raise ValidationError('Performance degradation must be between -1.0 and 1.0')
