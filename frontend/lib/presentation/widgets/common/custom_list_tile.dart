@@ -32,7 +32,7 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveSelectedColor = selectedColor ?? Theme.of(context).colorScheme.primary.withOpacity(0.1);
+    final effectiveSelectedColor = selectedColor ?? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1);
     final effectiveTextColor = textColor ?? Theme.of(context).colorScheme.onSurface;
     final effectiveHorizontalPadding = horizontalPadding ?? 16.0;
     final effectiveVerticalPadding = verticalPadding ?? 8.0;

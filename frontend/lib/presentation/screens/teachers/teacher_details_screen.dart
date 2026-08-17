@@ -24,14 +24,14 @@ class _TeacherDetailsScreenState extends State<TeacherDetailsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.person, size: 64, color: AppTheme.primaryColor),
-            SizedBox(height: 16),
+            const Icon(Icons.person, size: 64, color: AppTheme.primaryColor),
+            const SizedBox(height: 16),
             Text(
               'Teacher ID: ${widget.teacherId}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Teacher Details Screen',
               style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
             ),

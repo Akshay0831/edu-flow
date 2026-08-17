@@ -6,7 +6,7 @@ void main() {
   group('MfaSetup Widget Tests', () {
     testWidgets('MfaSetup widget should display correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: const MfaSetup(),
         ),
       );
@@ -20,7 +20,7 @@ void main() {
 
     testWidgets('MfaSetup widget should show loading state initially', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: const MfaSetup(),
         ),
       );
@@ -37,7 +37,7 @@ void main() {
     testWidgets('MfaSetup widget should show enable MFA button when MFA is disabled', (WidgetTester tester) async {
       // Set up widget state to simulate MFA disabled
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: const MfaSetup(),
         ),
       );
@@ -53,7 +53,7 @@ void main() {
       // To test this scenario, we'd need to manipulate the widget state
       // For now, we test the basic widget structure
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: const MfaSetup(),
         ),
       );
@@ -88,7 +88,7 @@ void main() {
 
     testWidgets('MfaSetup widget should show proper theme styling', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+MaterialApp(
           theme: ThemeData(
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.standard,
@@ -106,7 +106,7 @@ void main() {
 
     testWidgets('MfaSetup widget should display help section', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: const MfaSetup(),
         ),
       );

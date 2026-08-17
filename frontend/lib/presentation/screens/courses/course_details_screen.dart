@@ -24,14 +24,14 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.book, size: 64, color: AppTheme.primaryColor),
-            SizedBox(height: 16),
+            const Icon(Icons.book, size: 64, color: AppTheme.primaryColor),
+            const SizedBox(height: 16),
             Text(
               'Course ID: ${widget.courseId}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Course Details Screen',
               style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
             ),

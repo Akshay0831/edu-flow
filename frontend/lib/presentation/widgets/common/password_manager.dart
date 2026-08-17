@@ -246,10 +246,10 @@ class _PasswordGeneratorState extends State<PasswordGenerator> {
   }
 
   String _generatePassword() {
-    final uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    final lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    final numbers = '0123456789';
-    final symbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
 
     String allowedChars = '';
     if (widget.includeUppercase) allowedChars += uppercase;
@@ -435,7 +435,7 @@ class _PasswordPolicyScreenState extends ConsumerState<PasswordPolicyScreen> {
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PasswordChangeScreen(),
+                        builder: (context) => const PasswordChangeScreen(),
                       ),
                     ),
                     child: const Text('Change Password Now'),

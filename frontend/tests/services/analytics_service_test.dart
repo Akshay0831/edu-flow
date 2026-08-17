@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:edu_flow/data/api/api_client.dart';
+import 'package:edu_flow/test/helpers/test_helpers.dart';
 import 'package:edu_flow/data/services/analytics_service.dart';
 import 'package:edu_flow/data/models/analytics_model.dart';
 
@@ -49,7 +50,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final performance = await analyticsService.getStudentPerformance('student1');
 
@@ -89,7 +90,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final analytics = await analyticsService.getCourseAnalytics('course1');
 
@@ -132,7 +133,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final performance = await analyticsService.getTeacherPerformance('teacher1');
 
@@ -169,7 +170,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final progress = await analyticsService.getStudentProgress('student1');
 
@@ -202,7 +203,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final dashboardData = await analyticsService.getDashboardData('admin');
 
@@ -240,7 +241,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final startDate = DateTime(2023, 1, 1);
         final endDate = DateTime(2023, 12, 31);
@@ -278,7 +279,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final startDate = DateTime(2023, 1, 1);
         final endDate = DateTime(2023, 12, 31);

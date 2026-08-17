@@ -71,7 +71,7 @@ class CustomAlertDialog extends StatelessWidget {
     final effectiveBorderRadius = borderRadius ?? 16.0;
 
     return AlertDialog(
-      backgroundColor: backgroundColor ?? Theme.of(context).dialogBackgroundColor,
+      backgroundColor: backgroundColor ?? (Theme.of(context).dialogTheme.backgroundColor ?? Colors.white),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(effectiveBorderRadius),
       ),

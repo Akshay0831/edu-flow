@@ -81,7 +81,7 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
           right: 16,
           child: FloatingActionButton(
             onPressed: _toggleDebugPanel,
-            backgroundColor: Colors.black.withOpacity(0.7),
+            backgroundColor: Colors.black.withValues(alpha: 0.7),
             mini: true,
             child: Icon(
               _showDebugPanel ? Icons.visibility_off : Icons.visibility,
@@ -102,7 +102,7 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
         width: 200,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.8),
+          color: Colors.black.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -112,9 +112,9 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
               children: [
                 const Icon(Icons.speed, color: Colors.white, size: 16),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Performance',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -130,7 +130,7 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
             ),
             const Divider(color: Colors.white24),
             _buildMetricItem('Screen', widget.screenName ?? 'Unknown'),
-            _buildMetricItem('FPS', '${_fps}'),
+            _buildMetricItem('FPS', '$_fps'),
             _buildMetricItem('Frame Count', '$_frameCount'),
             _buildMetricItem('Memory', _getMemoryUsage()),
             _buildMetricItem('Platform', '${Theme.of(context).platform}'),
@@ -168,7 +168,7 @@ class _PerformanceMonitorState extends State<PerformanceMonitor> {
 
   String _getMemoryUsage() {
     final memoryUsage = (MemoryInfo.getCurrentUsage() / (1024 * 1024)).toStringAsFixed(1);
-    return '${memoryUsage} MB';
+    return '$memoryUsage MB';
   }
 
   @override

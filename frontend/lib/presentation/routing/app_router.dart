@@ -221,7 +221,7 @@ class ErrorScreen extends StatelessWidget {
             if (error != null)
               Text(
                 error.toString(),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,
                 ),

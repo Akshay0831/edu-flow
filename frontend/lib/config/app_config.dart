@@ -15,31 +15,31 @@ class AppConfig {
   }
 
   String get authEndpoint {
-    return '${apiBaseUrl}${apiVersion}/auth';
+    return '$apiBaseUrl$apiVersion/auth';
   }
 
   String get usersEndpoint {
-    return '${apiBaseUrl}${apiVersion}/users';
+    return '$apiBaseUrl$apiVersion/users';
   }
 
   String get studentsEndpoint {
-    return '${apiBaseUrl}${apiVersion}/students';
+    return '$apiBaseUrl$apiVersion/students';
   }
 
   String get teachersEndpoint {
-    return '${apiBaseUrl}${apiVersion}/teachers';
+    return '$apiBaseUrl$apiVersion/teachers';
   }
 
   String get coursesEndpoint {
-    return '${apiBaseUrl}${apiVersion}/courses';
+    return '$apiBaseUrl$apiVersion/courses';
   }
 
   String get assessmentsEndpoint {
-    return '${apiBaseUrl}${apiVersion}/assessments';
+    return '$apiBaseUrl$apiVersion/assessments';
   }
 
   String get analyticsEndpoint {
-    return '${apiBaseUrl}${apiVersion}/analytics';
+    return '$apiBaseUrl$apiVersion/analytics';
   }
 
   bool get enableAnalytics {

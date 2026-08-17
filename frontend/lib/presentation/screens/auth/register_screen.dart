@@ -20,8 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _roleController = TextEditingController();
   
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+  final bool _obscurePassword = true;
+  final bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -238,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onChanged: (value) {},
                         activeColor: AppTheme.primaryColor,
                       ),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'I agree to the Terms of Service and Privacy Policy',
                           style: TextStyle(
@@ -267,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         "Already have an account? ",
                         style: TextStyle(
                           color: AppTheme.textSecondary,
@@ -277,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: () {
                           Navigator.of(context).pushReplacementNamed('/login');
                         },
-                        child: Text(
+                        child: const Text(
                           'Sign In',
                           style: TextStyle(
                             color: AppTheme.primaryColor,
@@ -348,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       title: Text(role),
       subtitle: Text(
         description,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 12,
           color: AppTheme.textSecondary,
         ),

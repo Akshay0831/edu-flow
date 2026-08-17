@@ -45,7 +45,7 @@ class CustomCard extends StatelessWidget {
     final effectiveElevation = elevation ?? (onTap != null ? 2.0 : 0.0);
     final effectiveBackgroundColor = backgroundColor ?? Theme.of(context).cardColor;
     final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(12.0);
-    final effectiveBorderColor = borderColor ?? (hasBorder ? Theme.of(context).colorScheme.outline.withOpacity(0.2) : Colors.transparent);
+    final effectiveBorderColor = borderColor ?? (hasBorder ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.2) : Colors.transparent);
     final effectiveBorderWidth = borderWidth ?? 1.0;
 
     Widget cardContent;

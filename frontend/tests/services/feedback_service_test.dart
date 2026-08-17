@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:edu_flow/data/api/api_client.dart';
+import 'package:edu_flow/test/helpers/test_helpers.dart';
 import 'package:edu_flow/data/services/feedback_service.dart';
 import 'package:edu_flow/data/models/feedback_model.dart';
 
@@ -53,7 +54,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final submittedFeedback = await feedbackService.submitFeedback(feedback);
 
@@ -94,7 +95,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final feedbacks = await feedbackService.getStudentFeedback('student1', courseId: 'course1');
 
@@ -132,7 +133,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final summary = await feedbackService.getFeedbackSummary('course1');
 
@@ -174,7 +175,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final analysis = await feedbackService.analyzeFeedbackSentiment('1');
 
@@ -246,7 +247,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final report = await feedbackService.generateFeedbackReport('course1');
 
@@ -284,7 +285,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final actionItems = await feedbackService.getActionItems('course1');
 
@@ -316,7 +317,7 @@ void main() {
         });
 
         // Mock the ApiClient.instance
-        ApiClient.instance = mockApiClient;
+        ApiClientTestHelper.testInstance = mockApiClient;
 
         final startDate = DateTime(2023, 1, 1);
         final endDate = DateTime(2023, 12, 31);

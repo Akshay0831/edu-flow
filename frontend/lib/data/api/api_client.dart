@@ -5,9 +5,8 @@ import 'package:edu_flow/config/app_config.dart';
 import 'package:edu_flow/core/exceptions/api_exceptions.dart';
 
 class ApiClient {
-  static ApiClient _instance = ApiClient._internal();
+  static final ApiClient _instance = ApiClient._internal();
   static ApiClient get instance => _instance;
-  static set instance(ApiClient newInstance) => _instance = newInstance;
   
   ApiClient();
   ApiClient._internal();

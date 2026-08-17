@@ -394,7 +394,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
       label: Text(label),
       avatar: Icon(icon, size: 16),
       onPressed: onTap,
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       labelStyle: TextStyle(color: Theme.of(context).primaryColor),
     );
   }

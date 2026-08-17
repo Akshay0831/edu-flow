@@ -9,20 +9,20 @@ class LoggingService {
   LoggingService._internal();
   
   /// Logging levels
-  static const String DEBUG = 'DEBUG';
-  static const String INFO = 'INFO';
-  static const String WARNING = 'WARNING';
-  static const String ERROR = 'ERROR';
-  static const String CRITICAL = 'CRITICAL';
+  static const String debugLevel = 'DEBUG';
+  static const String infoLevel = 'INFO';
+  static const String warningLevel = 'WARNING';
+  static const String errorLevel = 'ERROR';
+  static const String criticalLevel = 'CRITICAL';
   
   /// Initialize logging configuration
   void initialize({
-    String level = INFO,
+    String level = infoLevel,
     bool enableConsoleLogs = true,
     bool enableFileLogs = false,
     bool enablePerformanceTracking = false,
   }) {
-    _log('Logging initialized with level: $level', INFO);
+    _log('Logging initialized with level: $level', infoLevel);
     
     // Configure performance tracking
     if (enablePerformanceTracking) {
@@ -48,7 +48,7 @@ class LoggingService {
   
   /// General logging method
   void log(String message, {
-    String level = INFO,
+    String level = infoLevel,
     dynamic error,
     StackTrace? stackTrace,
     Map<String, dynamic>? extra,
@@ -82,17 +82,17 @@ class LoggingService {
   
   /// Debug logging
   void debug(String message, {String? tag, Map<String, dynamic>? extra}) {
-    log(message, level: DEBUG, tag: tag, extra: extra);
+    log(message, level: debugLevel, tag: tag, extra: extra);
   }
   
   /// Info logging
   void info(String message, {String? tag, Map<String, dynamic>? extra}) {
-    log(message, level: INFO, tag: tag, extra: extra);
+    log(message, level: infoLevel, tag: tag, extra: extra);
   }
   
   /// Warning logging
   void warning(String message, {String? tag, Map<String, dynamic>? extra}) {
-    log(message, level: WARNING, tag: tag, extra: extra);
+    log(message, level: warningLevel, tag: tag, extra: extra);
   }
   
   /// Error logging
@@ -102,7 +102,7 @@ class LoggingService {
     String? tag,
     Map<String, dynamic>? extra,
   }) {
-    log(message, level: ERROR, error: error, stackTrace: stackTrace, tag: tag, extra: extra);
+    log(message, level: errorLevel, error: error, stackTrace: stackTrace, tag: tag, extra: extra);
   }
   
   /// Critical logging
@@ -112,7 +112,7 @@ class LoggingService {
     String? tag,
     Map<String, dynamic>? extra,
   }) {
-    log(message, level: CRITICAL, error: error, stackTrace: stackTrace, tag: tag, extra: extra);
+    log(message, level: criticalLevel, error: error, stackTrace: stackTrace, tag: tag, extra: extra);
   }
   
   /// Network logging
@@ -122,7 +122,7 @@ class LoggingService {
     Map<String, dynamic>? response,
     int? statusCode,
     String? statusMessage,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -149,7 +149,7 @@ class LoggingService {
   /// UI Event logging
   void uiEvent(String component, String event, {
     Map<String, dynamic>? data,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -175,7 +175,7 @@ class LoggingService {
     DateTime? startTime,
     DateTime? endTime,
     Map<String, dynamic>? metrics,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final duration = startTime != null && endTime != null
@@ -207,7 +207,7 @@ class LoggingService {
     String? userId,
     String? screen,
     Map<String, dynamic>? data,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -234,7 +234,7 @@ class LoggingService {
     String method = 'GET',
     Map<String, dynamic>? headers,
     dynamic body,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -261,7 +261,7 @@ class LoggingService {
     required int statusCode,
     String? statusMessage,
     dynamic data,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -289,7 +289,7 @@ class LoggingService {
     String? documentId,
     dynamic data,
     dynamic result,
-    String level = INFO,
+    String level = infoLevel,
     String? tag,
   }) {
     final logEntry = {
@@ -322,21 +322,21 @@ class LoggingService {
     final buffer = StringBuffer();
     
     // Level color coding for console output
-    final levelColors = {
-      DEBUG: '\x1B[36m',    // Cyan
-      INFO: '\x1B[32m',     // Green
-      WARNING: '\x1B[33m',  // Yellow
-      ERROR: '\x1B[31m',    // Red
-      CRITICAL: '\x1B[35m', // Magenta
+    const levelColors = {
+      debugLevel: '\x1B[36m',    // Cyan
+      infoLevel: '\x1B[32m',     // Green
+      warningLevel: '\x1B[33m',  // Yellow
+      errorLevel: '\x1B[31m',    // Red
+      criticalLevel: '\x1B[35m', // Magenta
     };
     
     final color = levelColors[level] ?? '\x1B[0m';
-    final reset = '\x1B[0m';
+    const reset = '\x1B[0m';
     
-    buffer.write('${color}[$level]$reset');
+    buffer.write('$color[$level]$reset');
     
     if (tag != null) {
-      buffer.write(' [${tag}]');
+      buffer.write(' [$tag]');
     }
     
     buffer.write(': $message');
@@ -384,19 +384,19 @@ class LoggingService {
     final message = logEntry['message'];
     
     switch (level) {
-      case DEBUG:
+      case debugLevel:
         debugPrint('[DEBUG] $message');
         break;
-      case INFO:
+      case infoLevel:
         debugPrint('[INFO] $message');
         break;
-      case WARNING:
+      case warningLevel:
         debugPrint('[WARNING] $message');
         break;
-      case ERROR:
+      case errorLevel:
         debugPrint('[ERROR] $message');
         break;
-      case CRITICAL:
+      case criticalLevel:
         debugPrint('[CRITICAL] $message');
         break;
     }

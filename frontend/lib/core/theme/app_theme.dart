@@ -28,7 +28,6 @@ class AppTheme {
       primary: primaryColor,
       secondary: secondaryColor,
       surface: surfaceColor,
-      background: backgroundColor,
       error: errorColor,
     ),
     scaffoldBackgroundColor: backgroundColor,
@@ -60,7 +59,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryColor,
-        side: BorderSide(color: primaryColor),
+        side: const BorderSide(color: primaryColor),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -72,45 +71,45 @@ class AppTheme {
       fillColor: surfaceColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: borderColor),
+        borderSide: const BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: borderColor),
+        borderSide: const BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: primaryColor, width: 2),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: errorColor),
+        borderSide: const BorderSide(color: errorColor),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: errorColor, width: 2),
+        borderSide: const BorderSide(color: errorColor, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: backgroundColor,
       foregroundColor: textPrimary,
       elevation: 0,
       centerTitle: true,
-      shape: const Border(bottom: BorderSide(color: borderColor)),
-      titleTextStyle: const TextStyle(
+      shape: Border(bottom: BorderSide(color: borderColor)),
+      titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: backgroundColor,
       selectedItemColor: primaryColor,
       unselectedItemColor: textSecondary,
       type: BottomNavigationBarType.fixed,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+      selectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
+      unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
     ),
     dividerTheme: const DividerThemeData(
       color: borderColor,
@@ -141,8 +140,7 @@ class AppTheme {
       brightness: Brightness.dark,
       primary: primaryColor,
       secondary: secondaryColor,
-      surface: const Color(0xFF1F2937),
-      background: const Color(0xFF111827),
+      surface: const Color(0xFF111827),
       error: errorColor,
     ),
     scaffoldBackgroundColor: const Color(0xFF111827),
@@ -174,7 +172,7 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: primaryColor,
-        side: BorderSide(color: primaryColor),
+        side: const BorderSide(color: primaryColor),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -186,45 +184,45 @@ class AppTheme {
       fillColor: const Color(0xFF1F2937),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: borderColor),
+        borderSide: const BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: borderColor),
+        borderSide: const BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: primaryColor, width: 2),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: errorColor),
+        borderSide: const BorderSide(color: errorColor),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: errorColor, width: 2),
+        borderSide: const BorderSide(color: errorColor, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFF111827),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF111827),
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
-      shape: const Border(bottom: BorderSide(color: borderColor)),
-      titleTextStyle: const TextStyle(
+      shape: Border(bottom: BorderSide(color: borderColor)),
+      titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: Colors.white,
       ),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: const Color(0xFF111827),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF111827),
       selectedItemColor: primaryColor,
       unselectedItemColor: textSecondary,
       type: BottomNavigationBarType.fixed,
-      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
+      selectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
+      unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
     ),
     dividerTheme: const DividerThemeData(
       color: borderColor,

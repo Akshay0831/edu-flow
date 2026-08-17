@@ -25,7 +25,7 @@ class OfflineDetector extends StatefulWidget {
   final Widget? errorWidget;
 
   OfflineDetector({
-    Key? key,
+    super.key,
     Widget? child,
     this.isOnline = true,
     this.onStatusChanged,
@@ -49,8 +49,7 @@ class OfflineDetector extends StatefulWidget {
     this.timeout,
     this.errorWidget,
   })  : assert(child != null, 'child parameter cannot be null'),
-        child = child!,
-        super(key: key);
+        child = child!;
 
   @override
   State<OfflineDetector> createState() => _OfflineDetectorState();

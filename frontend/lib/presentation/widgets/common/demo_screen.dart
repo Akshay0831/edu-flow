@@ -202,7 +202,7 @@ class _ComponentsDemoScreenState extends ConsumerState<ComponentsDemoScreen>
           // Password Strength Indicator
           const Text('Password Strength Indicator', style: TextStyle(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-          PasswordStrengthIndicator(
+          const PasswordStrengthIndicator(
             password: 'Password123!',
             label: 'Password Strength',
             showDetailedScore: true,
@@ -270,26 +270,26 @@ class _ComponentsDemoScreenState extends ConsumerState<ComponentsDemoScreen>
           const Text('Analytics Dashboard', style: TextStyle(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           AnalyticsDashboard(
-            performanceData: [
+            performanceData: const [
               {'label': 'Jan', 'value': 65},
               {'label': 'Feb', 'value': 78},
               {'label': 'Mar', 'value': 85},
               {'label': 'Apr', 'value': 92},
               {'label': 'May', 'value': 88},
             ],
-            enrollmentData: [
+            enrollmentData: const [
               {'label': 'Jan', 'value': 120},
               {'label': 'Feb', 'value': 135},
               {'label': 'Mar', 'value': 150},
               {'label': 'Apr', 'value': 165},
               {'label': 'May', 'value': 180},
             ],
-            summaryMetrics: {
+            summaryMetrics: const {
               'totalStudents': 1250,
               'activeCourses': 45,
               'averageScore': 78.5,
             },
-            availableFilters: ['weekly', 'monthly', 'yearly'],
+            availableFilters: const ['weekly', 'monthly', 'yearly'],
             onFilterChanged: (filter) => CustomSnackBar.showInfo(context: context, message: 'Filter changed to $filter'),
           ),
         ],
@@ -358,9 +358,9 @@ class _ComponentsDemoScreenState extends ConsumerState<ComponentsDemoScreen>
           // Offline Support
           const Text('Offline Support', style: TextStyle(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-          OfflineSupportIndicator(
+          const OfflineSupportIndicator(
             message: 'You are offline. Changes will be synced when online.',
-            child: const Card(
+            child: Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text('Content with offline support'),
@@ -373,10 +373,10 @@ class _ComponentsDemoScreenState extends ConsumerState<ComponentsDemoScreen>
           // Performance Monitor
           const Text('Performance Monitor', style: TextStyle(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
-          PerformanceMonitor(
+          const PerformanceMonitor(
             enabled: true,
             screenName: 'Demo Screen',
-            child: const Card(
+            child: Card(
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text('Performance monitoring enabled'),

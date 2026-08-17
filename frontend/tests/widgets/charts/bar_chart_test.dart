@@ -5,7 +5,7 @@ import 'package:edu_flow/presentation/widgets/charts/bar_chart.dart';
 void main() {
   group('BarChart Widget Tests', () {
     testWidgets('BarChart displays basic chart correctly', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
         {'label': 'Mar', 'value': 15},
@@ -13,7 +13,7 @@ void main() {
       ];
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               data: chartData,
@@ -29,12 +29,12 @@ void main() {
     });
 
     testWidgets('BarChart responds to data updates', (WidgetTester tester) async {
-      final initialData = [
+      const initialData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
       
-      final updatedData = [
+      const updatedData = [
         {'label': 'Jan', 'value': 15},
         {'label': 'Feb', 'value': 25},
         {'label': 'Mar', 'value': 30},
@@ -74,7 +74,7 @@ void main() {
     });
 
     testWidgets('BarChart shows custom colors', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -96,7 +96,7 @@ void main() {
     });
 
     testWidgets('BarChart shows grid lines when enabled', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -118,7 +118,7 @@ void main() {
     });
 
     testWidgets('BarChart shows legend when provided', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -139,7 +139,7 @@ void main() {
     });
 
     testWidgets('BarChart shows tooltips when enabled', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -178,7 +178,7 @@ void main() {
 
     testWidgets('BarChart shows loading state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               data: [],
@@ -211,13 +211,13 @@ void main() {
     });
 
     testWidgets('BarChart respects custom dimensions', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               data: chartData,
@@ -234,7 +234,7 @@ void main() {
     });
 
     testWidgets('BarChart shows horizontal layout', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -256,7 +256,7 @@ void main() {
     });
 
     testWidgets('BarChart shows multiple data series', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10, 'series': 'A'},
         {'label': 'Feb', 'value': 20, 'series': 'A'},
         {'label': 'Jan', 'value': 15, 'series': 'B'},
@@ -264,7 +264,7 @@ void main() {
       ];
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               data: chartData,
@@ -280,7 +280,7 @@ void main() {
     });
 
     testWidgets('BarChart shows value labels on bars', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
@@ -302,13 +302,13 @@ void main() {
     });
 
     testWidgets('BarChart shows animation when enabled', (WidgetTester tester) async {
-      final chartData = [
+      const chartData = [
         {'label': 'Jan', 'value': 10},
         {'label': 'Feb', 'value': 20},
       ];
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               data: chartData,

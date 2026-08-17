@@ -24,14 +24,14 @@ class _AssessmentDetailsScreenState extends State<AssessmentDetailsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assignment, size: 64, color: AppTheme.primaryColor),
-            SizedBox(height: 16),
+            const Icon(Icons.assignment, size: 64, color: AppTheme.primaryColor),
+            const SizedBox(height: 16),
             Text(
               'Assessment ID: ${widget.assessmentId}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
-            Text(
+            const SizedBox(height: 8),
+            const Text(
               'Assessment Details Screen',
               style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
             ),

@@ -32,7 +32,7 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
   final TextEditingController _recoveryCodeController = TextEditingController();
   
   // Mock data - in real app, this would come from backend
-  List<String> _backupCodes = [
+  final List<String> _backupCodes = [
     'ABC123DEF456',
     'GHI789JKL012',
     'MNO345PQR678',
@@ -274,9 +274,9 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                SelectableText(
+                const SelectableText(
                   'JBSWY3DPEHPK3PXP',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

@@ -221,16 +221,16 @@ class ErrorBoundary extends StatefulWidget {
   final Function(FlutterErrorDetails)? onError;
   
   const ErrorBoundary({
-    Key? key,
+    super.key,
     required this.child,
     this.onError,
-  }) : super(key: key);
+  });
   
   @override
-  _ErrorBoundaryState createState() => _ErrorBoundaryState();
+  ErrorBoundaryState createState() => ErrorBoundaryState();
 }
 
-class _ErrorBoundaryState extends State<ErrorBoundary> {
+class ErrorBoundaryState extends State<ErrorBoundary> {
   bool _hasError = false;
   
   @override
