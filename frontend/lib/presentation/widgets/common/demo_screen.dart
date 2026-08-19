@@ -128,7 +128,7 @@ class _ComponentsDemoScreenState extends ConsumerState<ComponentsDemoScreen>
             labelText: 'Name',
             hintText: 'Enter your name',
             prefixIcon: Icons.person,
-            onChanged: (value) => print('Name: $value'),
+            onChanged: (value) => debugPrint('Name: $value'),
           ),
           
           const SizedBox(height: 24),

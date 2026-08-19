@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -30,7 +31,7 @@ void main() {
       } catch (e) {
         // If connection fails, it might be because backend is not running
         // This is acceptable for this test - we're just checking connectivity
-        print('Backend connection test skipped (backend may not be running): $e');
+        developer.log('Backend connection test skipped (backend may not be running): $e');
         // Don't fail the test - connectivity issues are expected in some environments
       }
     });
@@ -44,7 +45,7 @@ void main() {
 
         expect([200, 301, 302].contains(response.statusCode), isTrue);
       } catch (e) {
-        print('Backend docs test skipped (backend may not be running): $e');
+        developer.log('Backend docs test skipped (backend may not be running): $e');
         // Don't fail the test
       }
     });

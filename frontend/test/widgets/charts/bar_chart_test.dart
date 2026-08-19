@@ -166,7 +166,7 @@ void main() {
 
     testWidgets('BarChart handles empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               title: 'Chart',
@@ -183,7 +183,7 @@ void main() {
 
     testWidgets('BarChart shows loading state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChartWidget(
               data: [],
@@ -199,7 +199,7 @@ void main() {
 
     testWidgets('BarChart shows error state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChartWidget(
               data: [],
@@ -324,7 +324,7 @@ void main() {
 
     testWidgets('BarChart throws assertion error for empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               title: 'Chart',
@@ -341,7 +341,7 @@ void main() {
 
     testWidgets('BarChart throws assertion error for empty labels', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: BarChart(
               title: 'Chart',

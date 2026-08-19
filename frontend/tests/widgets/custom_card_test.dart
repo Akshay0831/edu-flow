@@ -9,12 +9,12 @@ void main() {
       const subtitle = 'Card subtitle';
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: title,
               subtitle: subtitle,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -27,11 +27,11 @@ void main() {
 
     testWidgets('CustomCard displays child content', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Test Card',
-              child: const Column(
+              child: Column(
                 children: [
                   Text('Item 1'),
                   Text('Item 2'),
@@ -74,13 +74,13 @@ void main() {
 
     testWidgets('CustomCard respects custom dimensions', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Custom Size',
               width: 300,
               height: 200,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -91,10 +91,10 @@ void main() {
 
     testWidgets('CustomCard with no title still works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -105,11 +105,11 @@ void main() {
 
     testWidgets('CustomCard with no subtitle still works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Title',
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -121,12 +121,12 @@ void main() {
 
     testWidgets('CustomCard shows loading state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Loading Card',
               isLoading: true,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -180,12 +180,12 @@ void main() {
 
     testWidgets('CustomCard shows border when borderColor is set', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Bordered Card',
               borderColor: Colors.red,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),
@@ -196,12 +196,12 @@ void main() {
 
     testWidgets('CustomCard shows elevation', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CustomCard(
               title: 'Elevated Card',
               elevation: 8,
-              child: const Text('Content'),
+              child: Text('Content'),
             ),
           ),
         ),

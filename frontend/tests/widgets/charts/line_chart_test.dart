@@ -166,7 +166,7 @@ void main() {
 
     testWidgets('LineChart handles empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               data: [],
@@ -182,7 +182,7 @@ void main() {
 
     testWidgets('LineChart shows loading state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               data: [],
@@ -199,7 +199,7 @@ void main() {
 
     testWidgets('LineChart shows error state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               data: [],
@@ -329,8 +329,8 @@ void main() {
 
     test('LineChart throws assertion error for empty data', () {
       expect(
-        () => LineChart(
-          data: const [],
+        () => const LineChart(
+          data: [],
           xAxisLabel: 'Time',
           yAxisLabel: 'Value',
           // Empty data without error state
@@ -341,8 +341,8 @@ void main() {
 
     test('LineChart throws assertion error for empty labels', () {
       expect(
-        () => LineChart(
-          data: const [{'x': 1, 'y': 10}],
+        () => const LineChart(
+          data: [{'x': 1, 'y': 10}],
           xAxisLabel: '', // Empty label
           yAxisLabel: 'Value',
         ),

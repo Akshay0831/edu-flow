@@ -18,34 +18,34 @@ void main() {
       expect(find.text('Two-Factor Authentication'), findsOneWidget);
     });
 
-    testWidgets('MfaSetup widget should show loading state initially', (WidgetTester tester) async {
+    testWidgets('MfaSetup widget should show enable MFA screen initially', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: MfaSetup(),
         ),
       );
 
-      // Verify loading state is shown
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      
       await tester.pumpAndSettle();
       
-      // Verify loading state is replaced with actual content
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // Verify the main content is shown (method selection cards)
+      expect(find.text('Scan QR Code'), findsOneWidget);
+      expect(find.text('Setup with Code'), findsOneWidget);
     });
 
-    testWidgets('MfaSetup widget should show enable MFA button when MFA is disabled', (WidgetTester tester) async {
-      // Set up widget state to simulate MFA disabled
+    testWidgets('MfaSetup widget should show enable MFA button after selecting code setup', (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: MfaSetup(),
         ),
       );
 
-      // Pump and set to simulate async loading completion
       await tester.pumpAndSettle();
 
-      // Verify Enable MFA button is shown
+      // Tap on "Setup with Code" card
+      await tester.tap(find.text('Setup with Code'));
+      await tester.pumpAndSettle();
+
+      // Verify Enable MFA button is now shown
       expect(find.text('Enable MFA'), findsOneWidget);
     });
 
@@ -74,6 +74,10 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      // Tap on "Setup with Code" card first
+      await tester.tap(find.text('Setup with Code'));
+      await tester.pumpAndSettle();
+
       // Verify Enable MFA button can be tapped
       final enableButton = find.text('Enable MFA');
       expect(enableButton, findsOneWidget);
@@ -88,7 +92,7 @@ void main() {
 
     testWidgets('MfaSetup widget should show proper theme styling', (WidgetTester tester) async {
       await tester.pumpWidget(
-MaterialApp(
+        MaterialApp(
           theme: ThemeData(
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.standard,

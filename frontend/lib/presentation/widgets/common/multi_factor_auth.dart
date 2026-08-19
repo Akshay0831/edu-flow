@@ -52,6 +52,12 @@ class _MultiFactorAuthScreenState extends ConsumerState<MultiFactorAuthScreen> {
     },
   ];
 
+    @override
+    void dispose() {
+      _codeController.dispose();
+      super.dispose();
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

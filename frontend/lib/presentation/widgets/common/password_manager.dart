@@ -245,6 +245,12 @@ class _PasswordGeneratorState extends State<PasswordGenerator> {
     _passwordController = TextEditingController(text: widget.initialPassword ?? _generatePassword());
   }
 
+    @override
+    void dispose() {
+      _passwordController.dispose();
+      super.dispose();
+    }
+
   String _generatePassword() {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
@@ -261,13 +267,13 @@ class _PasswordGeneratorState extends State<PasswordGenerator> {
       return '';
     }
 
-    String password = '';
-    for (int i = 0; i < widget.length; i++) {
-      password += allowedChars[
-          (DateTime.now().millisecondsSinceEpoch + i) % allowedChars.length];
+    final password = <String>[];
+    final random = DateTime.now().millisecondsSinceEpoch;
+    for (var i = 0; i < widget.length; i++) {
+      password.add(allowedChars[(random + i) % allowedChars.length]);
     }
 
-    return password;
+    return password.join('');
   }
 
   void _copyToClipboard() async {
@@ -276,20 +282,18 @@ class _PasswordGeneratorState extends State<PasswordGenerator> {
       _isCopied = true;
     });
     
-    CustomSnackBar.showSuccess(
-      context: context,
-      message: 'Password copied to clipboard',
-    );
+    if (mounted) {
+      CustomSnackBar.showSuccess(
+        context: context,
+        message: 'Password copied to clipboard',
+      );
 
-    if (widget.onPasswordGenerated != null) {
-      widget.onPasswordGenerated!(_passwordController.text);
+      if (widget.onPasswordGenerated != null) {
+        widget.onPasswordGenerated!(_passwordController.text);
+      }
     }
 
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isCopied = false;
-      });
-    });
+    // Don't use setState in callback that could be called after dispose
   }
 
   @override
@@ -541,6 +545,14 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
   bool _showNewPassword = false;
   bool _showConfirmPassword = false;
 
+    @override
+    void dispose() {
+      _currentPasswordController.dispose();
+      _newPasswordController.dispose();
+      _confirmPasswordController.dispose();
+      super.dispose();
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -630,11 +642,13 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
     // Simulate password change
     await Future.delayed(const Duration(seconds: 2));
     
-    CustomSnackBar.showSuccess(
-      context: context,
-      message: 'Password changed successfully',
-    );
-    
-    Navigator.pop(context);
+    if (mounted) {
+      CustomSnackBar.showSuccess(
+        context: context,
+        message: 'Password changed successfully',
+      );
+      
+      Navigator.pop(context);
+    }
   }
 }

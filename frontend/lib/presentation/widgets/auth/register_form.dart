@@ -98,7 +98,7 @@ class _RegisterFormState extends State<RegisterForm> {
           if (widget.showRoleSelection) ...[
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: const InputDecoration(
                 labelText: 'Role',
               ),

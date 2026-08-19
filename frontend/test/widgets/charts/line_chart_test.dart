@@ -169,7 +169,7 @@ void main() {
 
     testWidgets('LineChart handles empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChartWidget(
               data: [],
@@ -185,7 +185,7 @@ void main() {
 
     testWidgets('LineChart shows loading state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               title: 'Chart',
@@ -202,7 +202,7 @@ void main() {
 
     testWidgets('LineChart shows error state', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               title: 'Chart',
@@ -332,7 +332,7 @@ void main() {
 
     testWidgets('LineChart throws assertion error for empty data', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               title: 'Chart',
@@ -349,7 +349,7 @@ void main() {
 
     testWidgets('LineChart throws assertion error for empty labels', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LineChart(
               title: 'Chart',

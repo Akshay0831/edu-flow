@@ -253,7 +253,7 @@ void main() {
     testWidgets('CustomNavigationBar with no items throws assertion error', (WidgetTester tester) async {
       expect(
         () => CustomNavigationBar(
-          items: [],
+          items: const [],
           currentIndex: 0,
           onTap: (index) {},
         ),

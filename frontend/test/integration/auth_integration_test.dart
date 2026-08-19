@@ -59,8 +59,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -91,8 +91,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -112,8 +112,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -166,8 +166,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -293,8 +293,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -316,8 +316,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -392,8 +392,8 @@ void main() {
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -412,12 +412,12 @@ void main() {
         MaterialApp(
           home: ChangeNotifierProvider<MockAuthServiceProvider>(
             create: (_) => mockServiceProvider,
-            child: Scaffold(
-              appBar: const CustomAppBar(
+            child: const Scaffold(
+              appBar: CustomAppBar(
                 title: 'Dashboard',
                 semanticLabel: 'Main dashboard navigation',
               ),
-              body: const Text('Protected Content'),
+              body: Text('Protected Content'),
             ),
           ),
         ),
@@ -432,7 +432,7 @@ void main() {
 
 // Extension to mock auth status
 extension on MockAuthNotifier {
-  void set error(String? error) {
+  set error(String? error) {
     // This is a workaround for testing purposes
     throw UnimplementedError();
   }

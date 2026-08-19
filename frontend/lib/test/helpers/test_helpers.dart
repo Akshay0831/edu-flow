@@ -1,4 +1,4 @@
-/// Test helpers for mocking and testing utilities
+// Test helpers for mocking and testing utilities
 
 import '../../data/api/api_client.dart';
 

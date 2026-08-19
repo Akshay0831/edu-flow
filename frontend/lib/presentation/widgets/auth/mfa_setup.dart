@@ -43,15 +43,8 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
   @override
   void initState() {
     super.initState();
-    _checkMfaStatus();
-  }
-
-  Future<void> _checkMfaStatus() async {
-    // Simulate checking MFA status from backend
-    await Future.delayed(const Duration(milliseconds: 500));
-    setState(() {
-      _isMfaEnabled = false; // Default to disabled
-    });
+    // Initialize MFA status directly without async operation to avoid timer issues in tests
+    _isMfaEnabled = false; // Default to disabled
   }
 
   @override
@@ -639,18 +632,19 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
       // In real app, this would call the backend API
       // await ref.read(authServiceProvider).enableMfa(_mfaCodeController.text);
       
-      setState(() {
-        _isMfaEnabled = true;
-        _isLoading = false;
-        _showQrSetup = false;
-        _showCodeSetup = false;
-        _mfaCodeController.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _isMfaEnabled = true;
+          _isLoading = false;
+          _showQrSetup = false;
+          _showCodeSetup = false;
+          _mfaCodeController.clear();
+        });
 
-      CustomSnackBar.showSuccess(
-        context: context,
-        message: 'MFA enabled successfully',
-      );
+        CustomSnackBar.showSuccess(
+          context: context,
+          message: 'MFA enabled successfully',
+        );
 
       // Navigate to backup codes screen if enabled
       if (widget.showBackupCodes) {
@@ -658,14 +652,17 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
           _showBackupCodesScreen = true;
         });
       }
+    }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Failed to enable MFA: ${e.toString()}',
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Failed to enable MFA: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -689,24 +686,28 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
       // In real app, this would call the backend API
       // await ref.read(authServiceProvider).disableMfa(_passwordController.text);
       
-      setState(() {
-        _isMfaEnabled = false;
-        _isLoading = false;
-        _passwordController.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _isMfaEnabled = false;
+          _isLoading = false;
+          _passwordController.clear();
+        });
 
-      CustomSnackBar.showSuccess(
-        context: context,
-        message: 'MFA disabled successfully',
-      );
+        CustomSnackBar.showSuccess(
+          context: context,
+          message: 'MFA disabled successfully',
+        );
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Failed to disable MFA: ${e.toString()}',
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Failed to disable MFA: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -722,24 +723,28 @@ class _MfaSetupState extends ConsumerState<MfaSetup> {
       // Remove used backup code
       _backupCodes.remove(_recoveryCodeController.text);
       
-      setState(() {
-        _isLoading = false;
-        _showRecoveryScreen = false;
-        _recoveryCodeController.clear();
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showRecoveryScreen = false;
+          _recoveryCodeController.clear();
+        });
 
-      CustomSnackBar.showSuccess(
-        context: context,
-        message: 'Recovery code verified successfully',
-      );
+        CustomSnackBar.showSuccess(
+          context: context,
+          message: 'Recovery code verified successfully',
+        );
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      CustomSnackBar.showError(
-        context: context,
-        message: 'Invalid recovery code',
-      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        CustomSnackBar.showError(
+          context: context,
+          message: 'Invalid recovery code',
+        );
+      }
     }
   }
 

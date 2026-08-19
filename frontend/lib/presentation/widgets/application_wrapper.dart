@@ -252,10 +252,6 @@ class DashboardScreenWrapper extends StatelessWidget {
             onSync: () async {
               // This is safe because the BuildContext is not being used across widget rebuilds
               await Future.delayed(const Duration(seconds: 2));
-              CustomSnackBar.showSuccess(
-                context: context,
-                message: 'Data synced successfully',
-              );
             },
             successMessage: 'Data synced successfully',
           ),

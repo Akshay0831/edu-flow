@@ -8,10 +8,10 @@ void main() {
       const title = 'Test App Bar';
       
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(title: title),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -21,13 +21,13 @@ void main() {
 
     testWidgets('CustomAppBar shows leading icon', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               leading: Icons.menu,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -64,8 +64,8 @@ void main() {
             appBar: CustomAppBar(
               title: 'Test',
               actions: [
-                IconButton(icon: Icon(Icons.search), onPressed: () {}),
-                IconButton(icon: Icon(Icons.more_vert), onPressed: () {}),
+                IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+                IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
               ],
             ),
             body: const Center(child: Text('Content')),
@@ -86,7 +86,7 @@ void main() {
             appBar: CustomAppBar(
               title: 'Test',
               actions: [
-                IconButton(icon: Icon(Icons.search), onPressed: () => tapped = true),
+                IconButton(icon: const Icon(Icons.search), onPressed: () => tapped = true),
               ],
             ),
             body: const Center(child: Text('Content')),
@@ -102,13 +102,13 @@ void main() {
 
     testWidgets('CustomAppBar shows custom background color', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               backgroundColor: Colors.blue,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -118,13 +118,13 @@ void main() {
 
     testWidgets('CustomAppBar shows custom elevation', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               elevation: 8,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -134,13 +134,13 @@ void main() {
 
     testWidgets('CustomAppBar shows center title', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               centerTitle: true,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -150,13 +150,13 @@ void main() {
 
     testWidgets('CustomAppBar shows automaticallyImplyLeading false', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               automaticallyImplyLeading: false,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -167,13 +167,13 @@ void main() {
 
     testWidgets('CustomAppBar shows custom font size', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               fontSize: 20,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -183,13 +183,13 @@ void main() {
 
     testWidgets('CustomAppBar shows custom font weight', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               fontWeight: FontWeight.bold,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -199,13 +199,13 @@ void main() {
 
     testWidgets('CustomAppBar shows custom title color', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               titleColor: Colors.red,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -215,14 +215,14 @@ void main() {
 
     testWidgets('CustomAppBar shows icon color', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               leading: Icons.menu,
               iconColor: Colors.blue,
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -263,13 +263,13 @@ void main() {
 
     testWidgets('CustomAppBar with null actions still works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               // No actions provided
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );
@@ -279,13 +279,13 @@ void main() {
 
     testWidgets('CustomAppBar with null leading still works', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             appBar: CustomAppBar(
               title: 'Test',
               // No leading provided
             ),
-            body: const Center(child: Text('Content')),
+            body: Center(child: Text('Content')),
           ),
         ),
       );

@@ -62,8 +62,8 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -83,8 +83,8 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -104,9 +104,9 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
               loadingWidget: Text('Loading...'),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -127,9 +127,9 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
               loadingWidget: CircularProgressIndicator(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -147,8 +147,8 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Custom Login Screen'),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -166,9 +166,9 @@ void main() {
           home: ChangeNotifierProvider<AuthNotifier>(
             create: (_) => mockAuthNotifier,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
               errorWidget: Text('Error occurred'),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -188,8 +188,8 @@ void main() {
           routes: {
             '/login': (context) => const Text('Login Route'),
             '/': (context) => const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: Text('Login Screen'),
+              child: Text('Protected Content'),
             ),
           },
         ),

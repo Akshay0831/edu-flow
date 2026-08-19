@@ -63,8 +63,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -95,8 +95,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -116,8 +116,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -170,8 +170,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -297,8 +297,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -320,8 +320,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -396,8 +396,8 @@ void main() {
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
             child: const AuthWrapper(
-              child: Text('Protected Content'),
               loginScreen: LoginForm(),
+              child: Text('Protected Content'),
             ),
           ),
         ),
@@ -416,12 +416,12 @@ void main() {
         MaterialApp(
           home: ChangeNotifierProvider<AuthServiceProvider>(
             create: (_) => mockServiceProvider,
-            child: Scaffold(
-              appBar: const CustomAppBar(
+            child: const Scaffold(
+              appBar: CustomAppBar(
                 title: 'Dashboard',
                 semanticLabel: 'Main dashboard navigation',
               ),
-              body: const Text('Protected Content'),
+              body: Text('Protected Content'),
             ),
           ),
         ),

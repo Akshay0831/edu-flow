@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 /// Central error handling service for comprehensive error logging and management
@@ -8,6 +9,9 @@ class ErrorHandlingService {
   factory ErrorHandlingService() => _instance;
   
   ErrorHandlingService._internal();
+
+  static const int _maxStoredErrors = 100;
+  final List<Map<String, dynamic>> _storedErrors = [];
   
   /// Global error handler for Flutter framework errors
   void handleFlutterError(FlutterErrorDetails details) {
@@ -178,26 +182,28 @@ class ErrorHandlingService {
       print(List.filled(50, '=').join());
     }
     
-    // TODO: In production, send to external logging service
-    // This would integrate with services like Sentry, Firebase Crashlytics, etc.
     _sendToExternalLoggingService(errorData);
     
     // Store in local storage for debugging
     _storeErrorLocally(errorData);
   }
   
-  /// Send error to external logging service (placeholder)
+  /// Send error details to the configured platform logger.
   void _sendToExternalLoggingService(Map<String, dynamic> errorData) {
-    // TODO: Implement integration with external logging services
-    // Examples: Sentry, Firebase Crashlytics, Bugsnag, Datadog, etc.
-    // This would be configured based on the specific service and environment
+    developer.log(
+      errorData['exception_message'] as String,
+      name: 'edu_flow.error.${errorData['level']}',
+      error: errorData['exception_type'],
+      stackTrace: StackTrace.fromString(errorData['stack_trace'] as String),
+    );
   }
   
   /// Store error locally for debugging
   void _storeErrorLocally(Map<String, dynamic> errorData) {
-    // TODO: Implement local storage of errors
-    // Could use shared_preferences, file system, or database
-    // Implement error aggregation and cleanup
+    _storedErrors.add(Map<String, dynamic>.from(errorData));
+    if (_storedErrors.length > _maxStoredErrors) {
+      _storedErrors.removeAt(0);
+    }
   }
 }
 
