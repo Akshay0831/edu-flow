@@ -1,8 +1,8 @@
-# Edu-Flow Backend
+# Backend
 
 FastAPI service in `src/main.py`.
 
-## Run
+## Install and Run
 
 ```bash
 cd backend
@@ -10,7 +10,11 @@ pip install -r requirements.txt
 PYTHONPATH=src python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-The active health endpoint is `/health`; API docs are at `/docs`. Local development uses the SQLite configuration in the application startup path.
+Local database: SQLite (`edu_flow.db`).
+
+- API: `http://localhost:8001`
+- Docs: `http://localhost:8001/docs`
+- Health: `http://localhost:8001/health`
 
 ## Test
 
@@ -19,7 +23,13 @@ cd backend
 PYTHONPATH=src python -m pytest
 ```
 
-## Deployment
+Focused database tests:
+
+```bash
+PYTHONPATH=src python -m pytest tests/test_database_manager.py -q
+```
+
+## Docker
 
 Use the repository-level Compose deployment:
 
@@ -27,4 +37,4 @@ Use the repository-level Compose deployment:
 docker compose -f docker-compose.yml up --build -d backend
 ```
 
-The Compose backend is exposed on host port `8000`. Local development uses `8001`.
+Docker maps the backend to host port `8000`.

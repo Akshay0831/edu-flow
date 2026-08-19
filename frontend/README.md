@@ -1,8 +1,8 @@
-# Edu-Flow Frontend
+# Frontend
 
 Flutter application in `lib/` with web support.
 
-## Run
+## Install and Run
 
 ```bash
 cd frontend
@@ -10,9 +10,15 @@ flutter pub get
 flutter run -d chrome --web-port 8080
 ```
 
-The web app uses `frontend/.env`; local development uses `API_BASE_URL=http://localhost:8001`.
+Local API configuration is in `frontend/.env`:
 
-## Test and Build
+```env
+API_BASE_URL=http://localhost:8001/api/v1
+```
+
+Frontend: `http://localhost:8080`.
+
+## Analyze, Test, Build
 
 ```bash
 cd frontend
@@ -21,7 +27,7 @@ flutter test
 flutter build web --release
 ```
 
-## Deployment
+## Docker
 
 Use the repository-level Compose deployment:
 
@@ -29,4 +35,4 @@ Use the repository-level Compose deployment:
 docker compose -f docker-compose.yml up --build -d frontend
 ```
 
-The frontend is exposed on host port `8080`.
+Docker maps the frontend to host port `8080`.

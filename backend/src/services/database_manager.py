@@ -14,20 +14,21 @@ Author: Edu-Flow Team
 """
 
 import asyncio
+import inspect
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any, Union, AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 
-from core.database_abstraction import (
+from src.core.database_abstraction import (
     DatabaseInterface, DatabaseType, DatabaseConfig, 
     DatabaseConnectionPool, SQLiteDatabase, MongoDBDatabase
 )
-from core.database_migrations import MigrationManager, MigrationStatus
-from core.exceptions import DatabaseError, MigrationError, ConfigurationError
-from core.logging import get_logger
-from config.settings import settings
+from src.core.database_migrations import MigrationManager, MigrationStatus
+from src.core.exceptions import DatabaseError, MigrationError, ConfigurationError
+from src.core.logging import get_logger
+from src.config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -77,12 +78,9 @@ class EnhancedDatabaseManager:
         if url.startswith("invalid"):
             selected_url = url
         elif (
-            hasattr(settings, 'mongodb_url')
-            and settings.mongodb_url
+            settings.mongodb_url
             and settings.mongodb_url != "mongodb://localhost:27017/edu_flow"
         ):
-            selected_url = settings.mongodb_url
-        elif url == "sqlite+aiosqlite:///edu_flow.db" and hasattr(settings, 'mongodb_url') and settings.mongodb_url:
             selected_url = settings.mongodb_url
         else:
             selected_url = url
@@ -137,18 +135,26 @@ class EnhancedDatabaseManager:
                 max_connections=50,
                 min_connections=5
             )
+
+    async def _resolve(self, value):
+        """Resolve either an async result or a synchronous adapter result."""
+        return await value if inspect.isawaitable(value) else value
     
     async def initialize(self):
         """Initialize database manager"""
-        if self._initialized and self.database is not None:
+        if self._initialized and self.database is not None and self.migration_manager is not None:
             return
         
         try:
             logger.info("Initializing enhanced database manager...")
+            self.config = self._get_database_config()
             
             # Create connection pool
-            self.pool = DatabaseConnectionPool(self.config)
-            await self.pool.initialize()
+            if self.pool is None:
+                self.pool = DatabaseConnectionPool(self.config)
+            initialize_result = self.pool.initialize()
+            if inspect.isawaitable(initialize_result):
+                await initialize_result
             
             # Create database instance based on type
             if self.config.db_type == DatabaseType.SQLITE:
@@ -170,10 +176,15 @@ class EnhancedDatabaseManager:
             
             # Start health check task
             self._health_check_task = asyncio.create_task(self._health_check_loop())
+            self._initialized = True
             
             logger.info("Database manager initialized successfully")
             
         except Exception as e:
+            self._initialized = False
+            self.database = None
+            self.pool = None
+            self.migration_manager = None
             logger.error(f"Failed to initialize database manager: {e}")
             raise DatabaseError(f"Database manager initialization failed: {e}")
     
@@ -249,7 +260,7 @@ class EnhancedDatabaseManager:
             await self.initialize()
         
         try:
-            connection = await self.pool.get_connection()
+            connection = await self._resolve(self.pool.get_connection())
             self.stats.active_connections += 1
             self.stats.total_connections += 1
             
@@ -273,18 +284,18 @@ class EnhancedDatabaseManager:
         try:
             # Begin transaction
             if hasattr(self.database, 'begin_transaction'):
-                await self.database.begin_transaction()
+                await self._resolve(self.database.begin_transaction())
             
             yield self.database
             
             # Commit transaction
             if hasattr(self.database, 'commit_transaction'):
-                await self.database.commit_transaction()
+                await self._resolve(self.database.commit_transaction())
                 
         except Exception as e:
             # Rollback transaction
             if hasattr(self.database, 'rollback_transaction'):
-                await self.database.rollback_transaction()
+                await self._resolve(self.database.rollback_transaction())
             
             self.stats.error_count += 1
             logger.error(f"Transaction error: {e}")
@@ -296,10 +307,7 @@ class EnhancedDatabaseManager:
         start_time = time.time()
         
         try:
-            if use_cache and hasattr(self.database, 'execute_cached_query'):
-                result = await self.database.execute_cached_query(query, params)
-            else:
-                result = await self.database.execute_query(query, params)
+            result = await self._resolve(self.database.execute_query(query, params))
             
             query_time = time.time() - start_time
             self._record_query_time(query_time)
@@ -319,7 +327,7 @@ class EnhancedDatabaseManager:
         start_time = time.time()
         
         try:
-            result = await self.database.execute_update(query, params)
+            result = await self._resolve(self.database.execute_update(query, params))
             
             query_time = time.time() - start_time
             self._record_query_time(query_time)
@@ -341,13 +349,14 @@ class EnhancedDatabaseManager:
                 return False
             
             # Perform basic health check
-            is_healthy = await self.database.health_check()
+            is_healthy = await self._resolve(self.database.health_check())
             
             if is_healthy:
                 logger.debug("Database health check passed")
             else:
                 logger.warning("Database health check failed")
             
+            self.stats.is_healthy = is_healthy
             return is_healthy
             
         except Exception as e:
@@ -370,6 +379,15 @@ class EnhancedDatabaseManager:
         """Get database statistics"""
         if not self.database:
             await self.initialize()
+        else:
+            self.stats.is_healthy = await self.health_check()
+
+        migration_status = None
+        if self.migration_manager:
+            try:
+                migration_status = await self._resolve(self.migration_manager.get_migration_status())
+            except Exception as e:
+                logger.warning(f"Unable to read migration status: {e}")
         
         stats = {
             "database_type": self.config.db_type.value,
@@ -380,13 +398,14 @@ class EnhancedDatabaseManager:
             "avg_query_time": self.stats.avg_query_time,
             "is_healthy": self.stats.is_healthy,
             "last_health_check": self.stats.last_health_check.isoformat() if self.stats.last_health_check else None,
-            "migration_status": await self.migration_manager.get_migration_status() if self.migration_manager else None
+            "migration_status": migration_status
         }
         
         # Get pool-specific stats
         if self.pool:
-            pool_stats = await self.pool.get_stats()
-            stats.update(pool_stats)
+            pool_stats = await self._resolve(self.pool.get_stats())
+            if isinstance(pool_stats, dict):
+                stats.update(pool_stats)
         
         return stats
     
@@ -417,7 +436,7 @@ class EnhancedDatabaseManager:
             await self.initialize()
         
         try:
-            backup_timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            backup_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             backup_info = {
                 "timestamp": backup_timestamp,
                 "database_type": self.config.db_type.value,
@@ -551,11 +570,12 @@ class EnhancedDatabaseManager:
             
             # Close connection pool
             if self.pool:
-                await self.pool.close()
+                await self._resolve(self.pool.close())
             
             self.database = None
             self.pool = None
             self.migration_manager = None
+            self._initialized = False
             
             logger.info("Database manager closed successfully")
             

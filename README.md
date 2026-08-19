@@ -1,8 +1,14 @@
 # Edu-Flow
 
-Edu-Flow is an education management application with a FastAPI backend, Flutter frontend, and optional Rust services.
+FastAPI backend, Flutter frontend, and optional Rust services for an education management system.
 
-## Run Locally
+## Requirements
+
+- Python 3.13 or compatible Python 3.8+
+- Flutter SDK
+- Docker Desktop for container deployment
+
+## Local Start
 
 Backend:
 
@@ -20,27 +26,22 @@ flutter pub get
 flutter run -d chrome --web-port 8080
 ```
 
-Open `http://localhost:8080`. The API is at `http://localhost:8001`; documentation is at `/docs`.
+- Frontend: `http://localhost:8080`
+- API: `http://localhost:8001`
+- API docs: `http://localhost:8001/docs`
+- Health: `http://localhost:8001/health`
 
-## Docker Deployment
+## Docker Start
 
 ```bash
 docker compose up --build -d
 ```
 
-Compose exposes the backend on port `8000` and the frontend on port `8080`. Local development uses backend port `8001`.
+Docker maps the backend to host port `8000` and the frontend to `8080`.
 
-Windows:
+Stop the stack with `docker compose down`.
 
-```bat
-deploy\deploy_full_stack_windows.bat
-```
-
-Linux/macOS:
-
-```bash
-./deploy/deploy_full_stack.sh
-```
+The scripts in `deploy/` are convenience wrappers around Compose.
 
 ## Tests
 
@@ -51,4 +52,8 @@ PYTHONPATH=src python -m pytest
 
 Frontend tests run with `flutter test` from `frontend`.
 
-See [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) for component details. This repository does not currently include a `LICENSE` file.
+See [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) for component commands.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

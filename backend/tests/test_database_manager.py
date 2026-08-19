@@ -17,6 +17,7 @@ import asyncio
 import json
 import tempfile
 import os
+import time
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, AsyncMock
 
@@ -26,6 +27,21 @@ from src.services.database_manager import (
 from src.core.database_abstraction import DatabaseType, DatabaseConfig
 from src.core.database_migrations import MigrationManager, MigrationStatus
 from src.core.exceptions import DatabaseError, MigrationError, ConfigurationError
+from src.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def reset_settings():
+    """Keep configuration tests isolated from one another."""
+    from src.config.settings import settings
+
+    settings.database_url = "sqlite+aiosqlite:///edu_flow.db"
+    settings.mongodb_url = "mongodb://localhost:27017/edu_flow"
+    yield
+    settings.database_url = "sqlite+aiosqlite:///edu_flow.db"
+    settings.mongodb_url = "mongodb://localhost:27017/edu_flow"
 
 
 class TestDatabaseConfig:
@@ -120,10 +136,13 @@ class TestEnhancedDatabaseManager:
     def setup_method(self):
         """Setup test environment"""
         # Reset database manager
-        db_manager._initialized = False
-        db_manager.database = None
-        db_manager.pool = None
+        EnhancedDatabaseManager()
+        db_manager._initialized = True
+        db_manager.database = Mock()
+        db_manager.pool = Mock()
         db_manager.migration_manager = None
+        db_manager.stats = DatabaseStats()
+        db_manager._query_times = []
     
     def teardown_method(self):
         """Cleanup test environment"""
@@ -148,6 +167,7 @@ class TestEnhancedDatabaseManager:
     async def test_database_manager_initialization(self):
         """Test database manager initialization"""
         manager = EnhancedDatabaseManager()
+        manager._initialized = False
         
         # Mock the initialization to avoid actual database connection
         with patch.object(manager, '_get_database_config') as mock_config:
@@ -168,11 +188,14 @@ class TestEnhancedDatabaseManager:
                 mock_pool_class.return_value = mock_pool_instance
                 manager.pool = mock_pool_instance
                 
-                with patch.object(manager, '_run_migrations') as mock_migrations:
+                with patch.object(manager, '_run_migrations') as mock_migrations, \
+                    patch.object(MigrationManager, 'initialize', new_callable=AsyncMock):
                     mock_migrations.return_value = None
                     
                     with patch.object(manager, '_health_check_loop') as mock_health:
-                        mock_health.return_value = asyncio.sleep(0.1)
+                        async def fake_health_loop():
+                            return None
+                        mock_health.side_effect = fake_health_loop
                         
                         await manager.initialize()
                         
@@ -383,7 +406,7 @@ class TestEnhancedDatabaseManager:
                     
                     assert "timestamp" in backup_info
                     assert "backup_path" in backup_info
-                    assert status == "completed"
+                    assert backup_info["status"] == "completed"
     
     @pytest.mark.asyncio
     async def test_database_close(self):
@@ -405,11 +428,22 @@ class TestEnhancedDatabaseManager:
 
 class TestDatabaseManagerIntegration:
     """Integration tests for database manager"""
+
+    def setup_method(self):
+        """Provide patchable manager dependencies for integration tests."""
+        EnhancedDatabaseManager()
+        db_manager._initialized = True
+        db_manager.database = Mock()
+        db_manager.pool = Mock()
+        db_manager.migration_manager = None
+        db_manager.stats = DatabaseStats()
+        db_manager._query_times = []
     
     @pytest.mark.asyncio
     async def test_full_initialization_flow(self):
         """Test complete initialization flow"""
         manager = EnhancedDatabaseManager()
+        manager._initialized = False
         
         # Mock all dependencies
         with patch.object(manager, '_get_database_config') as mock_config:
@@ -427,11 +461,14 @@ class TestDatabaseManagerIntegration:
             with patch.object(manager.pool, 'initialize') as mock_init:
                 mock_init.return_value = None
                 
-                with patch.object(manager, '_run_migrations') as mock_migrations:
+                with patch.object(manager, '_run_migrations') as mock_migrations, \
+                     patch.object(MigrationManager, 'initialize', new_callable=AsyncMock):
                     mock_migrations.return_value = {"status": "success"}
                     
                     with patch.object(manager, '_health_check_loop') as mock_health:
-                        mock_health.return_value = asyncio.sleep(0.1)
+                        async def fake_health_loop():
+                            return None
+                        mock_health.side_effect = fake_health_loop
                         
                         # Initialize
                         await manager.initialize()
@@ -529,6 +566,16 @@ class TestDatabaseManagerIntegration:
 
 class TestDatabaseManagerPerformance:
     """Performance tests for database manager"""
+
+    def setup_method(self):
+        """Provide patchable manager dependencies for performance tests."""
+        EnhancedDatabaseManager()
+        db_manager._initialized = True
+        db_manager.database = Mock()
+        db_manager.pool = Mock()
+        db_manager.migration_manager = None
+        db_manager.stats = DatabaseStats()
+        db_manager._query_times = []
     
     @pytest.mark.asyncio
     async def test_query_performance_tracking(self):

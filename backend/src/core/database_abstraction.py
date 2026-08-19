@@ -182,9 +182,12 @@ class DatabaseConnectionPool:
             if hasattr(self._pool, 'dispose'):
                 await self._pool.dispose()
             elif hasattr(self._pool, 'close'):
-                await self._pool.close()
+                close_result = self._pool.close()
+                if hasattr(close_result, "__await__"):
+                    await close_result
             
             self._initialized = False
+            self._pool = None
             logger.info("Connection pool closed")
     
     async def get_stats(self) -> Dict[str, Any]:
