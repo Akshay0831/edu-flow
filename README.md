@@ -1,32 +1,59 @@
-# NBA Criteria 3 (Attainment) Automation System
+# Edu-Flow
 
-## Tech Stack
+FastAPI backend, Flutter frontend, and optional Rust services for an education management system.
 
-**Client:** React
+## Requirements
 
-**Server:** Node, Express, Firebase Authentication
+- Python 3.13 or compatible Python 3.8+
+- Flutter SDK
+- Docker Desktop for container deployment
 
-**Database:** MongoDB, Firebase Firestore
+## Local Start
 
----
+Backend:
 
-## Run Locally
+```bash
+cd backend
+pip install -r requirements.txt
+PYTHONPATH=src python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8001
+```
 
-1. Clone the project
+Frontend:
 
-   ```bash
-   git clone https://github.com/Akshay0831/Institution-Accreditation-and-Automation-System.git
+```bash
+cd frontend
+flutter pub get
+flutter run -d chrome --web-port 8080
+```
 
-2. Run the appropriate script based on your operating system:
+- Frontend: `http://localhost:8080`
+- API: `http://localhost:8001`
+- API docs: `http://localhost:8001/docs`
+- Health: `http://localhost:8001/health`
 
-   **Windows:** Double-click on the `runApp.bat` file in the project root directory.
+## Docker Start
 
-   **Linux/MacOS:** Open a terminal window, navigate to the project root directory, and run the command `./runApp.sh`.
+```bash
+docker compose up --build -d
+```
 
-   The script will automatically install the necessary dependencies and start the backend and frontend servers.
+Docker maps the backend to host port `8000` and the frontend to `8080`.
 
-3. Once the script is finished running, you can access the web application by visiting http://localhost:5173 in your web browser. The backend server is already configured to communicate with the MongoDB and Firebase Firestore databases.
+Stop the stack with `docker compose down`.
 
-**Note:** If you encounter any issues while running the script, make sure that you have the necessary dependencies installed on your system, such as Node.js and npm.
+The scripts in `deploy/` are convenience wrappers around Compose.
 
----
+## Tests
+
+```bash
+cd backend
+PYTHONPATH=src python -m pytest
+```
+
+Frontend tests run with `flutter test` from `frontend`.
+
+See [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) for component commands.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
