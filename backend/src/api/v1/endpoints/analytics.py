@@ -17,9 +17,9 @@ from datetime import datetime, timedelta
 import logging
 import asyncio
 
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from src.core.security import verify_token
-from src.core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from core.security import verify_token
+from core.response_handler import ResponseFormatter
 from src.services.base_service import (
     UserService, CourseService, StudentService, TeacherService, AssessmentService,
     get_user_service, get_course_service, get_student_service, get_teacher_service, get_assessment_service

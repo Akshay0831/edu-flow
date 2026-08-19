@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import redis.asyncio as redis
 from contextlib import asynccontextmanager
-from src.config.settings import settings
+from config.settings import settings
 
 
 class DatabaseManager:

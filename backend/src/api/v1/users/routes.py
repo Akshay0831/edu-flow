@@ -16,12 +16,12 @@ from datetime import datetime, timedelta
 import json
 from logging import getLogger
 
-from ....models.user import User, UserRole
+from models.user import User, UserRole
 from src.services.user_service import UserService
-from src.core.security import SecurityConfig
-from src.core.dependencies import get_db, get_current_user, get_current_active_admin
-from src.core.exceptions import UserNotFoundError, UserExistsError, AuthenticationError
-from src.config.settings import settings
+from core.security import SecurityConfig
+from core.dependencies import get_db, get_current_user, get_current_active_admin
+from core.exceptions import UserNotFoundError, UserExistsError, AuthenticationError
+from config.settings import settings
 
 logger = getLogger(__name__)
 security_config = SecurityConfig()

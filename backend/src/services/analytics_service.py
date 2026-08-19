@@ -23,7 +23,7 @@ import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, or_, func, desc, asc
 
-from src.models.analytics import (
+from models.analytics import (
     AnalyticsType, MetricType, Timeframe, AggregationType,
     VisualizationType, DataSource, AnalyticsFilter,
     MetricDefinition, TimeRange, Aggregation, QueryFilter,
@@ -34,8 +34,8 @@ from src.models.analytics import (
     LearningAnalytics, RiskAssessment, AnalyticsDataValidator,
     Alert, AlertLog
 )
-from src.core.exceptions import NotFoundError, ValidationError
-from src.core.logging import get_logger
+from core.exceptions import NotFoundError, ValidationError
+from core.logging import get_logger
 from src.services.excel_integration_service import ExcelIntegrationService
 
 logger = get_logger(__name__)
@@ -124,8 +124,8 @@ class AdvancedAnalyticsService:
     
     async def _fetch_student_records(self, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
         """Fetch student records with filtering"""
-        from src.models.student import Student
-        from src.models.course import CourseEnrollment
+        from models.student import Student
+        from models.course import CourseEnrollment
         
         students = await self.db_session.execute(
             select(Student).where(
@@ -161,7 +161,7 @@ class AdvancedAnalyticsService:
     
     async def _fetch_course_records(self, start_date: datetime, end_date: datetime) -> List[Dict[str, Any]]:
         """Fetch course records with filtering"""
-        from src.models.course import Course
+        from models.course import Course
         
         courses = await self.db_session.execute(
             select(Course).where(
@@ -451,8 +451,8 @@ class AdvancedAnalyticsService:
         """
         logger.info(f"Calculating student performance metrics for {student_id}")
         
-        from src.models.student import Student
-        from src.models.course import CourseEnrollment, Course
+        from models.student import Student
+        from models.course import CourseEnrollment, Course
         
         # Get student information
         result = await self.db_session.execute(
@@ -475,7 +475,7 @@ class AdvancedAnalyticsService:
         total_credits = sum([enrollment.course.credits for enrollment in active_enrollments])
         
         # Calculate GPA
-        from src.models.marks import Mark
+        from models.marks import Mark
         marks = await self.db_session.execute(
             select(Mark).where(Mark.student_id == student_id)
         )
@@ -487,7 +487,7 @@ class AdvancedAnalyticsService:
         current_gpa = round(weighted_sum / total_possible, 2) if total_possible > 0 else 0.0
         
         # Calculate completion rate
-        from src.models.course_completion import CourseCompletion
+        from models.course_completion import CourseCompletion
         completions = await self.db_session.execute(
             select(CourseCompletion).where(CourseCompletion.student_id == student_id)
         )
@@ -497,7 +497,7 @@ class AdvancedAnalyticsService:
         completion_rate = (completed_courses / total_courses * 100) if total_courses > 0 else 0.0
         
         # Get attendance rate
-        from src.models.attendance import Attendance
+        from models.attendance import Attendance
         attendance = await self.db_session.execute(
             select(Attendance).where(Attendance.student_id == student_id)
         )
@@ -545,10 +545,10 @@ class AdvancedAnalyticsService:
         """
         logger.info(f"Calculating course analytics for {course_id}")
         
-        from src.models.course import Course
-        from src.models.course_enrollment import CourseEnrollment
-        from src.models.marks import Mark
-        from src.models.attendance import Attendance
+        from models.course import Course
+        from models.course_enrollment import CourseEnrollment
+        from models.marks import Mark
+        from models.attendance import Attendance
         
         # Get course information
         result = await self.db_session.execute(
@@ -569,7 +569,7 @@ class AdvancedAnalyticsService:
         total_enrollments = len(enrollments_list)
         
         # Calculate completion rate
-        from src.models.course_completion import CourseCompletion
+        from models.course_completion import CourseCompletion
         completions = await self.db_session.execute(
             select(CourseCompletion).where(
                 CourseCompletion.course_id == course_id
@@ -647,8 +647,8 @@ class AdvancedAnalyticsService:
         logger.info(f"Generating report using template {template_id}")
         
         # Get template
-        from src.models.analytics import ReportTemplate
-        from src.core.exceptions import ResourceNotFoundError
+        from models.analytics import ReportTemplate
+        from core.exceptions import ResourceNotFoundError
         
         result = await self.db_session.execute(
             select(ReportTemplate).where(ReportTemplate.template_id == template_id)
@@ -692,7 +692,7 @@ class AdvancedAnalyticsService:
         """
         logger.info(f"Creating alert: {alert_config.name}")
         
-        from src.models.analytics import Alert as Alert
+        from models.analytics import Alert as Alert
         
         # Create alert in database
         alert = Alert(
@@ -727,8 +727,8 @@ class AdvancedAnalyticsService:
         triggered_alerts = []
         
         # Get active alerts
-        from src.models.analytics import Alert as Alert
-        from src.core.exceptions import ResourceNotFoundError
+        from models.analytics import Alert as Alert
+        from core.exceptions import ResourceNotFoundError
         
         result = await self.db_session.execute(
             select(Alert).where(Alert.is_active == True)
@@ -777,7 +777,7 @@ class AdvancedAnalyticsService:
         """
         logger.info(f"Creating dashboard: {dashboard.name}")
         
-        from src.models.analytics import AnalyticsDashboard as DashboardModel
+        from models.analytics import AnalyticsDashboard as DashboardModel
         
         # Create dashboard in database
         dashboard_model = DashboardModel(
@@ -810,8 +810,8 @@ class AdvancedAnalyticsService:
         """
         logger.info(f"Getting KPI values for {len(kpi_ids)} KPIs")
         
-        from src.models.analytics import Kpi as KpiModel
-        from src.core.exceptions import ResourceNotFoundError
+        from models.analytics import Kpi as KpiModel
+        from core.exceptions import ResourceNotFoundError
         
         result = await self.db_session.execute(
             select(KpiModel).where(KpiModel.kpi_id.in_(kpi_ids))

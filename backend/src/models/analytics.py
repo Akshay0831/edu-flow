@@ -24,8 +24,8 @@ import numpy as np
 import pandas as pd
 import json
 
-from src.core.exceptions import ValidationError
-from src.infrastructure.models.base_model import Base
+from core.exceptions import ValidationError
+from infrastructure.models.base_model import Base
 
 
 class AnalyticsType(str, Enum):

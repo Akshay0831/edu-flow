@@ -18,9 +18,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import auth_service
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
-from src.infrastructure.repositories.department_repository import DepartmentRepository
+from core.security import auth_service
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
+from infrastructure.repositories.department_repository import DepartmentRepository
 
 # Create router
 router = APIRouter(prefix="/departments", tags=["departments"])

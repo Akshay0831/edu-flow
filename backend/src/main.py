@@ -28,20 +28,20 @@ from contextlib import asynccontextmanager
 import asyncio
 import logging
 
-from src.core.exceptions import (
+from core.exceptions import (
     BaseError, ValidationError, NotFoundError, AuthenticationError,
     AuthorizationError, ForbiddenError, ConflictError, DatabaseError,
     ExternalServiceError, RateLimitError, ConfigurationError
 )
-from src.core.security import auth_service
-from src.core.response_handler import ResponseFormatter
-from src.core.error_handling import setup_error_handling
-from src.core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
-from src.core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
-from src.core.service_container import initialize_service_container, configure_services, get_service_container
-from src.core.api_service import initialize_api_client
+from core.security import auth_service
+from core.response_handler import ResponseFormatter
+from core.error_handling import setup_error_handling
+from core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
+from core.cache_abstraction import CacheConfig, CacheBackend, initialize_cache_manager
+from core.service_container import initialize_service_container, configure_services, get_service_container
+from core.api_service import initialize_api_client
 from src.services.base_service import ServiceFactory, CourseService, StudentService, TeacherService, AssessmentService
-from src.services.user_service import UserService
+from src.services.user_service import UserService as AuthUserService
 # Commented out - Rust AI services not available yet
 # from services.rust_ai_services import (
 #     initialize_container,
@@ -49,16 +49,16 @@ from src.services.user_service import UserService
 #     get_container,
 #     ServiceContainer,
 # )
-from src.api.v1.endpoints.auth import router as auth_router
-from src.api.v1.endpoints.auth_enhanced import router as auth_enhanced_router
-from src.api.v1.endpoints.users import router as users_router
-from src.api.v1.endpoints.courses import router as courses_router
-from src.api.v1.endpoints.students import router as students_router
-from src.api.v1.endpoints.teachers_simple import router as teachers_router
-from src.api.v1.endpoints.assessments_simple import router as assessments_router
-from src.api.v1.endpoints.analytics_simple import router as analytics_router
-from src.api.v1.endpoints.see_prediction import router as see_prediction_router
-from src.api.v1.endpoints.analytics_advanced import router as analytics_advanced_router
+from api.v1.endpoints.auth import router as auth_router
+from api.v1.endpoints.auth_enhanced import router as auth_enhanced_router
+from api.v1.endpoints.users import router as users_router
+from api.v1.endpoints.courses import router as courses_router
+from api.v1.endpoints.students import router as students_router
+from api.v1.endpoints.teachers_simple import router as teachers_router
+from api.v1.endpoints.assessments_simple import router as assessments_router
+from api.v1.endpoints.analytics_simple import router as analytics_router
+from api.v1.endpoints.see_prediction import router as see_prediction_router
+from api.v1.endpoints.analytics_advanced import router as analytics_advanced_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -156,16 +156,20 @@ async def lifespan(app: FastAPI):
         
         # Register services
         logger.info("⚙️  Registering services...")
-        ServiceFactory.register_service('user', UserService)
+        ServiceFactory.register_service('user', AuthUserService)
         ServiceFactory.register_service('course', CourseService)
         ServiceFactory.register_service('student', StudentService)
         ServiceFactory.register_service('teacher', TeacherService)
         ServiceFactory.register_service('assessment', AssessmentService)
         
         # Initialize services
-        user_service = ServiceFactory.create_service('user')
+        user_service = AuthUserService(database_manager=db_manager)
+        logger.info(f"Created user service: {type(user_service)}")
         await user_service.initialize()
         auth_service.user_service = user_service
+        import api.v1.endpoints.users as users_endpoint
+        users_endpoint.user_service = user_service
+        logger.info(f"Assigned user service to auth service: {type(auth_service.user_service)}")
         
         # Initialize Rust AI Services container (placeholder for future implementation)
         logger.info("🤖 Rust AI Services initialization skipped - placeholder for future implementation")
@@ -193,11 +197,11 @@ async def lifespan(app: FastAPI):
             
             # Clean up database
             if 'db_manager' in locals():
-                await db_manager.dispose()
+                await db_manager.disconnect()
             
             # Clean up cache
             if 'cache_manager' in locals():
-                await cache_manager.dispose()
+                await cache_manager.disconnect()
             
             logger.info("✅ Application shutdown completed")
             
@@ -251,16 +255,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
-
-# Add request timing middleware
-@app.middleware("http")
-async def add_timing_middleware(request: Request, call_next):
-    """Add timing information to responses"""
-    request.state.request_start_time = time.time()
-    response = await call_next(request)
-    execution_time = time.time() - request.state.request_start_time
-    response.headers["X-Execution-Time"] = f"{execution_time:.3f}s"
-    return response
 
 # Custom exception handlers using standardized response format
 @app.exception_handler(BaseError)
@@ -358,21 +352,21 @@ def get_rust_ai_health_router():
     @router.get("/health", summary="Check all Rust AI services health")
     async def check_all_health():
         """Check health of all Rust AI services"""
-        from src.services.rust_ai_services import get_container
+        from services.rust_ai_services import get_container
         container = get_container()
         return await container.check_all_services_health()
 
     @router.get("/services/{service_name}", summary="Check specific service health")
     async def check_service_health(service_name: str):
         """Check health of a specific Rust AI service"""
-        from src.services.rust_ai_services import get_container
+        from services.rust_ai_services import get_container
         container = get_container()
         return await container.get_service_health(service_name)
 
     @router.get("/stats", summary="Get Rust AI services statistics")
     async def get_stats():
         """Get statistics about Rust AI services"""
-        from src.services.rust_ai_services import get_container, ServiceContainerStats
+        from services.rust_ai_services import get_container, ServiceContainerStats
         container = get_container()
         stats = await container.get_stats()
         return {
@@ -396,7 +390,7 @@ app.include_router(
 @app.get("/rust-ai/health", tags=["rust-ai-services"])
 async def rust_ai_health():
     """Health check for Rust AI Services"""
-    from src.services.rust_ai_services import get_container
+    from services.rust_ai_services import get_container
     container = get_container()
     health = await container.check_all_services_health()
     return {
@@ -410,7 +404,7 @@ async def rust_ai_health():
 @app.get("/rust-ai/stats", tags=["rust-ai-services"])
 async def rust_ai_stats():
     """Statistics for Rust AI Services"""
-    from src.services.rust_ai_services import get_container, ServiceContainerStats
+    from services.rust_ai_services import get_container, ServiceContainerStats
     container = get_container()
     stats = await container.get_stats()
     return {
@@ -555,7 +549,7 @@ async def metrics():
     return metrics
 
 # Service dependencies
-def get_user_service() -> UserService:
+def get_user_service() -> AuthUserService:
     """Get user service instance"""
     return ServiceFactory.create_service('user')
 

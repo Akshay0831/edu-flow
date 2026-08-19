@@ -17,8 +17,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent.parent
 sys.path.append(str(project_root))
 
-from src.services.database_service import database_service
-from src.core.logging import get_logger
+from services.database_service import database_service
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

@@ -20,8 +20,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, field_validator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import AuthService
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from core.security import auth_service
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError
 from src.services.user_service import UserService
 
 # Create router
@@ -30,9 +30,8 @@ router = APIRouter(prefix="/users", tags=["users"])
 # Security
 security = HTTPBearer()
 
-# Services
-user_service = UserService()
-auth_service = AuthService()
+# Services are initialized once during application startup.
+user_service = None
 
 
 # Pydantic models
@@ -147,8 +146,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     """Get current user from JWT token"""
     try:
         token = credentials.credentials
-        user_data = auth_service.decode_token(token)
-        return user_data
+        token_data = auth_service.verify_token(token, expected_type="access")
+        return {
+            "user_id": token_data.sub,
+            "email": token_data.email,
+            "role": token_data.role,
+        }
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -194,7 +197,7 @@ async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_curre
     Returns the profile of the authenticated user
     """
     try:
-        user = user_service.get_user(current_user["user_id"])
+        user = await auth_service.user_service.get_user(current_user["user_id"])
         return UserResponse(**user)
     except NotFoundError:
         raise HTTPException(status_code=404, detail="User not found")
@@ -210,10 +213,10 @@ async def get_user(user_id: str, current_user: Dict[str, Any] = Depends(get_curr
     - **user_id**: Unique user identifier
     """
     try:
-        user = user_service.get_user(user_id)
+        user = await auth_service.user_service.get_user(user_id)
         
         # Check permissions
-        if not user_service.check_permission(current_user["user_id"], "view_profile", user_id):
+        if not auth_service.user_service.check_permission(current_user["user_id"], "view_profile", user_id):
             raise HTTPException(status_code=403, detail="Permission denied")
         
         return UserResponse(**user)

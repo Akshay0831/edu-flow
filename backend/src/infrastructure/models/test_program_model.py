@@ -14,8 +14,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 import json
 
-from src.infrastructure.models.program_model import ProgramModel
-from src.core.exceptions import ValidationError
+from infrastructure.models.program_model import ProgramModel
+from core.exceptions import ValidationError
 
 
 class TestProgramModel(unittest.TestCase):

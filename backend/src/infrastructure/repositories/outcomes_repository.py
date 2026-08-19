@@ -16,9 +16,9 @@ from enum import Enum
 import json
 import statistics
 
-from src.core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
-from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
+from core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
+from core.logging import get_logger
+from infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
 
 logger = get_logger(__name__)
 

@@ -14,9 +14,9 @@ Author: Edu-Flow Team
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 from typing import Optional, Dict, Any, List, AsyncGenerator
-from src.config.settings import settings
-from src.core.exceptions import DatabaseError, NotFoundError
-from src.core.logging import get_logger
+from config.settings import settings
+from core.exceptions import DatabaseError, NotFoundError
+from core.logging import get_logger
 import logging
 
 logger = get_logger(__name__)
@@ -67,14 +67,14 @@ class DatabaseService:
         
         # Close PostgreSQL connection
         try:
-            from src.database.postgresql import close_postgres
+            from database.postgresql import close_postgres
             await close_postgres()
         except Exception as e:
             logger.error(f"Failed to close PostgreSQL: {e}")
         
         # Close Redis connection
         try:
-            from src.database.redis import redis_cache
+            from database.redis import redis_cache
             if redis_cache.client:
                 await redis_cache.client.close()
         except Exception as e:

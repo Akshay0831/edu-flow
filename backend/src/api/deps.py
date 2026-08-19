@@ -19,10 +19,10 @@ import jwt
 from datetime import datetime, timedelta
 import logging
 
-from src.core.security import SecurityConfig
-from src.core.database_abstraction import DatabaseManager, DatabaseConfig
-from src.core.service_container import get_service_container
-from src.core.exceptions import AuthenticationError, NotFoundError
+from core.security import SecurityConfig
+from core.database_abstraction import DatabaseManager, DatabaseConfig
+from core.service_container import get_service_container
+from core.exceptions import AuthenticationError, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def get_db() -> Session:
         Database session instance
     """
     try:
-        from src.core.database_abstraction import DatabaseManager
+        from core.database_abstraction import DatabaseManager
         db_manager = DatabaseManager()
         db_session = db_manager.get_session()
         yield db_session
@@ -107,7 +107,7 @@ def get_service_container() -> Dict[str, Any]:
         Service container instance
     """
     try:
-        from src.core.service_container import get_service_container
+        from core.service_container import get_service_container
         container = get_service_container()
         return container
     except Exception as e:

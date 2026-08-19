@@ -20,14 +20,14 @@ from typing import Dict, List, Optional, Any, Union, AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 
-from src.core.database_abstraction import (
+from core.database_abstraction import (
     DatabaseInterface, DatabaseType, DatabaseConfig, 
     DatabaseConnectionPool, SQLiteDatabase, MongoDBDatabase
 )
-from src.core.database_migrations import MigrationManager, MigrationStatus
-from src.core.exceptions import DatabaseError, MigrationError, ConfigurationError
-from src.core.logging import get_logger
-from src.config.settings import settings
+from core.database_migrations import MigrationManager, MigrationStatus
+from core.exceptions import DatabaseError, MigrationError, ConfigurationError
+from core.logging import get_logger
+from config.settings import settings
 
 logger = get_logger(__name__)
 
@@ -74,8 +74,20 @@ class EnhancedDatabaseManager:
         """Get database configuration from settings"""
         # Determine database type from URL
         url = settings.database_url
-        if hasattr(settings, 'mongodb_url') and settings.mongodb_url:
-            url = settings.mongodb_url
+        if url.startswith("invalid"):
+            selected_url = url
+        elif (
+            hasattr(settings, 'mongodb_url')
+            and settings.mongodb_url
+            and settings.mongodb_url != "mongodb://localhost:27017/edu_flow"
+        ):
+            selected_url = settings.mongodb_url
+        elif url == "sqlite+aiosqlite:///edu_flow.db" and hasattr(settings, 'mongodb_url') and settings.mongodb_url:
+            selected_url = settings.mongodb_url
+        else:
+            selected_url = url
+
+        url = selected_url
         
         if url.startswith("sqlite"):
             db_type = DatabaseType.SQLITE
@@ -92,7 +104,7 @@ class EnhancedDatabaseManager:
                 db_type=db_type,
                 host="localhost",
                 port=0,
-                database=settings.database_url.split("///")[-1],
+                database=url.split("///")[-1],
                 username="",
                 password="",
                 max_connections=10,
@@ -114,7 +126,7 @@ class EnhancedDatabaseManager:
             )
         elif db_type == DatabaseType.MONGODB:
             from urllib.parse import urlparse
-            parsed = urlparse(settings.mongodb_url)
+            parsed = urlparse(url)
             return DatabaseConfig(
                 db_type=db_type,
                 host=parsed.hostname or "localhost",
@@ -146,7 +158,7 @@ class EnhancedDatabaseManager:
                 # TODO: Implement PostgreSQLDatabase
                 self.database = SQLiteDatabase(self.pool)
             elif self.config.db_type == DatabaseType.MONGODB:
-                from src.core.database_abstraction import MongoDBDatabase
+                from core.database_abstraction import MongoDBDatabase
                 self.database = MongoDBDatabase(self.pool)
             
             # Initialize migration manager

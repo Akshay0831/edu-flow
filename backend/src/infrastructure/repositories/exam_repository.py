@@ -12,10 +12,10 @@ from uuid import uuid4
 from datetime import datetime, date, time
 import json
 
-from src.core.logging import get_logger
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.infrastructure.repositories.base_repository import BaseRepository
-from src.models.exam import ExamCreate, ExamUpdate, ExamResponse, ExamStats
+from core.logging import get_logger
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from infrastructure.repositories.base_repository import BaseRepository
+from models.exam import ExamCreate, ExamUpdate, ExamResponse, ExamStats
 
 logger = get_logger(__name__)
 
@@ -273,7 +273,7 @@ class ExamRepository(BaseRepository):
                 raise NotFoundError(f"Exam not found with ID: {exam_id}")
             
             # Get students enrolled in the exam
-            from src.infrastructure.repositories.mark_repository import MarkRepository
+            from infrastructure.repositories.mark_repository import MarkRepository
             mark_repo = MarkRepository()
             marks = await mark_repo.get_marks_by_exam(exam_id)
             

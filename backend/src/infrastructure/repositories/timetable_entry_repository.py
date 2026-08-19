@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, time, date, timedelta
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.database_abstraction import DatabaseManager, DatabaseInterface
-from src.infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
-from src.models.timetable_entry import (
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.database_abstraction import DatabaseManager, DatabaseInterface
+from infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB, QueryResult
+from models.timetable_entry import (
     TimetableEntryCreate, TimetableEntryUpdate, TimetableEntryResponse,
     TimetableEntryOccurrence, TimetableEntryConflict, ResourceAllocationRequest,
     ResourceAllocationResponse, ResourceAllocation

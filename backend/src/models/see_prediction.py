@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, field_validator
 import numpy as np
 import pandas as pd
 
-from src.core.exceptions import ValidationError
+from core.exceptions import ValidationError
 
 
 class PredictionType(str, Enum):

@@ -19,12 +19,12 @@ from sqlalchemy.orm import Session
 import io
 import json
 
-from src.api.deps import get_db, get_current_user, get_service_container
+from api.deps import get_db, get_current_user, get_service_container
 from src.services.feedback_service import FeedbackService
-from src.core.response_handler import ResponseFormatter
-from src.core.exceptions import ValidationError, NotFoundError
-from src.models.feedback import FeedbackStatus, FeedbackResponseStatus
-from src.core.service_container import ServiceContainer
+from core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError
+from models.feedback import FeedbackStatus, FeedbackResponseStatus
+from core.service_container import ServiceContainer
 
 router = APIRouter(prefix="/feedback", tags=["Feedback Processing"])
 
@@ -325,7 +325,7 @@ async def get_feedback_report(
     feedback_service = service_container.get_feedback_service()
     
     try:
-        from src.models.feedback import FeedbackReport
+        from models.feedback import FeedbackReport
         report = db.query(FeedbackReport).filter(
             FeedbackReport.id == report_id
         ).first()
@@ -354,7 +354,7 @@ async def download_feedback_report(
     """Download feedback report in specified format"""
     
     try:
-        from src.models.feedback import FeedbackReport
+        from models.feedback import FeedbackReport
         report = db.query(FeedbackReport).filter(
             FeedbackReport.id == report_id
         ).first()
@@ -430,7 +430,7 @@ async def get_feedback_campaign(
     """Get feedback campaign details"""
     
     try:
-        from src.models.feedback import FeedbackCampaign
+        from models.feedback import FeedbackCampaign
         campaign = db.query(FeedbackCampaign).filter(
             FeedbackCampaign.id == campaign_id
         ).first()

@@ -31,8 +31,8 @@ except ImportError:
     redis = None
     REDIS_AVAILABLE = False
 
-from src.config.settings import settings
-from src.core.exceptions import CacheError
+from config.settings import settings
+from core.exceptions import CacheError
 
 
 class CacheStrategy(Enum):

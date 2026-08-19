@@ -18,9 +18,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, File
 from pydantic import BaseModel, Field, validator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import auth_service
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
-from src.infrastructure.repositories.grade_repository import GradeRepository
+from core.security import auth_service
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
+from infrastructure.repositories.grade_repository import GradeRepository
 
 # Create router
 router = APIRouter(prefix="/grades", tags=["grades"])

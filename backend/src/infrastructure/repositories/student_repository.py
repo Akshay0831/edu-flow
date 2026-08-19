@@ -11,11 +11,11 @@ from typing import List, Optional, Dict, Any, Union
 from uuid import uuid4
 from datetime import datetime, date
 
-from src.core.logging import get_logger
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
-from src.models.student import StudentCreate, StudentUpdate, StudentResponse
-from src.models.student_stats import StudentStats
+from core.logging import get_logger
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult
+from models.student import StudentCreate, StudentUpdate, StudentResponse
+from models.student_stats import StudentStats
 
 logger = get_logger(__name__)
 
@@ -42,7 +42,7 @@ class StudentRepository(BaseRepository):
             entity_data['updated_at'] = datetime.utcnow().isoformat()
             
             # Get database instance and create student
-            from src.core.database_abstraction import DatabaseInterface
+            from core.database_abstraction import DatabaseInterface
             # For now, create a mock database interface that we can replace later
             mock_db = self._get_mock_db()
             student_id = await mock_db.insert_one(self._collection_name, entity_data)
@@ -274,12 +274,12 @@ class StudentRepository(BaseRepository):
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
             # Get courses associated with student
-            from src.infrastructure.repositories.course_repository import CourseRepository
+            from infrastructure.repositories.course_repository import CourseRepository
             course_repo = CourseRepository()
             courses = await course_repo.get_courses_by_student(student_id)
             
             # Get marks associated with student
-            from src.infrastructure.repositories.mark_repository import MarkRepository
+            from infrastructure.repositories.mark_repository import MarkRepository
             mark_repo = MarkRepository()
             marks = await mark_repo.get_marks_by_student(student_id)
             

@@ -12,8 +12,8 @@ Author: Edu-Flow Team
 """
 
 from .security import AuthService
-from ..services.student_service import StudentService
-from ..services.user_service import UserService
+from src.services.student_service import StudentService
+from src.services.user_service import UserService
 
 # Create shared service instances
 SECRET_KEY = "your-secret-key-here-in-production-use-environment-variable"

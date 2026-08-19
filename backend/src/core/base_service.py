@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Type
 from datetime import datetime
 import asyncio
-from src.core.exceptions import NotFoundError, ValidationError, ForbiddenError
-from src.core.base_repository import BaseRepository
+from core.exceptions import NotFoundError, ValidationError, ForbiddenError
+from core.base_repository import BaseRepository
 
 
 class BaseService(ABC):

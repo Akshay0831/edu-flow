@@ -23,9 +23,9 @@ from sqlalchemy import Column, String, Boolean, DateTime, Float, Text, Integer, 
 import logging
 from contextlib import asynccontextmanager
 
-from src.config.settings import settings
-from src.core.exceptions import DatabaseError
-from src.core.logging import get_logger
+from config.settings import settings
+from core.exceptions import DatabaseError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

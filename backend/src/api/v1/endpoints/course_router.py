@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 
-from src.models.course import (
+from models.course import (
     CourseCreate, CourseUpdate, CourseResponse, CourseCreateResponse,
     CourseOffering, OfferingCreate, OfferingUpdate, OfferingResponse,
     Enrollment, EnrollmentCreate, EnrollmentUpdate, EnrollmentResponse,
@@ -12,13 +12,13 @@ from src.models.course import (
     CourseStatus, CourseLevel, CreditType, Semester, Grade
 )
 from src.services.course_service import CourseService
-from src.core.exceptions import ValidationError, NotFoundError, UnauthorizedError
-from src.core.security import AuthService
+from core.exceptions import ValidationError, NotFoundError, UnauthorizedError
+from core.security import AuthService
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
 # Initialize services
-from src.auth.service import AuthService
+from auth.service import AuthService
 auth_service = AuthService()
 course_service = CourseService(auth_service)
 

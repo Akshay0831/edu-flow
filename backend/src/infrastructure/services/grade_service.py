@@ -18,11 +18,11 @@ from uuid import uuid4
 import statistics
 import math
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.grade_repository import GradeRepository
-from src.models.grade import (
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.grade_repository import GradeRepository
+from models.grade import (
     GradeCreate, GradeUpdate, GradeResponse, GradeStats, GradeDistribution, 
     GradePolicy, GradeCalculation, GradeAnalytics, GradeStatistics, GradeTrend,
     StudentGradeSummary, ClassGradeSummary, SubjectGradeSummary

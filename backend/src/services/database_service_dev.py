@@ -16,10 +16,10 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import text
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
-from src.config.settings import settings
-from src.core.exceptions import DatabaseError, NotFoundError
-from src.database.sqlite import User, Student, Teacher, Course, Subject, Class, Marks, Feedback, Department
-from src.core.logging import get_logger
+from config.settings import settings
+from core.exceptions import DatabaseError, NotFoundError
+from database.sqlite import User, Student, Teacher, Course, Subject, Class, Marks, Feedback, Department
+from core.logging import get_logger
 import logging
 
 logger = get_logger(__name__)
@@ -65,7 +65,7 @@ class DatabaseService:
                 )
                 
                 # Create tables
-                from src.database.sqlite import Base
+                from database.sqlite import Base
                 async with self.sqlite_engine.begin() as conn:
                     await conn.run_sync(Base.metadata.create_all)
                 

@@ -9,7 +9,7 @@ Author: Edu-Flow Team
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
-from src.infrastructure.repositories.base_repository import QueryResult
+from infrastructure.repositories.base_repository import QueryResult
 
 
 class StudentRepositoryAbstract(ABC):

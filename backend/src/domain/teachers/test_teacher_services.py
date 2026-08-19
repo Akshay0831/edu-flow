@@ -12,9 +12,9 @@ import pytest
 from datetime import datetime
 from unittest.mock import Mock, AsyncMock, patch
 
-from src.domain.teachers.services import TeacherService, QualificationService
-from src.domain.teachers.entities import Teacher, Qualification, EmploymentStatus
-from src.infrastructure.exceptions import NotFoundError, ValidationError
+from domain.teachers.services import TeacherService, QualificationService
+from domain.teachers.entities import Teacher, Qualification, EmploymentStatus
+from infrastructure.exceptions import NotFoundError, ValidationError
 
 
 class TestTeacherService:

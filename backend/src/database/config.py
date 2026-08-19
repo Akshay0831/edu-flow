@@ -15,9 +15,9 @@ import asyncio
 import logging
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
-from src.config.settings import settings
-from src.core.exceptions import ConfigurationError
-from src.core.logging import get_logger
+from config.settings import settings
+from core.exceptions import ConfigurationError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -53,7 +53,7 @@ class DatabaseConfig:
     async def configure_mongodb(self) -> bool:
         """Configure MongoDB connection"""
         try:
-            from src.database.mongodb import mongodb_service
+            from database.mongodb import mongodb_service
             
             # MongoDB configuration
             mongodb_config = {
@@ -86,7 +86,7 @@ class DatabaseConfig:
     async def configure_postgresql(self) -> bool:
         """Configure PostgreSQL connection"""
         try:
-            from src.database.postgresql import initialize_postgres
+            from database.postgresql import initialize_postgres
             
             if await initialize_postgres():
                 self.postgresql_configured = True
@@ -102,7 +102,7 @@ class DatabaseConfig:
     async def configure_redis(self) -> bool:
         """Configure Redis connection"""
         try:
-            from src.database.redis import redis_cache
+            from database.redis import redis_cache
             
             redis_config = {
                 "host": "localhost",
@@ -137,20 +137,20 @@ class DatabaseConfig:
         try:
             # MongoDB health check
             if self.mongodb_configured:
-                from src.database.mongodb import mongodb_service
+                from database.mongodb import mongodb_service
                 if mongodb_service.client:
                     await mongodb_service.client.admin.command('ping')
                     health_status["mongodb"] = True
             
             # PostgreSQL health check
             if selfpostgresql_configured:
-                from src.database.postgresql import db_connection
+                from database.postgresql import db_connection
                 # PostgreSQL health check would be done through SQLAlchemy engine
                 health_status["postgresql"] = True
             
             # Redis health check
             if self.redis_configured:
-                from src.database.redis import redis_cache
+                from database.redis import redis_cache
                 if redis_cache.client:
                     await redis_cache.client.ping()
                     health_status["redis"] = True
@@ -165,19 +165,19 @@ class DatabaseConfig:
         try:
             # Close MongoDB
             if self.mongodb_configured:
-                from src.database.mongodb import mongodb_service
+                from database.mongodb import mongodb_service
                 mongodb_service.disconnect()
                 self.mongodb_configured = False
             
             # Close PostgreSQL
             if self.postgresql_configured:
-                from src.database.postgresql import close_postgres
+                from database.postgresql import close_postgres
                 await close_postgres()
                 self.postgresql_configured = False
             
             # Close Redis
             if self.redis_configured:
-                from src.database.redis import redis_cache
+                from database.redis import redis_cache
                 if redis_cache.client:
                     await redis_cache.client.close()
                     self.redis_configured = False

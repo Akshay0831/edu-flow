@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.analytics import (
+from models.analytics import (
     AnalyticsType, MetricType, Timeframe, AggregationType,
     VisualizationType, DataSource, MetricDefinition, TimeRange,
     Aggregation, QueryFilter, AnalyticsQuery, AnalyticsResult,
@@ -32,12 +32,12 @@ from src.models.analytics import (
     ReportTemplate, AlertConfig, KpiMetric, LearningAnalytics,
     RiskAssessment, AnalyticsDataValidator, AnalyticsProcessor
 )
-from src.api.deps import get_db, get_current_user
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError
-from src.models.user import User
-from src.models.analytics import Alert as AlertModel
+from api.deps import get_db, get_current_user
+from core.exceptions import NotFoundError, ValidationError, DatabaseError
+from models.user import User
+from models.analytics import Alert as AlertModel
 from src.services.analytics_service import AdvancedAnalyticsService
-from src.core.logging import get_logger
+from core.logging import get_logger
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 logger = get_logger(__name__)
@@ -88,7 +88,7 @@ async def get_analytics_query(
     
     Retrieve the result of a previously executed analytics query.
     """
-    from src.models.analytics import AnalyticsResult as AnalyticsResultModel
+    from models.analytics import AnalyticsResult as AnalyticsResultModel
     
     try:
         result = await db_session.execute(
@@ -650,7 +650,7 @@ async def export_analytics(
     logger.info(f"Exporting analytics result for query {query_id} as {format}")
     
     try:
-        from src.models.analytics import AnalyticsResult as AnalyticsResultModel
+        from models.analytics import AnalyticsResult as AnalyticsResultModel
         
         # Get result
         result = await db_session.execute(

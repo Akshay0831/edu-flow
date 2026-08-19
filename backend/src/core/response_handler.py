@@ -195,7 +195,7 @@ def standardize_response(func):
             
         except Exception as e:
             # Handle different types of exceptions
-            from src.core.exceptions import BaseError
+            from core.exceptions import BaseError
             
             if isinstance(e, BaseError):
                 return ResponseFormatter.error(

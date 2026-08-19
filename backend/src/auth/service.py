@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr, field_validator
 from fastapi import HTTPException, status
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError
 
 
 class AuthService:

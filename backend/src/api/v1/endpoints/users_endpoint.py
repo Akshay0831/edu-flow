@@ -16,9 +16,9 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import logging
 
-from src.core.exceptions import ValidationError, NotFoundError, ConflictError, AuthenticationError
-from src.core.security import auth_service, verify_token
-from src.core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError, ConflictError, AuthenticationError
+from core.security import auth_service, verify_token
+from core.response_handler import ResponseFormatter
 from src.services.base_service import UserService, get_user_service, ServiceFactory
 
 router = APIRouter()

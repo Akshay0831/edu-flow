@@ -22,16 +22,16 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func, desc
 import uuid
 
-from src.api.deps import get_db
-from src.models.feedback import (
+from api.deps import get_db
+from models.feedback import (
     Feedback, FeedbackCategory, FeedbackResponse, FeedbackAnalysis,
     FeedbackReport, FeedbackTemplate, FeedbackCampaign, FeedbackStatus,
     FeedbackResponseStatus, Sentiment
 )
 from src.services.base_service import BaseService
-from src.core.exceptions import NotFoundError, ValidationError, ConfigurationError
-from src.core.cache_abstraction import CacheManager, CacheConfig
-from src.config.settings import settings
+from core.exceptions import NotFoundError, ValidationError, ConfigurationError
+from core.cache_abstraction import CacheManager, CacheConfig
+from config.settings import settings
 
 class FeedbackService(BaseService):
     """Feedback Processing Service"""

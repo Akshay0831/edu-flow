@@ -11,11 +11,11 @@ from typing import List, Optional, Dict, Any, Union
 from uuid import uuid4
 from datetime import datetime, date
 
-from src.core.logging import get_logger
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB
-from src.models.course import CourseCreate, CourseUpdate, CourseResponse, CourseStatistics
-from src.models.course_progress import CourseProgress
+from core.logging import get_logger
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from infrastructure.repositories.base_repository_with_db import BaseRepositoryWithDB
+from models.course import CourseCreate, CourseUpdate, CourseResponse, CourseStatistics
+from models.course_progress import CourseProgress
 
 logger = get_logger(__name__)
 
@@ -263,7 +263,7 @@ class CourseRepository(BaseRepositoryWithDB):
                 raise NotFoundError(f"Course not found with ID: {course_id}")
             
             # Get students enrolled in the course
-            from src.infrastructure.repositories.mark_repository import MarkRepository
+            from infrastructure.repositories.mark_repository import MarkRepository
             mark_repo = MarkRepository()
             marks = await mark_repo.get_marks_by_course(course_id)
             
@@ -283,7 +283,7 @@ class CourseRepository(BaseRepositoryWithDB):
                 pass_percentage = 0
             
             # Get teachers assigned to the course
-            from src.infrastructure.repositories.teacher_repository import TeacherRepository
+            from infrastructure.repositories.teacher_repository import TeacherRepository
             teacher_repo = TeacherRepository()
             teachers = await teacher_repo.get_teachers_by_department(course.department_id)
             
@@ -320,7 +320,7 @@ class CourseRepository(BaseRepositoryWithDB):
                 raise NotFoundError(f"Course not found with ID: {course_id}")
             
             # Get student marks in this course
-            from src.infrastructure.repositories.mark_repository import MarkRepository
+            from infrastructure.repositories.mark_repository import MarkRepository
             mark_repo = MarkRepository()
             marks = await mark_repo.get_marks_by_student_and_course(student_id, course_id)
             
@@ -445,21 +445,21 @@ class CourseRepository(BaseRepositoryWithDB):
     async def _check_course_dependencies(self, course_id: str) -> None:
         """Check if course has dependent entities."""
         # Check associated marks
-        from src.infrastructure.repositories.mark_repository import MarkRepository
+        from infrastructure.repositories.mark_repository import MarkRepository
         mark_repo = MarkRepository()
         marks = await mark_repo.get_marks_by_course(course_id)
         if marks:
             raise ValidationError(f"Cannot delete course {course_id} - it has {len(marks)} associated marks")
         
         # Check associated timetable entries
-        from src.infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
+        from infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
         timetable_repo = TimetableEntryRepository()
         entries = await timetable_repo.get_by_course(course_id)
         if entries:
             raise ValidationError(f"Cannot delete course {course_id} - it has {len(entries)} associated timetable entries")
         
         # Check associated enrollments
-        from src.infrastructure.repositories.mark_repository import MarkRepository
+        from infrastructure.repositories.mark_repository import MarkRepository
         mark_repo = MarkRepository()
         marks = await mark_repo.get_marks_by_course(course_id)
         if marks:

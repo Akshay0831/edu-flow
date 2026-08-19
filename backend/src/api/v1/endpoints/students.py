@@ -19,10 +19,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, EmailStr, validator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import AuthService
-from src.core.exceptions import ValidationError, NotFoundError, ForbiddenError, AuthenticationError
+from core.security import AuthService
+from core.exceptions import ValidationError, NotFoundError, ForbiddenError, AuthenticationError
 from src.services.student_service import StudentService
-from src.models.student import (
+from models.student import (
     StudentCreate, StudentUpdate, StudentResponse,
     AcademicRecord, EnrollmentRequest, EnrollmentRecord,
     PerformanceMetrics, AcademicSummary, GraduationStatus,
@@ -41,7 +41,7 @@ SECRET_KEY = "your-secret-key-here-in-production-use-environment-variable"
 ALGORITHM = "HS256"
 
 # Import shared services
-from src.core.services import auth_service, get_student_service
+from core.services import auth_service, get_student_service
 
 # For now, we'll use direct instances for testing
 _student_service = get_student_service()

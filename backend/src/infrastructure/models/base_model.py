@@ -16,8 +16,8 @@ from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 
-from src.core.exceptions import ValidationError
-from src.core.logging import get_logger
+from core.exceptions import ValidationError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

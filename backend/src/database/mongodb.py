@@ -3,10 +3,10 @@
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 from bson import ObjectId
-from src.core.base_repository import BaseRepository
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError
-from src.database.connection import database_manager
-from src.core.validation import validate_email, validate_phone, validate_password
+from core.base_repository import BaseRepository
+from core.exceptions import NotFoundError, ValidationError, DatabaseError
+from database.connection import database_manager
+from core.validation import validate_email, validate_phone, validate_password
 
 
 class MongoDBRepository(BaseRepository):

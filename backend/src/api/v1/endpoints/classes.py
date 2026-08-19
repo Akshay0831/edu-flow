@@ -18,9 +18,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from pydantic import BaseModel, Field, validator
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from src.core.security import auth_service
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
-from src.infrastructure.repositories.class_repository import ClassRepository
+from core.security import auth_service
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError, AuthorizationError
+from infrastructure.repositories.class_repository import ClassRepository
 
 # Create router
 router = APIRouter(prefix="/classes", tags=["classes"])

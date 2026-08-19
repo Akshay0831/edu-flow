@@ -12,9 +12,9 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 import logging
 
-from src.core.exceptions import DatabaseError, NotFoundError, ValidationError
-from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
+from core.exceptions import DatabaseError, NotFoundError, ValidationError
+from core.logging import get_logger
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult
 
 logger = get_logger(__name__)
 

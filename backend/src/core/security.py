@@ -20,8 +20,8 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from pydantic import BaseModel
-from ..core.validation import validate_email
-from .exceptions import ValidationError as CustomValidationError
+from core.validation import validate_email
+from core.exceptions import ValidationError as CustomValidationError
 from .auth_gateway import AuthProvider, auth_gateway
 
 try:
@@ -112,10 +112,6 @@ class AuthService:
         """Verify token using specified provider"""
         return await self.auth_gateway.verify_token(token, provider)
     
-    async def create_user(self, user_data: Dict[str, Any], provider: str = None) -> Dict[str, Any]:
-        """Create user using specified provider"""
-        return await self.auth_gateway.create_user(user_data, provider)
-    
     async def authenticate_with_fallback(self, credentials: Dict[str, Any], preferred_provider: str = None) -> Dict[str, Any]:
         """Authenticate with fallback mechanism"""
         try:
@@ -127,10 +123,6 @@ class AuthService:
         
         # Fall back to default provider
         return await self.auth_gateway.authenticate(credentials)
-    
-    def get_password_hash(self, password: str) -> str:
-        """Hash password"""
-        return pwd_context.hash(password)
     
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify password"""
@@ -287,6 +279,7 @@ class AuthService:
     async def create_user(self, user_data: Dict[str, Any], provider: str = None, user_service=None) -> Dict[str, Any]:
         """Create a new user"""
         try:
+            print(f"DEBUG: create_user called with user_data={user_data}, provider={provider}, user_service={user_service}")
             email = user_data.get("email")
             password = user_data.get("password")
             name = user_data.get("name")
@@ -295,15 +288,18 @@ class AuthService:
             # Use provided user_service or the one in auth_service
             if user_service is None:
                 user_service = self.user_service
+                print(f"DEBUG: Using self.user_service={user_service} (type: {type(user_service)})")
                 if user_service is None:
                     raise AuthenticationError("User service not available")
             
             # Create user using the service method (user service will handle password hashing)
             user_result = await user_service.create_user(
-                email=email,
-                password=password,  # Pass plain password to user service
-                name=name,
-                role=role
+                {
+                    "email": email,
+                    "password": password,
+                    "name": name,
+                    "role": role,
+                }
             )
             
             # Extract the actual user_id from the result
@@ -845,8 +841,9 @@ class AuthService:
     def sanitize_input(self, input_str: str) -> str:
         """Sanitize input to prevent injection attacks"""
         # Use the enhanced validation version
-        from src.core.validation import sanitize_input as validation_sanitize
+        from core.validation import sanitize_input as validation_sanitize
         return validation_sanitize(input_str)
 
 # Global auth service instance
 auth_service = AuthService()
+

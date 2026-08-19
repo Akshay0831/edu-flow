@@ -15,9 +15,9 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
 
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from src.core.security import AuthService
-from src.core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from core.security import AuthService
+from core.response_handler import ResponseFormatter
 
 router = APIRouter()
 security = HTTPBearer()

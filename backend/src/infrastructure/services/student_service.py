@@ -16,12 +16,12 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.student_repository import StudentRepository
-from src.models.student import StudentCreate, StudentUpdate, StudentResponse
-from src.models.student_stats import StudentStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.student_repository import StudentRepository
+from models.student import StudentCreate, StudentUpdate, StudentResponse
+from models.student_stats import StudentStats
 
 logger = get_logger(__name__)
 
@@ -270,7 +270,7 @@ class StudentService(BaseService):
                 raise NotFoundError(f"Student not found with ID: {student_id}")
             
             # Validate class exists
-            from src.infrastructure.repositories.class_repository import ClassRepository
+            from infrastructure.repositories.class_repository import ClassRepository
             class_repo = ClassRepository()
             class_obj = await class_repo.get_by_id(class_id)
             if not class_obj:

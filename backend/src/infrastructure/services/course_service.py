@@ -16,12 +16,12 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.course_repository import CourseRepository
-from src.models.course import CourseCreate, CourseUpdate, CourseResponse, CourseStatistics
-from src.models.course_progress import CourseProgress
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.course_repository import CourseRepository
+from models.course import CourseCreate, CourseUpdate, CourseResponse, CourseStatistics
+from models.course_progress import CourseProgress
 
 logger = get_logger(__name__)
 
@@ -461,7 +461,7 @@ class CourseService(BaseService):
                 raise NotFoundError(f"Course not found with ID: {course_id}")
             
             # Validate student exists
-            from src.infrastructure.repositories.student_repository import StudentRepository
+            from infrastructure.repositories.student_repository import StudentRepository
             student_repo = StudentRepository()
             student = await student_repo.get_by_id(student_id)
             if not student:
@@ -780,7 +780,7 @@ class CourseService(BaseService):
             raise ValidationError("Invalid academic year format")
         
         # Validate instructor exists
-        from src.infrastructure.repositories.teacher_repository import TeacherRepository
+        from infrastructure.repositories.teacher_repository import TeacherRepository
         teacher_repo = TeacherRepository()
         instructor = await teacher_repo.get_by_id(data['instructor_id'])
         if not instructor:
@@ -820,7 +820,7 @@ class CourseService(BaseService):
         
         # Validate instructor if provided
         if 'instructor_id' in data and data['instructor_id']:
-            from src.infrastructure.repositories.teacher_repository import TeacherRepository
+            from infrastructure.repositories.teacher_repository import TeacherRepository
             teacher_repo = TeacherRepository()
             instructor = await teacher_repo.get_by_id(data['instructor_id'])
             if not instructor:

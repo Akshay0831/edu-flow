@@ -17,11 +17,11 @@ from datetime import datetime, date
 from uuid import uuid4
 import statistics
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.mark_repository import MarkRepository
-from src.models.mark_model import MarkCreate, MarkUpdate, MarkResponse, MarkStats, GradeDistribution
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.mark_repository import MarkRepository
+from models.mark_model import MarkCreate, MarkUpdate, MarkResponse, MarkStats, GradeDistribution
 
 logger = get_logger(__name__)
 
@@ -777,21 +777,21 @@ class MarkService(BaseService):
             raise ValidationError("; ".join(issues))
         
         # Validate grade exists
-        from src.infrastructure.repositories.teacher_repository import TeacherRepository
+        from infrastructure.repositories.teacher_repository import TeacherRepository
         teacher_repo = TeacherRepository()
         grader = await teacher_repo.get_by_id(data['graded_by'])
         if not grader:
             raise NotFoundError(f"Teacher not found with ID: {data['graded_by']}")
         
         # Validate student exists
-        from src.infrastructure.repositories.student_repository import StudentRepository
+        from infrastructure.repositories.student_repository import StudentRepository
         student_repo = StudentRepository()
         student = await student_repo.get_by_id(data['student_id'])
         if not student:
             raise NotFoundError(f"Student not found with ID: {data['student_id']}")
         
         # TODO: Validate assessment exists when assessment repository is implemented
-        # from src.infrastructure.repositories.assessment_repository import AssessmentRepository
+        # from infrastructure.repositories.assessment_repository import AssessmentRepository
         # assessment_repo = AssessmentRepository()
         # assessment = await assessment_repo.get_by_id(data['assessment_id'])
         # if not assessment:

@@ -12,19 +12,19 @@ from abc import ABC, abstractmethod
 import asyncio
 import weakref
 
-from src.core.logging import get_logger
-from src.infrastructure.repositories.base_service import BaseService
-from src.infrastructure.repositories.student_repository import StudentRepository
-from src.infrastructure.repositories.teacher_repository import TeacherRepository
-from src.infrastructure.repositories.course_repository import CourseRepository
-from src.infrastructure.repositories.class_repository import ClassRepository
-from src.infrastructure.repositories.subject_repository import SubjectRepository
-from src.infrastructure.repositories.department_repository import DepartmentRepository
-from src.infrastructure.repositories.mark_repository import MarkRepository
-from src.infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
-from src.infrastructure.repositories.grade_repository import GradeRepository
-from src.infrastructure.repositories.laboratory_repository import LaboratoryRepository
-from src.infrastructure.repositories.room_repository import RoomRepository
+from core.logging import get_logger
+from infrastructure.repositories.base_service import BaseService
+from infrastructure.repositories.student_repository import StudentRepository
+from infrastructure.repositories.teacher_repository import TeacherRepository
+from infrastructure.repositories.course_repository import CourseRepository
+from infrastructure.repositories.class_repository import ClassRepository
+from infrastructure.repositories.subject_repository import SubjectRepository
+from infrastructure.repositories.department_repository import DepartmentRepository
+from infrastructure.repositories.mark_repository import MarkRepository
+from infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
+from infrastructure.repositories.grade_repository import GradeRepository
+from infrastructure.repositories.laboratory_repository import LaboratoryRepository
+from infrastructure.repositories.room_repository import RoomRepository
 
 logger = get_logger(__name__)
 
@@ -464,17 +464,17 @@ class ServiceContainerContext:
     
     async def __aenter__(self):
         """Enter context: setup services."""
-        from src.infrastructure.services.student_service import StudentService
-        from src.infrastructure.services.teacher_service import TeacherService
-        from src.infrastructure.services.course_service import CourseService
-        from src.infrastructure.services.class_service import ClassService
-        from src.infrastructure.services.subject_service import SubjectService
-        from src.infrastructure.services.department_service import DepartmentService
-        from src.infrastructure.services.mark_service import MarkService
-        from src.infrastructure.services.timetable_entry_service import TimetableEntryService
-        from src.infrastructure.services.grade_service import GradeService
-        from src.infrastructure.services.laboratory_service import LaboratoryService
-        from src.infrastructure.services.room_service import RoomService
+        from infrastructure.services.student_service import StudentService
+        from infrastructure.services.teacher_service import TeacherService
+        from infrastructure.services.course_service import CourseService
+        from infrastructure.services.class_service import ClassService
+        from infrastructure.services.subject_service import SubjectService
+        from infrastructure.services.department_service import DepartmentService
+        from infrastructure.services.mark_service import MarkService
+        from infrastructure.services.timetable_entry_service import TimetableEntryService
+        from infrastructure.services.grade_service import GradeService
+        from infrastructure.services.laboratory_service import LaboratoryService
+        from infrastructure.services.room_service import RoomService
         
         # Get container
         container = get_container()

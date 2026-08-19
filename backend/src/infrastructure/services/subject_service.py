@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.subject_repository import SubjectRepository
-from src.models.subject_model import SubjectCreate, SubjectUpdate, SubjectResponse, SubjectStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.subject_repository import SubjectRepository
+from models.subject_model import SubjectCreate, SubjectUpdate, SubjectResponse, SubjectStats
 
 logger = get_logger(__name__)
 
@@ -436,7 +436,7 @@ class SubjectService(BaseService):
                 raise NotFoundError(f"Subject not found with ID: {subject_id}")
             
             # Validate courses exist
-            from src.infrastructure.repositories.course_repository import CourseRepository
+            from infrastructure.repositories.course_repository import CourseRepository
             course_repo = CourseRepository()
             for course_id in course_ids:
                 course = await course_repo.get_by_id(course_id)
@@ -637,7 +637,7 @@ class SubjectService(BaseService):
             raise ValidationError(f"Invalid subject level. Must be one of: {valid_levels}")
         
         # Validate department exists
-        from src.infrastructure.repositories.department_repository import DepartmentRepository
+        from infrastructure.repositories.department_repository import DepartmentRepository
         dept_repo = DepartmentRepository()
         department = await dept_repo.get_by_id(data['department_id'])
         if not department:
@@ -682,7 +682,7 @@ class SubjectService(BaseService):
     
     async def _has_associated_classes(self, subject_id: str) -> bool:
         """Check if subject has associated classes."""
-        from src.infrastructure.repositories.class_repository import ClassRepository
+        from infrastructure.repositories.class_repository import ClassRepository
         class_repo = ClassRepository()
         classes = await class_repo.get_by_subject(subject_id)
         return len(classes) > 0

@@ -11,10 +11,10 @@ from typing import List, Optional, Dict, Any, Union
 from uuid import uuid4
 from datetime import datetime, date
 
-from src.core.logging import get_logger
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
-from src.models.user import UserCreate, UserUpdate, User
+from core.logging import get_logger
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult
+from models.user import UserCreate, UserUpdate, User
 
 logger = get_logger(__name__)
 

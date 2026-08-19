@@ -14,8 +14,8 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from src.core.exceptions import DatabaseError, NotFoundError, ValidationError
-from src.core.logging import get_logger
+from core.exceptions import DatabaseError, NotFoundError, ValidationError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

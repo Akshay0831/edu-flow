@@ -13,40 +13,80 @@ This service handles all user-related operations including:
 Author: Edu-Flow Team
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Dict, Any
 import re
 import hashlib
 import hmac
 from uuid import uuid4
-
-from src.core.security import AuthService
-from src.core.exceptions import ValidationError, NotFoundError, AuthenticationError
-from src.services.database_manager import db_manager
+from core.exceptions import ValidationError, NotFoundError, AuthenticationError
+from core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
+from core.security import pwd_context
 
 
 class UserService:
-    """User Management Service"""
+    """User management service used by the authentication endpoints."""
     
-    def __init__(self, auth_service = None):
+    def __init__(self, auth_service=None, database_manager=None):
         """Initialize the user service"""
-        self.auth_service = auth_service or AuthService()
+        self.auth_service = auth_service
+        self.database_manager = database_manager
         self.users = {}  # In-memory storage for demo
         self.user_activities = {}  # User activity logging
         self.audit_trail = {}  # User audit trail
         self._db_initialized = False
         
+    async def create(self, data: Dict) -> Dict:
+        """Create a new user entity"""
+        return await self.create_user(data)
+    
+    async def get(self, id: str) -> Optional[Dict]:
+        """Get a user by ID"""
+        return await self.get_user(id)
+    
+    async def update(self, id: str, data: Dict) -> Dict:
+        """Update a user by ID"""
+        return await self.update_user(id, **data)
+    
+    async def delete(self, id: str) -> bool:
+        """Delete a user by ID"""
+        try:
+            await self.delete_user(id)
+            return True
+        except NotFoundError:
+            return False
+    
+    async def list(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict]:
+        """List users with pagination and filtering"""
+        return await self.list_users(skip=skip, limit=limit, filters=filters)
+    
+    async def count(self, filters: Dict = None) -> int:
+        """Count users with optional filters"""
+        return await self.count_users(filters)
+    
     async def initialize(self):
         """Initialize the user service"""
         # Initialize database manager
-        await db_manager.initialize()
+        if self.database_manager is None:
+            # Create default database config
+            from core.database_abstraction import DatabaseConfig, DatabaseType
+            db_config = DatabaseConfig(
+                db_type=DatabaseType.SQLITE,
+                host="localhost",
+                port=5432,
+                database="edu_flow",
+                username="admin",
+                password="admin"
+            )
+            self.database_manager = initialize_database_manager(db_config)
+        
+        if not getattr(self.database_manager, "_initialized", False):
+            await self.database_manager.initialize()
         self._db_initialized = True
         
     async def dispose(self):
         """Dispose of the user service resources"""
         # Clean up database connections
-        if self._db_initialized:
-            await db_manager.close()
         self._db_initialized = False
         
     def validate_email(self, email: str) -> bool:
@@ -71,16 +111,12 @@ class UserService:
         valid_roles = ['student', 'teacher', 'admin', 'staff']
         return role in valid_roles
     
-    async def create_user(self, email: str, password: str, name: str, role: str, **kwargs) -> Dict[str, Any]:
+    async def create_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Create a new user
         
         Args:
-            email: User email address
-            password: User password
-            name: User display name
-            role: User role (student, teacher, admin, staff)
-            **kwargs: Additional user data
+            user_data: Dictionary containing user information
             
         Returns:
             Dict containing user information
@@ -89,58 +125,74 @@ class UserService:
             ValidationError: If validation fails
         """
         # Validate inputs
-        if not self.validate_email(email):
+        if not user_data.get('email'):
+            raise ValidationError("Email is required")
+        
+        if not user_data.get('password'):
+            raise ValidationError("Password is required")
+        
+        if not user_data.get('name'):
+            raise ValidationError("Name is required")
+        
+        role = user_data.get('role', 'student')
+        
+        # Validate email format
+        if not self.validate_email(user_data['email']):
             raise ValidationError("Invalid email format")
         
-        if not self.validate_password(password):
+        # Validate password strength (only if auth service not available)
+        if not self.auth_service and not self.validate_password(user_data['password']):
             raise ValidationError("Password does not meet requirements")
         
+        # Validate role
         if not self.validate_role(role):
             raise ValidationError("Invalid role")
         
         # Check if user already exists
-        existing_user = await self.get_user_by_email(email)
+        existing_user = await self.get_user_by_email(user_data['email'])
         if existing_user:
             raise ValidationError("User with this email already exists")
         
         # Create user
         user_id = str(uuid4())
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         
-        # Hash the password using auth service
-        hashed_password = self.auth_service.get_password_hash(password)
+        # Hash the password
+        if self.auth_service:
+            password_hash = self.auth_service.hash_password(user_data['password'])
+        else:
+            # Fallback to pwd_context directly
+            password_hash = pwd_context.hash(user_data['password'])
         
         user = {
             'user_id': user_id,
-            'email': email,
-            'name': name,
+            'email': user_data['email'],
+            'name': user_data['name'],
             'role': role,
-            'password_hash': hashed_password,  # Store hashed password
+            'password_hash': password_hash,
             'is_active': True,
             'created_at': now,
             'updated_at': now,
             'last_login': None,
             'deactivated_at': None,
-            **kwargs
+            **{k: v for k, v in user_data.items() if k not in ['password']}
         }
         
-        # Store user in mock database for now
-        # In production, this would use a real database
-        from ..core.database_abstraction import DatabaseConfig, DatabaseType, initialize_database_manager
-        
         try:
-            # Store user in memory for testing
             self.users[user_id] = user
+            
+            # Log user creation
+            await self.log_activity(user_id, "user_created", "User account created")
             
             # Return user data without password hash
             return {
                 "user_id": user_id,
-                "email": email,
-                "name": name,
+                "email": user_data['email'],
+                "name": user_data['name'],
                 "role": role,
                 "is_active": True,
                 "created_at": now.isoformat(),
-                **kwargs
+                **{k: v for k, v in user_data.items() if k not in ['password']}
             }
         except Exception as e:
             raise ValidationError(f"Failed to create user: {str(e)}")
@@ -173,40 +225,10 @@ class UserService:
     
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
-        # For now, return a mock user for testing
-        # In production, this would query the real database
-        if email == "admin@example.com":
-            return {
-                "user_id": "admin_123",
-                "email": "admin@example.com",
-                "name": "Admin User",
-                "role": "admin",
-                "password_hash": "hashed_password_here",
-                "is_active": True,
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
-            }
-        
-        # Search through all created users
         for user_id, user_data in self.users.items():
             if user_data['email'] == email:
                 return user_data.copy()
-        
-        # Check if user exists in any known emails (legacy support)
-        test_users = {
-            "test@example.com": {
-                "user_id": "test_123",
-                "email": "test@example.com",
-                "name": "Test User",
-                "role": "student",
-                "password_hash": "hashed_password_here",
-                "is_active": True,
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
-            }
-        }
-        
-        return test_users.get(email)
+        return None
     
     def update_user(self, user_id: str, **kwargs) -> Dict[str, Any]:
         """Update user information"""
@@ -468,6 +490,10 @@ class UserService:
         }
         
         self.user_activities[user_id].append(activity)
+
+    async def log_activity(self, user_id: str, action: str, details: str = "") -> None:
+        """Record an activity from asynchronous service operations."""
+        self.log_user_activity(user_id, action, details=details)
     
     def get_user_activities(self, user_id: str, action: str = None, 
                            start_date: datetime = None, end_date: datetime = None,
@@ -598,3 +624,45 @@ class UserService:
             'inactive_users': total_users - active_users,
             'role_distribution': role_counts
         }
+    
+    async def count_users(self, filters: Dict = None) -> int:
+        """Count users with optional filters"""
+        if filters:
+            filtered_users = [user for user in self.users.values() if self._matches_filters(user, filters)]
+            return len(filtered_users)
+        return len(self.users)
+    
+    async def list_users(self, skip: int = 0, limit: int = 100, filters: Dict = None) -> List[Dict[str, Any]]:
+        """List users with pagination and filtering"""
+        users_list = list(self.users.values())
+        
+        # Apply filters
+        if filters:
+            users_list = [user for user in users_list if self._matches_filters(user, filters)]
+        
+        # Apply pagination
+        start = skip
+        end = start + limit
+        paginated_users = users_list[start:end]
+        
+        # Don't return password hash
+        result = []
+        for user in paginated_users:
+            user_data = user.copy()
+            user_data['password_hash'] = None
+            result.append(user_data)
+        
+        return result
+    
+    def _matches_filters(self, user: Dict, filters: Dict) -> bool:
+        """Check if user matches given filters"""
+        for key, value in filters.items():
+            if key == 'role' and user.get('role') != value:
+                return False
+            if key == 'is_active' and user.get('is_active') != value:
+                return False
+            if key == 'email' and user.get('email') != value:
+                return False
+            if key == 'name' and value.lower() not in user.get('name', '').lower():
+                return False
+        return True

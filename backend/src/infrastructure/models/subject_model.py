@@ -14,9 +14,9 @@ import logging
 from sqlalchemy import Column, String, Integer, Text, DateTime, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
-from src.infrastructure.models.base_model import BaseModel
-from src.core.exceptions import ValidationError
-from src.core.logging import get_logger
+from infrastructure.models.base_model import BaseModel
+from core.exceptions import ValidationError
+from core.logging import get_logger
 
 logger = get_logger(__name__)
 

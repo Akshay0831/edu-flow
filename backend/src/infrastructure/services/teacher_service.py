@@ -16,12 +16,12 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.base_repository import BaseRepository
-from src.models.user import UserCreate, UserUpdate, User
-from src.models.teacher import TeacherStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.base_repository import BaseRepository
+from models.user import UserCreate, UserUpdate, User
+from models.teacher import TeacherStats
 
 logger = get_logger(__name__)
 
@@ -266,7 +266,7 @@ class TeacherService(BaseService):
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
             # Validate subject exists
-            from src.infrastructure.repositories.subject_repository import SubjectRepository
+            from infrastructure.repositories.subject_repository import SubjectRepository
             subject_repo = SubjectRepository()
             subject = await subject_repo.get_by_id(subject_id)
             if not subject:
@@ -324,7 +324,7 @@ class TeacherService(BaseService):
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
             # Validate subject exists
-            from src.infrastructure.repositories.subject_repository import SubjectRepository
+            from infrastructure.repositories.subject_repository import SubjectRepository
             subject_repo = SubjectRepository()
             subject = await subject_repo.get_by_id(subject_id)
             if not subject:
@@ -370,7 +370,7 @@ class TeacherService(BaseService):
                 raise NotFoundError(f"Teacher not found with ID: {teacher_id}")
             
             # Validate class exists
-            from src.infrastructure.repositories.class_repository import ClassRepository
+            from infrastructure.repositories.class_repository import ClassRepository
             class_repo = ClassRepository()
             class_obj = await class_repo.get_by_id(class_id)
             if not class_obj:

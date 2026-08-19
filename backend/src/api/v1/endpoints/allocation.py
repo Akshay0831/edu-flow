@@ -17,11 +17,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, Backgr
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from src.api.deps import get_db, get_current_user, get_service_container
+from api.deps import get_db, get_current_user, get_service_container
 from src.services.allocation_service import AllocationService
-from src.core.response_handler import ResponseFormatter
-from src.core.exceptions import ValidationError, NotFoundError
-from src.models.allocation import AllocationStatus, ConstraintType
+from core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError
+from models.allocation import AllocationStatus, ConstraintType
 from src.services.base_service import ServiceContainer
 
 router = APIRouter(prefix="/allocation", tags=["Class & Teacher Allocation"])

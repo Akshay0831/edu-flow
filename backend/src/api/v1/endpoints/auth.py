@@ -5,11 +5,11 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, field_validator
-from src.core.security import AuthService, TokenData
-from src.core.auth_gateway import AuthProvider, auth_gateway
-from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
-from src.core.response_handler import ResponseFormatter
-from src.config.settings import settings
+from core.security import AuthService, TokenData
+from core.auth_gateway import AuthProvider, auth_gateway
+from core.exceptions import AuthenticationError, ValidationError, NotFoundError
+from core.response_handler import ResponseFormatter
+from config.settings import settings
 from src.services.user_service import UserService
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -115,7 +115,7 @@ class TokenResponse(BaseModel):
     expires_in: int
 
 # Import the global auth service
-from src.core.security import auth_service as global_auth_service
+from core.security import auth_service as global_auth_service
 
 # Endpoints
 
@@ -136,6 +136,10 @@ async def register_user(
     Registers a new user and returns user information
     """
     try:
+        print(f"DEBUG: register_user called with: {user_request}")
+        print(f"DEBUG: global_auth_service type: {type(global_auth_service)}")
+        print(f"DEBUG: global_auth_service.user_service: {global_auth_service.user_service}")
+        
         # Create user using the enhanced auth service with provider support
         result = await global_auth_service.create_user(
             user_data={

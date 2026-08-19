@@ -9,10 +9,10 @@ from typing import Dict, Any, Optional, Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
-from src.core.security import auth_service
-from src.core.exceptions import AuthenticationError, AuthorizationError
-from src.config.settings import settings
-from src.core.logging import get_logger
+from core.security import auth_service
+from core.exceptions import AuthenticationError, AuthorizationError
+from config.settings import settings
+from core.logging import get_logger
 
 
 class AuditLogMiddleware(BaseHTTPMiddleware):

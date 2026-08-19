@@ -19,12 +19,12 @@ from fastapi.responses import FileResponse, JSONResponse
 import os
 import uuid
 
-from src.core.dependencies import get_current_user, get_current_active_admin
-from src.core.exceptions import ValidationError, NotFoundError, DatabaseError
-from src.core.response_handler import ResponseFormatter
-from src.core.database_abstraction import DatabaseInterface
+from core.dependencies import get_current_user, get_current_active_admin
+from core.exceptions import ValidationError, NotFoundError, DatabaseError
+from core.response_handler import ResponseFormatter
+from core.database_abstraction import DatabaseInterface
 from src.services.see_prediction_service import SEEPredictionService
-from src.models.see_prediction import (
+from models.see_prediction import (
     PredictionRequest, PredictionResult, ModelVersion, ModelEvaluation,
     ModelTrainingConfig, PredictionFeature, FeatureImportance,
     PredictionType, ModelType, ModelStatus, EvaluationMetric,

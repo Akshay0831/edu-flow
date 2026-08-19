@@ -13,9 +13,9 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from src.core.exceptions import DatabaseError, NotFoundError, ValidationError
-from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult, RepositoryOperation
+from core.exceptions import DatabaseError, NotFoundError, ValidationError
+from core.logging import get_logger
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult, RepositoryOperation
 
 logger = get_logger(__name__)
 

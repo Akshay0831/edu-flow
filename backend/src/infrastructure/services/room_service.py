@@ -17,11 +17,11 @@ from datetime import datetime, date, time, timedelta
 from uuid import uuid4
 import statistics
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.room_repository import RoomRepository
-from src.models.room import RoomCreate, RoomUpdate, RoomResponse, RoomStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.room_repository import RoomRepository
+from models.room import RoomCreate, RoomUpdate, RoomResponse, RoomStats
 
 logger = get_logger(__name__)
 
@@ -707,7 +707,7 @@ class RoomService(BaseService):
             raise ValidationError("Capacity must be a positive integer")
         
         # Validate building exists
-        from src.infrastructure.repositories.building_repository import BuildingRepository
+        from infrastructure.repositories.building_repository import BuildingRepository
         building_repo = BuildingRepository()
         building = await building_repo.get_by_id(data['building_id'])
         if not building:

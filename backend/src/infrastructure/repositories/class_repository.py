@@ -15,10 +15,10 @@ from dataclasses import dataclass
 from enum import Enum
 import json
 
-from src.core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
-from src.core.logging import get_logger
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult
-from src.models.class_model import ClassCreate, ClassUpdate, ClassResponse, ClassStats, AttendanceRecord
+from core.exceptions import DatabaseError, NotFoundError, ValidationError, ConflictError
+from core.logging import get_logger
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult
+from models.class_model import ClassCreate, ClassUpdate, ClassResponse, ClassStats, AttendanceRecord
 
 logger = get_logger(__name__)
 

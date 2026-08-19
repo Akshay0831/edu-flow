@@ -14,8 +14,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from src.config.logging import get_logger
-from src.core.logging_utils import (
+from config.logging import get_logger
+from core.logging_utils import (
     log_function_call,
     log_api_request,
     log_database_operation,

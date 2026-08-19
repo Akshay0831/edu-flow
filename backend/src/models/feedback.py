@@ -18,7 +18,7 @@ from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Tex
 from sqlalchemy.orm import relationship
 import uuid
 
-from src.infrastructure.models.base_model import Base
+from infrastructure.models.base_model import Base
 
 class FeedbackType(Enum):
     """Types of feedback categories"""

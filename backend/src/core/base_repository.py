@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any, Type
 from datetime import datetime
 import asyncio
-from src.core.exceptions import NotFoundError, ValidationError
+from core.exceptions import NotFoundError, ValidationError
 
 
 class BaseRepository(ABC):

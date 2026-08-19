@@ -5,11 +5,11 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, field_validator
-from src.core.security import AuthService, TokenData
-from src.core.auth_gateway import AuthProvider, auth_gateway
-from src.core.exceptions import AuthenticationError, ValidationError, NotFoundError
-from src.core.response_handler import ResponseFormatter
-from src.config.settings import settings
+from core.security import AuthService, TokenData
+from core.auth_gateway import AuthProvider, auth_gateway
+from core.exceptions import AuthenticationError, ValidationError, NotFoundError
+from core.response_handler import ResponseFormatter
+from config.settings import settings
 from src.services.user_service import UserService
 
 router = APIRouter(prefix="/auth/enhanced", tags=["enhanced-authentication"])
@@ -193,7 +193,7 @@ async def login_user(
         }
         
         # Create JWT tokens for API access (regardless of auth provider)
-        from src.core.security import AuthService
+        from core.security import AuthService
         auth_service = AuthService()
         token_pair = auth_service.create_token_pair({
             "user_id": auth_result.get("user_id", ""),
@@ -232,7 +232,7 @@ async def refresh_token(request: TokenRefreshRequest):
     Returns new access token
     """
     try:
-        from src.core.security import AuthService
+        from core.security import AuthService
         auth_service = AuthService()
         result = auth_service.refresh_tokens(request.refresh_token)
         return ResponseFormatter.success({
@@ -257,7 +257,7 @@ async def logout_user(credentials: HTTPAuthorizationCredentials = Depends(securi
     """
     try:
         token = credentials.credentials
-        from src.core.security import AuthService
+        from core.security import AuthService
         auth_service = AuthService()
         auth_service.logout_user(token)
         return ResponseFormatter.success(None, "Successfully logged out")
@@ -287,7 +287,7 @@ async def reset_password(password_reset: PasswordResetRequest):
                 detail="User not found"
             )
         
-        from src.core.security import AuthService
+        from core.security import AuthService
         auth_service = AuthService()
         auth_service.change_password(
             user_id=user['id'],
@@ -313,7 +313,7 @@ async def forgot_password(request: dict):
     Initiates password reset flow and returns reset token
     """
     try:
-        from src.core.security import AuthService
+        from core.security import AuthService
         auth_service = AuthService()
         result = auth_service.initiate_password_reset(
             email=request["email"],

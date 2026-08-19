@@ -16,9 +16,9 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 
-from src.core.security import auth_service
-from src.core.dependencies import get_current_user
-from src.core.exceptions import ValidationError, NotFoundError
+from core.security import auth_service
+from core.dependencies import get_current_user
+from core.exceptions import ValidationError, NotFoundError
 from src.services.database_service_dev import database_service
 
 router = APIRouter(prefix="/courses", tags=["courses"])

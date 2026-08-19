@@ -17,11 +17,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from src.api.deps import get_db, get_current_user, get_service_container
+from api.deps import get_db, get_current_user, get_service_container
 from src.services.co_po_mapping_service import COPOMappingService
-from src.core.response_handler import ResponseFormatter
-from src.core.exceptions import ValidationError, NotFoundError
-from src.models.co_po_mapping import COPOMapping, AttainmentLevel, AttainmentGrade
+from core.response_handler import ResponseFormatter
+from core.exceptions import ValidationError, NotFoundError
+from models.co_po_mapping import COPOMapping, AttainmentLevel, AttainmentGrade
 from src.services.base_service import ServiceContainer
 
 router = APIRouter(prefix="/co-po-mapping", tags=["CO-PO Mapping"])

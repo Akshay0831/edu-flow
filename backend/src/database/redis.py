@@ -15,8 +15,8 @@ import pickle
 import hashlib
 from typing import Any, Optional, Dict, List
 from datetime import datetime, timedelta
-from src.config.settings import settings
-from src.core.exceptions import ConfigurationError
+from config.settings import settings
+from core.exceptions import ConfigurationError
 import asyncio
 import logging
 from redis.asyncio import Redis

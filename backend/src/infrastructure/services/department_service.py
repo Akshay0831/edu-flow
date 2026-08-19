@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.department_repository import DepartmentRepository
-from src.models.department_model import DepartmentCreate, DepartmentUpdate, DepartmentResponse, DepartmentStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.department_repository import DepartmentRepository
+from models.department_model import DepartmentCreate, DepartmentUpdate, DepartmentResponse, DepartmentStats
 
 logger = get_logger(__name__)
 
@@ -323,7 +323,7 @@ class DepartmentService(BaseService):
                 raise NotFoundError(f"Department not found with ID: {department_id}")
             
             # Validate head exists
-            from src.infrastructure.repositories.teacher_repository import TeacherRepository
+            from infrastructure.repositories.teacher_repository import TeacherRepository
             teacher_repo = TeacherRepository()
             head = await teacher_repo.get_by_id(head_id)
             if not head:
@@ -390,7 +390,7 @@ class DepartmentService(BaseService):
                 raise NotFoundError(f"Department not found with ID: {department_id}")
             
             # Validate staff exists
-            from src.infrastructure.repositories.teacher_repository import TeacherRepository
+            from infrastructure.repositories.teacher_repository import TeacherRepository
             teacher_repo = TeacherRepository()
             for staff_id in staff_ids:
                 staff = await teacher_repo.get_by_id(staff_id)
@@ -506,21 +506,21 @@ class DepartmentService(BaseService):
             head_name = head_info['head_name'] if head_info else None
             
             # Get subjects
-            from src.infrastructure.repositories.subject_repository import SubjectRepository
+            from infrastructure.repositories.subject_repository import SubjectRepository
             subject_repo = SubjectRepository()
             subjects = await subject_repo.get_by_department(department_id)
             total_subjects = len(subjects)
             active_subjects = len([s for s in subjects if s.get('status') == 'active'])
             
             # Get courses
-            from src.infrastructure.repositories.course_repository import CourseRepository
+            from infrastructure.repositories.course_repository import CourseRepository
             course_repo = CourseRepository()
             courses = await course_repo.get_by_department(department_id)
             total_courses = len(courses)
             active_courses = len([c for c in courses if c.get('status') == 'active'])
             
             # Get classes
-            from src.infrastructure.repositories.class_repository import ClassRepository
+            from infrastructure.repositories.class_repository import ClassRepository
             class_repo = ClassRepository()
             classes = await class_repo.get_by_department(department_id)
             total_classes = len(classes)
@@ -634,14 +634,14 @@ class DepartmentService(BaseService):
             raise ValidationError("Invalid department code format")
         
         # Validate faculty exists
-        from src.infrastructure.repositories.faculty_repository import FacultyRepository
+        from infrastructure.repositories.faculty_repository import FacultyRepository
         faculty_repo = FacultyRepository()
         faculty = await faculty_repo.get_by_id(data['faculty_id'])
         if not faculty:
             raise NotFoundError(f"Faculty not found with ID: {data['faculty_id']}")
         
         # Validate head exists
-        from src.infrastructure.repositories.teacher_repository import TeacherRepository
+        from infrastructure.repositories.teacher_repository import TeacherRepository
         teacher_repo = TeacherRepository()
         head = await teacher_repo.get_by_id(data['head_id'])
         if not head:
@@ -657,7 +657,7 @@ class DepartmentService(BaseService):
         
         # Validate head if provided
         if 'head_id' in data and data['head_id']:
-            from src.infrastructure.repositories.teacher_repository import TeacherRepository
+            from infrastructure.repositories.teacher_repository import TeacherRepository
             teacher_repo = TeacherRepository()
             head = await teacher_repo.get_by_id(data['head_id'])
             if not head:
@@ -702,14 +702,14 @@ class DepartmentService(BaseService):
     
     async def _has_associated_subjects(self, department_id: str) -> bool:
         """Check if department has associated subjects."""
-        from src.infrastructure.repositories.subject_repository import SubjectRepository
+        from infrastructure.repositories.subject_repository import SubjectRepository
         subject_repo = SubjectRepository()
         subjects = await subject_repo.get_by_department(department_id)
         return len(subjects) > 0
     
     async def _has_associated_courses(self, department_id: str) -> bool:
         """Check if department has associated courses."""
-        from src.infrastructure.repositories.course_repository import CourseRepository
+        from infrastructure.repositories.course_repository import CourseRepository
         course_repo = CourseRepository()
         courses = await course_repo.get_by_department(department_id)
         return len(courses) > 0
@@ -774,15 +774,15 @@ class DepartmentService(BaseService):
             classes = []
             
             # Get academic entities
-            from src.infrastructure.repositories.subject_repository import SubjectRepository
+            from infrastructure.repositories.subject_repository import SubjectRepository
             subject_repo = SubjectRepository()
             subjects = await subject_repo.get_by_department(department_id, 0, 100)
             
-            from src.infrastructure.repositories.course_repository import CourseRepository
+            from infrastructure.repositories.course_repository import CourseRepository
             course_repo = CourseRepository()
             courses = await course_repo.get_by_department(department_id, 0, 100)
             
-            from src.infrastructure.repositories.class_repository import ClassRepository
+            from infrastructure.repositories.class_repository import ClassRepository
             class_repo = ClassRepository()
             classes = await class_repo.get_by_department(department_id, 0, 100)
             

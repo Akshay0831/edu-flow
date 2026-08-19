@@ -30,9 +30,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware import Middleware
 from pydantic import BaseModel, validator, Field
 from prometheus_client import Counter, Histogram, Gauge
-from src.core.security import SecurityConfig, AuthService
-from src.core.exceptions import AuthenticationError, AuthorizationError
-from src.config.settings import settings
+from core.security import SecurityConfig, AuthService
+from core.exceptions import AuthenticationError, AuthorizationError
+from config.settings import settings
 
 
 class RateLimitConfig:

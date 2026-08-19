@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, time, date, timedelta
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.database_abstraction import DatabaseManager, DatabaseInterface
-from src.infrastructure.repositories.base_repository import BaseRepository, QueryResult, RepositoryOperation
-from src.models.laboratory import (
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.database_abstraction import DatabaseManager, DatabaseInterface
+from infrastructure.repositories.base_repository import BaseRepository, QueryResult, RepositoryOperation
+from models.laboratory import (
     LabCreate as LaboratoryCreate, LabUpdate as LaboratoryUpdate, LabResponse as LaboratoryResponse,
     LaboratoryBooking, LaboratoryBookingResponse,
     LaboratoryEquipment, LaboratoryMaintenance,

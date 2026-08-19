@@ -4,16 +4,16 @@ from datetime import datetime, date, timezone
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 
-from src.models.course import (
+from models.course import (
     Course, CourseCreate, CourseUpdate, CourseResponse, CourseCreateResponse,
     CourseOffering, OfferingCreate, OfferingUpdate, OfferingResponse,
     Enrollment, EnrollmentCreate, EnrollmentUpdate, EnrollmentResponse,
     Department, Prerequisite, CourseStatistics, EnrollmentSummary,
     CourseStatus, CourseLevel, CreditType, Semester, Grade
 )
-from src.core.exceptions import ValidationError, NotFoundError, UnauthorizedError
-from src.core.base_service import BaseService
-from src.core.security import auth_service
+from core.exceptions import ValidationError, NotFoundError, UnauthorizedError
+from core.base_service import BaseService
+from core.security import auth_service
 
 
 class CourseService(BaseService):

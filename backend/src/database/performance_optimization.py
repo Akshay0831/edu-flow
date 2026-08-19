@@ -22,8 +22,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, create_engine
 from sqlalchemy.pool import QueuePool
 import redis.asyncio as redis
-from src.config.settings import settings
-from src.core.dependencies import get_db
+from config.settings import settings
+from core.dependencies import get_db
 
 
 class DatabasePerformanceOptimizer:

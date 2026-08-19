@@ -19,15 +19,15 @@ from typing import Dict, List, Optional, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
-from src.api.deps import get_db
-from src.models.co_po_mapping import (
+from api.deps import get_db
+from models.co_po_mapping import (
     COPOMapping, CourseOutcome, ProgramOutcome, AttainmentReport, COPOMappingConfig,
     AttainmentLevel, AttainmentGrade
 )
 from src.services.base_service import BaseService
-from src.core.exceptions import NotFoundError, ValidationError, ConfigurationError
-from src.core.cache import CacheManager
-from src.config.settings import get_settings
+from core.exceptions import NotFoundError, ValidationError, ConfigurationError
+from core.cache import CacheManager
+from config.settings import get_settings
 
 class COPOMappingService(BaseService):
     """CO-PO Mapping Service"""

@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date, time, timedelta
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
-from src.models.timetable_entry import TimetableEntryCreate, TimetableEntryUpdate, TimetableEntryResponse, TimetableStats
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.timetable_entry_repository import TimetableEntryRepository
+from models.timetable_entry import TimetableEntryCreate, TimetableEntryUpdate, TimetableEntryResponse, TimetableStats
 
 logger = get_logger(__name__)
 
@@ -598,28 +598,28 @@ class TimetableEntryService(BaseService):
         await self._validate_datetime_fields(data)
         
         # Validate class exists
-        from src.infrastructure.repositories.class_repository import ClassRepository
+        from infrastructure.repositories.class_repository import ClassRepository
         class_repo = ClassRepository()
         class_obj = await class_repo.get_by_id(data['class_id'])
         if not class_obj:
             raise NotFoundError(f"Class not found with ID: {data['class_id']}")
         
         # Validate teacher exists
-        from src.infrastructure.repositories.teacher_repository import TeacherRepository
+        from infrastructure.repositories.teacher_repository import TeacherRepository
         teacher_repo = TeacherRepository()
         teacher = await teacher_repo.get_by_id(data['teacher_id'])
         if not teacher:
             raise NotFoundError(f"Teacher not found with ID: {data['teacher_id']}")
         
         # Validate subject exists
-        from src.infrastructure.repositories.subject_repository import SubjectRepository
+        from infrastructure.repositories.subject_repository import SubjectRepository
         subject_repo = SubjectRepository()
         subject = await subject_repo.get_by_id(data['subject_id'])
         if not subject:
             raise NotFoundError(f"Subject not found with ID: {data['subject_id']}")
         
         # Validate room exists
-        from src.infrastructure.repositories.room_repository import RoomRepository
+        from infrastructure.repositories.room_repository import RoomRepository
         room_repo = RoomRepository()
         room = await room_repo.get_by_id(data['room_id'])
         if not room:
@@ -700,7 +700,7 @@ class TimetableEntryService(BaseService):
         
         # Validate room if provided
         if 'room_id' in data and data['room_id']:
-            from src.infrastructure.repositories.room_repository import RoomRepository
+            from infrastructure.repositories.room_repository import RoomRepository
             room_repo = RoomRepository()
             room = await room_repo.get_by_id(data['room_id'])
             if not room:

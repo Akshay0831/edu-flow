@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date, time, timedelta
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.laboratory_repository import LaboratoryRepository
-from src.models.laboratory import (
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.laboratory_repository import LaboratoryRepository
+from models.laboratory import (
     LabCreate as LaboratoryCreate, LabUpdate as LaboratoryUpdate, LabResponse as LaboratoryResponse,
     LabStats as LaboratoryStats, EquipmentResponse as Equipment
 )
@@ -704,7 +704,7 @@ class LaboratoryService(BaseService):
             raise ValidationError("Capacity must be a positive integer")
         
         # Validate department exists
-        from src.infrastructure.repositories.department_repository import DepartmentRepository
+        from infrastructure.repositories.department_repository import DepartmentRepository
         dept_repo = DepartmentRepository()
         department = await dept_repo.get_by_id(data['department_id'])
         if not department:

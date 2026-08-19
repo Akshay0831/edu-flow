@@ -16,11 +16,11 @@ from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, date, time, timedelta
 from uuid import uuid4
 
-from src.core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
-from src.core.logging import get_logger
-from src.core.base_service import BaseService
-from src.infrastructure.repositories.class_repository import ClassRepository
-from src.models.class_model import ClassCreate, ClassUpdate, ClassResponse, ClassStats, AttendanceRecord
+from core.exceptions import NotFoundError, ValidationError, DatabaseError, ConflictError
+from core.logging import get_logger
+from core.base_service import BaseService
+from infrastructure.repositories.class_repository import ClassRepository
+from models.class_model import ClassCreate, ClassUpdate, ClassResponse, ClassStats, AttendanceRecord
 
 logger = get_logger(__name__)
 
@@ -276,7 +276,7 @@ class ClassService(BaseService):
                 raise NotFoundError(f"Class not found with ID: {class_id}")
             
             # Validate student exists
-            from src.infrastructure.repositories.student_repository import StudentRepository
+            from infrastructure.repositories.student_repository import StudentRepository
             student_repo = StudentRepository()
             student = await student_repo.get_by_id(student_id)
             if not student:
@@ -741,21 +741,21 @@ class ClassService(BaseService):
             raise ValidationError("Invalid academic year format")
         
         # Validate teacher exists
-        from src.infrastructure.repositories.teacher_repository import TeacherRepository
+        from infrastructure.repositories.teacher_repository import TeacherRepository
         teacher_repo = TeacherRepository()
         teacher = await teacher_repo.get_by_id(data['teacher_id'])
         if not teacher:
             raise NotFoundError(f"Teacher not found with ID: {data['teacher_id']}")
         
         # Validate subject exists
-        from src.infrastructure.repositories.subject_repository import SubjectRepository
+        from infrastructure.repositories.subject_repository import SubjectRepository
         subject_repo = SubjectRepository()
         subject = await subject_repo.get_by_id(data['subject_id'])
         if not subject:
             raise NotFoundError(f"Subject not found with ID: {data['subject_id']}")
         
         # Validate department exists
-        from src.infrastructure.repositories.department_repository import DepartmentRepository
+        from infrastructure.repositories.department_repository import DepartmentRepository
         dept_repo = DepartmentRepository()
         department = await dept_repo.get_by_id(data['department_id'])
         if not department:

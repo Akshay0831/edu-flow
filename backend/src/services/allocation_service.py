@@ -21,15 +21,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 import uuid
 
-from src.api.deps import get_db
-from src.models.allocation import (
+from api.deps import get_db
+from models.allocation import (
     ClassAllocation, TeacherAvailability, ClassSchedule, AllocationConstraint,
     AllocationRequest, ResourceAvailability, AllocationStatus, ConstraintType
 )
 from src.services.base_service import BaseService
-from src.core.exceptions import NotFoundError, ValidationError, ConfigurationError
-from src.core.cache import CacheManager
-from src.config.settings import get_settings
+from core.exceptions import NotFoundError, ValidationError, ConfigurationError
+from core.cache import CacheManager
+from config.settings import get_settings
 
 class AllocationService(BaseService):
     """Class & Teacher Allocation Service"""

@@ -18,7 +18,7 @@ from typing import Dict, List, Any, Optional, Union
 import hashlib
 import re
 
-from ..models.student import (
+from models.student import (
     StudentCreate, StudentUpdate, StudentResponse,
     AcademicRecord, EnrollmentRecord, PerformanceMetrics,
     AcademicSummary, GraduationStatus, RiskAssessment,
@@ -26,9 +26,9 @@ from ..models.student import (
     GradeLevel, AcademicStanding, EnrollmentStatus,
     RiskLevel, UserRole
 )
-from ..core.security import AuthService
-from ..core.exceptions import ValidationError, NotFoundError, ForbiddenError, AuthenticationError
-from ..services.database_manager import db_manager
+from core.security import AuthService
+from core.exceptions import ValidationError, NotFoundError, ForbiddenError, AuthenticationError
+from src.services.database_manager import db_manager
 
 class StudentService:
     """Student management service with comprehensive functionality"""
